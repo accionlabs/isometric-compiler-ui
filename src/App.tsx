@@ -18,7 +18,7 @@ const App: React.FC = () => {
     const [availableAttachmentPoints, setAvailableAttachmentPoints] = useState<string[]>([]);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [boundingBox, setBoundingBox] = useState<{ x: number, y: number, width: number, height: number } | null>(null);
-    const [copiedComponents, setCopiedComponents] = useState<DiagramComponent[] | null>(null);
+    const [isCopied, setIsCopied] = useState<boolean>(false);
     const [fileName, setFileName] = useState(() => {
         return localStorage.getItem('fileName') || 'diagram.svg';
     });
@@ -120,50 +120,43 @@ const App: React.FC = () => {
         if (!id) {
             id = selected3DShape;
         }
-        // if any copied components, remove them
-        if (copiedComponents && copiedComponents.length>0) {
-            setCopiedComponents(null);
-        }
         if (id) {
             setDiagramComponents(prev => diagramComponentsLib.cut3DShape(prev, id));
             setSelected3DShape(null);
         }
-    }, [copiedComponents, setCopiedComponents]);
+    }, [selected3DShape]);
 
     const handleCancelCut3DShape = useCallback((id: string | null) => {
         setDiagramComponents(prev => diagramComponentsLib.cancelCut(prev, id));
-        if (copiedComponents && copiedComponents.length>0 ) {
-            setCopiedComponents(null);
-        }
-    }, [copiedComponents, setCopiedComponents]);
+        setIsCopied(false);
+    }, [isCopied]);
 
     const handleCopy3DShape = useCallback((id: string | null) => {
         if (!id) {
             id = selected3DShape;
         }
         if (id) {
-            const copiedShapes = diagramComponentsLib.copy3DShape(diagramComponents, id);
-            if (copiedShapes) {
-                setCopiedComponents(copiedShapes);
-                console.log('Copied components:', copiedShapes);
-            } else {
-                console.error('Failed to copy shape');
-            }
+            setIsCopied(true);
+            setDiagramComponents(prev => diagramComponentsLib.cut3DShape(prev, id));
         }
-    }, [diagramComponents, selected3DShape, setCopiedComponents]);
+    }, [diagramComponents, selected3DShape, isCopied, setIsCopied]);
 
     const handlePaste3DShape = useCallback((id: string | null) => {
         if (selected3DShape) {
             let result = null;
             // if any copied components, paste them
-            if (copiedComponents && copiedComponents.length > 0) {
+            if (isCopied) {
+                const copiedShapes = diagramComponentsLib.cancelCut(
+                    diagramComponentsLib.copy3DShape(diagramComponents, null),
+                    null
+                );
                 result = diagramComponentsLib.pasteCopied3DShapes(
                     diagramComponents,
-                    copiedComponents,
+                    copiedShapes,
                     selected3DShape,
                     selectedPosition,
                     selectedAttachmentPoint
-                );
+                );                        
             } else {
                 result = diagramComponentsLib.pasteCut3DShapes(
                     diagramComponents, 
@@ -180,7 +173,7 @@ const App: React.FC = () => {
                 console.error('Failed to paste 3D shape');
             }
         }
-    }, [selected3DShape, selectedPosition, selectedAttachmentPoint, copiedComponents, setCopiedComponents]);
+    }, [selected3DShape, isCopied, selectedPosition, selectedAttachmentPoint]);
 
     const getJsonFileName = useCallback((svgFileName: string) => {
         return svgFileName.replace(/\.svg$/, '.json');
@@ -301,6 +294,7 @@ const App: React.FC = () => {
             handleCut3DShape,
             handleCopy3DShape,
             handlePaste3DShape,
+            handleCancelCut3DShape,
             selected3DShape,
             diagramComponents,
             selectedPosition,
@@ -380,7 +374,7 @@ const App: React.FC = () => {
         <ImprovedLayout
             svgLibrary={svgLibrary}
             diagramComponents={diagramComponents}
-            copiedComponents={copiedComponents || []}
+            isCopied={isCopied}
             selected3DShape={selected3DShape}
             composedSVG={composedSVG}
             onAdd3DShape={handleAdd3DShape}

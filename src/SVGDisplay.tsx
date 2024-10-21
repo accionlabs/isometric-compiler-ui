@@ -8,7 +8,7 @@ interface SVGDisplayProps {
     svgContent: string;
     selected3DShape: string | null;
     diagramComponents: DiagramComponent[];
-    copiedComponents: DiagramComponent[];
+    isCopied: boolean;
     onSelect3DShape: (id: string | null) => void;
     onGetBoundingBox: (boundingBox: { x: number, y: number, width: number, height: number } | null) => void;
     canvasSize: { width: number; height: number };
@@ -20,7 +20,7 @@ const SVGDisplay: React.FC<SVGDisplayProps> = ({
     svgContent,
     selected3DShape,
     diagramComponents,
-    copiedComponents,
+    isCopied,
     onSelect3DShape,
     onGetBoundingBox,
     canvasSize,
@@ -95,8 +95,8 @@ const SVGDisplay: React.FC<SVGDisplayProps> = ({
             const svg = svgRef.current;
 
             // Remove all highlights
-            svg.querySelectorAll('.highlighted-shape, .copied-shape').forEach(el => {
-                el.classList.remove('highlighted-shape', 'copied-shape');
+            svg.querySelectorAll('.highlighted-shape').forEach(el => {
+                el.classList.remove('highlighted-shape');
             });
 
             // Add highlight to the selected element if there is one
@@ -107,19 +107,11 @@ const SVGDisplay: React.FC<SVGDisplayProps> = ({
                 }
             }
 
-            // Add highlight to copied elements
-            copiedComponents.forEach(component => {
-                const copiedElement = svg.getElementById(component.id);
-                if (copiedElement) {
-                    copiedElement.classList.add('copied-shape');
-                }
-            });
-
             // Apply reduced opacity to cut objects
             diagramComponents.forEach(component => {
                 const element = svg.getElementById(component.id);
                 if (element instanceof SVGElement) {
-                    element.style.opacity = component.cut ? '0.5' : '1';
+                    element.style.opacity = component.cut ? ( isCopied ? '0.75': '0.5') : '1';
                 }
             });
         }

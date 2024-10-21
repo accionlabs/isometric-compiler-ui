@@ -38,16 +38,18 @@ const findDependentShapes = (
     components: DiagramComponent[],
     shapeId: string,
     dependentIds: Set<string> = new Set()
-): Set<string> => {
+): { dependentIds: Set<string>; maxIndex: number } => {
     dependentIds.add(shapeId);
+    let maxIndex = components.findIndex(c => c.id === shapeId);
 
-    components.forEach(component => {
+    components.forEach((component, index) => {
         if (component.relativeToId === shapeId) {
-            findDependentShapes(components, component.id, dependentIds);
+            const { maxIndex: childMaxIndex } = findDependentShapes(components, component.id, dependentIds);
+            maxIndex = Math.max(maxIndex, index, childMaxIndex);
         }
     });
 
-    return dependentIds;
+    return { dependentIds, maxIndex };
 };
 
 export const extractAttachmentPoints = (svgElement: SVGElement): AttachmentPoint[] => {
@@ -211,7 +213,19 @@ export const add3DShape = (
             cut: false,
         };
 
-        const updatedComponents = [...diagramComponents, newComponent];
+        let updatedComponents = diagramComponents;
+        if (newComponent.relativeToId) {
+            // if the relativeToId is set, then insert the component as the last child
+            const {dependentIds, maxIndex} = findDependentShapes(diagramComponents,newComponent.relativeToId);
+            updatedComponents = [
+                ...diagramComponents.slice(0, maxIndex+1),
+                ...[newComponent],
+                ...diagramComponents.slice(maxIndex+1)
+            ];
+        } else {
+            // insert at the end of diagramComponents
+            updatedComponents = [...diagramComponents, newComponent];
+        }        
 
         return {
             updatedComponents,
@@ -250,7 +264,7 @@ export const remove3DShape = (
     id: string
 ): DiagramComponent[] => {
     console.log(`App: remove 3D shape ${id}`);
-    const dependentIds = findDependentShapes(diagramComponents, id);
+    const {dependentIds, maxIndex} = findDependentShapes(diagramComponents, id);
     return diagramComponents.filter(component => !dependentIds.has(component.id));
 };
 
@@ -280,7 +294,7 @@ export const cut3DShape = (
     }
     // cancel any previous cut objects
     let updatedComponents = cancelCut(diagramComponents, null);
-    const dependentIds = findDependentShapes(updatedComponents, id);
+    const {dependentIds} = findDependentShapes(updatedComponents, id);
     return updatedComponents.map(component =>
         dependentIds.has(component.id)
             ? { ...component, cut: true }
@@ -299,23 +313,31 @@ export const cancelCut = (
         }
     }
     if (id) {
-        const dependentIds = findDependentShapes(diagramComponents, id);
+        const {dependentIds} = findDependentShapes(diagramComponents, id);
         return diagramComponents.map(component =>
             dependentIds.has(component.id)
                 ? { ...component, cut: false }
                 : component
-        );    
+        );
     }
     return diagramComponents;
 };
 
 export const copy3DShape = (
     diagramComponents: DiagramComponent[],
-    id: string
+    id: string | null
 ): DiagramComponent[] => {
+    if (!id) {
+        const firstCut = getFirstCut3DShape(diagramComponents);
+        if (firstCut) {
+            id = firstCut.id
+        } else { // no cut objects
+            return diagramComponents;
+        }
+    }
     // cancel any previous cut objects
-    let updatedComponents = cancelCut(diagramComponents, null);
-
+    //let updatedComponents = cancelCut(diagramComponents, null);
+    let updatedComponents = diagramComponents;
     const componentToCopy = updatedComponents.find(component => component.id === id);
     if (!componentToCopy) {
         console.error(`Component with id ${id} not found`);
@@ -331,10 +353,10 @@ export const pasteCut3DShapes = (
     newPosition: DiagramComponent['position'],
     attachmentPoint: string | null,
 ): { updatedComponents: DiagramComponent[], pastedComponent: DiagramComponent | null } => {
-    
+
     // if no id was specified, get the first cut object
     if (!id) {
-        const firstCut =  getFirstCut3DShape(diagramComponents);
+        const firstCut = getFirstCut3DShape(diagramComponents);
         if (firstCut) {
             id = firstCut.id;
         } else {
@@ -345,7 +367,7 @@ export const pasteCut3DShapes = (
         }
     }
 
-    const dependentIds = findDependentShapes(diagramComponents, id);
+    const {dependentIds} = findDependentShapes(diagramComponents, id);
     let pastedComponent: DiagramComponent | null = null;
     let cutComponents: DiagramComponent[] = [];
     let nonCutComponents: DiagramComponent[] = [];
@@ -365,7 +387,7 @@ export const pasteCut3DShapes = (
         }
     });
 
-    return pasteCopied3DShapes(nonCutComponents,cutComponents,targetId,newPosition,attachmentPoint);
+    return pasteCopied3DShapes(nonCutComponents, cutComponents, targetId, newPosition, attachmentPoint);
 
 };
 
@@ -387,12 +409,12 @@ export const pasteCopied3DShapes = (
     let componentsToPaste = copiedComponents;
 
     // check if the first copied component has an id that already exists in diagramComponents,
-    // then we are re-pasting the same copied elements. So re-clone them.
-    const componentExists = get3DShape(diagramComponents,copiedComponents[0].id);
+    // then we are pasting the copied elements, not cut elements. So clone them before pasting.
+    const componentExists = get3DShape(diagramComponents, copiedComponents[0].id);
     if (componentExists) {
         // create a new copy
         console.log('component copy already pasted... re-copying');
-        componentsToPaste = copy3DShape(copiedComponents,copiedComponents[0].id);
+        componentsToPaste = copy3DShape(copiedComponents, copiedComponents[0].id);
     }
     const pastedComponents: DiagramComponent[] = componentsToPaste.map((component, index) => {
         if (index === 0) {
@@ -409,27 +431,27 @@ export const pasteCopied3DShapes = (
     });
 
     // Find all dependent objects of the target, so we can insert the pasted components at the end
-    const targetDependentIds = findDependentShapes(diagramComponents, targetId);
+    const {dependentIds, maxIndex} = findDependentShapes(diagramComponents, targetId);
 
     // Find the index of the last dependent object of the target
-    let insertIndex = -1;
-    for (let i = diagramComponents.length - 1; i >= 0; i--) {
-        if (targetDependentIds.has(diagramComponents[i].id)) {
-            insertIndex = i + 1;
-            break;
-        }
-    }
+    //let insertIndex = -1;
+    //for (let i = diagramComponents.length - 1; i >= 0; i--) {
+    //    if (dependentIds.has(diagramComponents[i].id)) {
+    //        insertIndex = i + 1;
+    //        break;
+    //    }
+    //}
 
     // If no dependents were found, insert after the target
-    if (insertIndex === -1) {
-        insertIndex = diagramComponents.findIndex(c => c.id === targetId) + 1;
-    }
+    //if (insertIndex === -1) {
+    //    insertIndex = diagramComponents.findIndex(c => c.id === targetId) + 1;
+    //}
 
     // Insert cut components after the last dependent of the target
     const updatedComponents = [
-        ...diagramComponents.slice(0, insertIndex),
+        ...diagramComponents.slice(0, maxIndex+1),
         ...pastedComponents,
-        ...diagramComponents.slice(insertIndex)
+        ...diagramComponents.slice(maxIndex+1)
     ];
 
     return {

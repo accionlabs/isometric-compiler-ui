@@ -11,7 +11,7 @@ import { DiagramComponent, Shape } from './Types';
 interface ImprovedLayoutProps {
     svgLibrary: Shape[];
     diagramComponents: DiagramComponent[];
-    copiedComponents: DiagramComponent[];
+    isCopied: boolean;
     canvasSize: { width: number; height: number };
     onSetCanvasSize: (size: { width: number; height: number }) => void;
     composedSVG: string;
@@ -53,7 +53,6 @@ interface ImprovedLayoutProps {
 const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     svgLibrary,
     diagramComponents,
-    copiedComponents,
     selected3DShape,
     canvasSize,
     composedSVG,
@@ -63,6 +62,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     onRemove2DShape,
     onCut3DShape,
     onCopy3DShape,
+    isCopied,
     onCancelCut3DShape,
     onPaste3DShape,
     onSelect3DShape,
@@ -217,7 +217,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                     {activePanel === 'composition' && (
                         <CompositionPanel
                             diagramComponents={diagramComponents}
-                            copiedComponents={copiedComponents}
+                            isCopied={isCopied}
                             svgLibrary={svgLibrary}
                             onRemove3DShape={onRemove3DShape}
                             onRemove2DShape={onRemove2DShape}
@@ -263,7 +263,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                         svgContent={composedSVG}
                         selected3DShape={selected3DShape}
                         diagramComponents={diagramComponents}
-                        copiedComponents={copiedComponents}
+                        isCopied={isCopied}
                         onSelect3DShape={handleSelect3DShape}
                         onGetBoundingBox={onGetBoundingBox}
                         canvasSize={canvasSize}

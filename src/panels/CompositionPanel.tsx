@@ -5,7 +5,7 @@ import SVGPreview from '../components/ui/SVGPreview';
 
 interface CompositionPanelProps {
     diagramComponents: DiagramComponent[];
-    copiedComponents: DiagramComponent[];
+    isCopied:boolean;
     svgLibrary: Shape[];
     onRemove3DShape: (id: string) => void;
     onRemove2DShape: (parentId: string, shapeIndex: number) => void;
@@ -19,7 +19,7 @@ interface CompositionPanelProps {
 
 const CompositionPanel: React.FC<CompositionPanelProps> = ({
     diagramComponents,
-    copiedComponents,
+    isCopied,
     svgLibrary,
     onRemove3DShape,
     onRemove2DShape,
@@ -114,7 +114,7 @@ const CompositionPanel: React.FC<CompositionPanelProps> = ({
 
             {cutComponents.length > 0 && (
                 <div className="border-t border-gray-700">
-                    <h3 className="text-lg font-semibold p-4">Cut Objects</h3>
+                    <h3 className="text-lg font-semibold p-4">{isCopied ? 'Copied' : 'Cut'} Objects</h3>
                     <div className="overflow-auto max-h-48 p-4">
                         <div className="space-y-2">
                             {cutComponents.map((component, ind) => (
@@ -124,8 +124,8 @@ const CompositionPanel: React.FC<CompositionPanelProps> = ({
                                     index={componentIndexMap[component.id]}
                                     parentIndex={getParentIndex(component)}
                                     isSelected={false}
-                                    isCut={true}
-                                    isCopied={false}
+                                    isCut={!isCopied}
+                                    isCopied={isCopied}
                                     isFirst={ind === 0}
                                     onSelect={() => { }} // No-op for cut objects
                                     onCut={() => { }} // No-op for cut objects
@@ -134,37 +134,6 @@ const CompositionPanel: React.FC<CompositionPanelProps> = ({
                                     onCancelCut={onCancelCut3DShape}
                                     onPaste={onPaste3DShape}
                                     onRemove2DShape={onRemove2DShape}
-                                    onScrollToParent={handleScrollToParent}
-                                    svgPreview={<SVGPreview svgContent={getSVGContent(component.shape)} className="w-12 h-12" />}
-                                />
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {copiedComponents.length > 0 && (
-                <div className="border-t border-gray-700">
-                    <h3 className="text-lg font-semibold p-4">Copied Objects</h3>
-                    <div className="overflow-auto max-h-48 p-4">
-                        <div className="space-y-2">
-                            {copiedComponents.map((component, ind) => (
-                                <DiagramComponentCard
-                                    key={component.id}
-                                    component={component}
-                                    index={ind}
-                                    parentIndex={getParentIndex(component)}
-                                    isSelected={false}
-                                    isCut={false}
-                                    isCopied={true}
-                                    isFirst={ind === 0}
-                                    onSelect={() => { }} // No-op for copied objects
-                                    onCut={() => { }} // No-op for copied objects
-                                    onCopy={() => { }} // No-op for copied objects
-                                    onRemove={() => { }} // No-op for copied objects
-                                    onCancelCut={onCancelCut3DShape}
-                                    onPaste={onPaste3DShape}
-                                    onRemove2DShape={() => { }} // No-op for copied objects
                                     onScrollToParent={handleScrollToParent}
                                     svgPreview={<SVGPreview svgContent={getSVGContent(component.shape)} className="w-12 h-12" />}
                                 />

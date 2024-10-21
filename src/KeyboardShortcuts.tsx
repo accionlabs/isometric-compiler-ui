@@ -13,6 +13,7 @@ export const createKeyboardShortcuts = (
     cut3DShape: (id: string | null) => void,
     copy3DShape: (id : string | null) => void,
     paste3DShape: (id: string | null) => void,
+    cancelClipboard: (id: string | null) => void,
     selected3DShape: string | null,
     diagramComponents: DiagramComponent[],
     selectedPosition: string,
@@ -80,7 +81,15 @@ export const createKeyboardShortcuts = (
                     console.log('No 3D shape selected for pasting');
                 }
             }
-        }
+        },
+        {
+            key: 'Escape',
+            modifierKey: false,
+            description: `Cancel Cut or Copy`,
+            action: () => {
+                cancelClipboard(null);
+            }
+        },
     ];
 
     const handleKeyDown = (event: KeyboardEvent) => {
