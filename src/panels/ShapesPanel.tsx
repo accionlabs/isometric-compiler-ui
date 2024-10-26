@@ -3,6 +3,7 @@ import { Button } from '../components/ui/Button';
 import { DiagramComponent, Shape } from '../Types';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '../components/ui/Accordion';
 import SVGPreview from '../components/ui/SVGPreview';
+import { SVGLibraryManager } from '../lib/svgLibraryUtils';
 
 interface ShapesPanelProps {
     svgLibrary: Shape[];
@@ -10,6 +11,7 @@ interface ShapesPanelProps {
     onAdd2DShape: (shapeName: string, attachTo: string) => void;
     selected3DShape: string | null;
     diagramComponents: DiagramComponent[];
+    activeLibrary: string;
 }
 
 const ShapesPanel: React.FC<ShapesPanelProps> = ({
@@ -18,8 +20,30 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
     onAdd2DShape,
     selected3DShape,
     diagramComponents,
+    activeLibrary,
 }) => {
     const [openPanels, setOpenPanels] = useState<string[]>(['3d-shapes', '2d-shapes']);
+    const [shapes, setShapes] = useState<Shape[]>([]);
+
+    // Update shapes when svgLibrary or activeLibrary changes
+    useEffect(() => {
+        console.log('Shapes:', activeLibrary, svgLibrary);
+        if (svgLibrary.length > 0) {
+            setShapes(svgLibrary);
+        } else {
+            // Fallback to getting shapes from active library
+            const library = SVGLibraryManager.getLibrary(activeLibrary);
+            if (library) {
+                setShapes(library.shapes);
+            }
+        }
+    }, [svgLibrary, activeLibrary]);
+
+    // Get active library details
+    const activeLibraryData = useMemo(() => {
+        return SVGLibraryManager.getLibrary(activeLibrary);
+    }, [activeLibrary]);
+
 
     const shouldDisable3DShapeButtons = () => {
         return diagramComponents.length > 0 && selected3DShape === null;

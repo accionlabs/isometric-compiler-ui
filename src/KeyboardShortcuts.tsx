@@ -7,11 +7,21 @@ type ShortcutAction = {
     action: () => void;
 };
 
+const isEditableElement = (element: HTMLElement | null): boolean => {
+    if (!element) return false;
+
+    const tagName = element.tagName.toLowerCase();
+    const isInput = tagName === 'input' || tagName === 'textarea';
+    const isContentEditable = element.getAttribute('contenteditable') === 'true';
+
+    return isInput || isContentEditable;
+};
+
 export const createKeyboardShortcuts = (
     saveDiagram: () => Promise<void>,
     remove3DShape: (id: string | null) => void,
     cut3DShape: (id: string | null) => void,
-    copy3DShape: (id : string | null) => void,
+    copy3DShape: (id: string | null) => void,
     paste3DShape: (id: string | null) => void,
     cancelClipboard: (id: string | null) => void,
     selected3DShape: string | null,
@@ -60,20 +70,20 @@ export const createKeyboardShortcuts = (
         {
             key: 'c',
             modifierKey: true,
-            description: `${isMac ? '⌘' : 'Ctrl'}+V: Cut selected 3D shape`,
+            description: `${isMac ? '⌘' : 'Ctrl'}+C: Copy selected 3D shape`,
             action: () => {
                 if (selected3DShape) {
                     console.log('Copying selected 3D shape:', selected3DShape);
                     copy3DShape(selected3DShape);
                 } else {
-                    console.log('No 3D shape selected for cutting');
+                    console.log('No 3D shape selected for copying');
                 }
             }
         },
         {
             key: 'v',
             modifierKey: true,
-            description: `${isMac ? '⌘' : 'Ctrl'}+V: Paste cut 3D shape`,
+            description: `${isMac ? '⌘' : 'Ctrl'}+V: Paste cut/copied 3D shape`,
             action: () => {
                 if (selected3DShape) {
                     paste3DShape(null);
@@ -93,8 +103,18 @@ export const createKeyboardShortcuts = (
     ];
 
     const handleKeyDown = (event: KeyboardEvent) => {
+        // Check if the active element is an input field
+        const activeElement = document.activeElement as HTMLElement;
+        if (isEditableElement(activeElement)) {
+            // If user is typing in an input field, only handle Save (Ctrl/Cmd + S)
+            if (event.key.toLowerCase() === 's' && (isMac ? event.metaKey : event.ctrlKey)) {
+                event.preventDefault();
+                saveDiagram();
+            }
+            return;
+        }
+
         const modifierKeyPressed = isMac ? event.metaKey : event.ctrlKey;
-        console.log('Handling key down:', event.key, 'Modifier:', modifierKeyPressed);
 
         const matchingShortcut = shortcuts.find(
             shortcut =>

@@ -6,6 +6,7 @@ import { loadShapesFromGoogleDrive, loadFileFromDrive, saveFileToDrive } from '.
 import * as diagramComponentsLib from './lib/diagramComponentsLib';
 import { defaultShapesLibrary } from './lib/defaultShapesLib';
 import { createKeyboardShortcuts } from './KeyboardShortcuts';
+import { SVGLibraryManager } from './lib/svgLibraryUtils';
 
 const App: React.FC = () => {
     const [svgLibrary, setSvgLibrary] = useState<Shape[]>([]);
@@ -22,18 +23,26 @@ const App: React.FC = () => {
     const [fileName, setFileName] = useState(() => {
         return localStorage.getItem('fileName') || 'diagram.svg';
     });
-    const [spreadsheetUrl, setSpreadsheetUrl] = useState(() => {
-        return localStorage.getItem('spreadsheetUrl') || '';
-    });
-    const [folderUrl, setFolderUrl] = useState(() => {
-        return localStorage.getItem('folderUrl') || '';
-    });
     const [folderPath, setFolderPath] = useState(() => {
         return localStorage.getItem('folderPath') || 'My Diagrams';
     });
     const [showAttachmentPoints, setShowAttachmentPoints] = useState(() => {
         return localStorage.getItem('showAttachmentPoints') === 'true';
     });
+    const [activeLibrary, setActiveLibrary] = useState<string>(() =>
+        localStorage.getItem('activeLibrary') || 'default'
+    );
+
+    // Update shapes when active library changes
+    const handleLibraryChange = useCallback((libraryId: string) => {
+        setActiveLibrary(libraryId);
+        localStorage.setItem('activeLibrary', libraryId);
+
+        const library = SVGLibraryManager.getLibrary(libraryId);
+        if (library) {
+            setSvgLibrary(library.shapes);
+        }
+    }, []);
 
     // handle select 3D shape from Composition panel or SVG diagram
     const updateSelected3DShape = (selectedComponent: DiagramComponent | null) => {
@@ -50,7 +59,7 @@ const App: React.FC = () => {
 
     const handleSelect3DShape = useCallback((id: string | null) => {
         console.log(`App: Select component ${id}`);
-        console.log('App: diagram components',diagramComponents);
+        console.log('App: diagram components', diagramComponents);
         if (!id) {
             setSelected3DShape(null);
             setAvailableAttachmentPoints([]);
@@ -156,13 +165,13 @@ const App: React.FC = () => {
                     selected3DShape,
                     selectedPosition,
                     selectedAttachmentPoint
-                );                        
+                );
             } else {
                 result = diagramComponentsLib.pasteCut3DShapes(
-                    diagramComponents, 
-                    id, 
-                    selected3DShape, 
-                    selectedPosition, 
+                    diagramComponents,
+                    id,
+                    selected3DShape,
+                    selectedPosition,
                     selectedAttachmentPoint
                 );
             }
@@ -220,36 +229,6 @@ const App: React.FC = () => {
         setFileName(newFileName);
         localStorage.setItem('fileName', newFileName);
     }, []);
-
-    const handleSetSpreadsheetUrl = useCallback((newUrl: string) => {
-        setSpreadsheetUrl(newUrl);
-        localStorage.setItem('spreadsheetUrl', newUrl);
-    }, []);
-
-    const handleSetFolderUrl = useCallback((newUrl: string) => {
-        setFolderUrl(newUrl);
-        localStorage.setItem('folderUrl', newUrl);
-    }, []);
-
-    const handleLoadFromGoogleDrive = async () => {
-        if (!spreadsheetUrl || !folderUrl) {
-            setErrorMessage('Please provide both Spreadsheet URL and Folder URL in the settings.');
-            return;
-        }
-
-        try {
-            const newLibrary = await loadShapesFromGoogleDrive(spreadsheetUrl, folderUrl, (progress) => {
-                // Handle progress updates if needed
-            });
-            setSvgLibrary(newLibrary);
-        } catch (err) {
-            if (err instanceof Error) {
-                setErrorMessage(`Error loading shapes: ${err.message}`);
-            } else {
-                setErrorMessage('An unknown error occurred while loading shapes.');
-            }
-        }
-    };
 
     // get the bounding box for clipping the SVG to the content
     const handleGetBoundingBox = useCallback((newBoundingBox: { x: number, y: number, width: number, height: number } | null) => {
@@ -311,6 +290,33 @@ const App: React.FC = () => {
         selectedAttachmentPoint
     ]);
 
+    // Load default library on mount
+    useEffect(() => {
+        // Set default library if not already set
+        const defaultLibrary = SVGLibraryManager.getLibrary('default');
+        if (defaultLibrary) {
+            // Get active library from localStorage or use default
+            const storedActiveLibrary = localStorage.getItem('activeLibrary') || 'default';
+            setActiveLibrary(storedActiveLibrary);
+            // set the shapes up in svgLibrary
+            const loadSvgContent = async () => {
+                const loadedLibrary = await Promise.all(
+                    defaultShapesLibrary.map(async (shape) => {
+                        const response = await fetch(`./shapes/${shape.svgFile}`);
+                        const svgContent = await response.text();
+                        return { ...shape, svgContent };
+                    })
+                );
+                SVGLibraryManager.addShapesToLibrary('default', loadedLibrary);
+                setSvgLibrary(loadedLibrary);
+            }
+            loadSvgContent();
+        } else {
+            console.log("Default library not found");
+        }
+    }, []);
+
+
     useEffect(() => {
         const { handleKeyDown } = handleKeyboardShortcuts();
 
@@ -327,21 +333,6 @@ const App: React.FC = () => {
     }, [handleKeyboardShortcuts]);
 
     useEffect(() => {
-        const loadSvgContent = async () => {
-            const loadedLibrary = await Promise.all(
-                defaultShapesLibrary.map(async (shape) => {
-                    const response = await fetch(`./shapes/${shape.svgFile}`);
-                    const svgContent = await response.text();
-                    return { ...shape, svgContent };
-                })
-            );
-            setSvgLibrary(loadedLibrary);
-        };
-
-        loadSvgContent();
-    }, []);
-
-    useEffect(() => {
         const { svgContent } = diagramComponentsLib.compileDiagram(diagramComponents, canvasSize, svgLibrary, showAttachmentPoints);
         setComposedSVG(svgContent);
     }, [diagramComponents, canvasSize, svgLibrary, showAttachmentPoints]);
@@ -355,14 +346,6 @@ const App: React.FC = () => {
     }, [fileName]);
 
     useEffect(() => {
-        localStorage.setItem('spreadsheetUrl', spreadsheetUrl);
-    }, [spreadsheetUrl]);
-
-    useEffect(() => {
-        localStorage.setItem('folderUrl', folderUrl);
-    }, [folderUrl]);
-
-    useEffect(() => {
         localStorage.setItem('folderPath', folderPath);
     }, [folderPath]);
 
@@ -373,6 +356,8 @@ const App: React.FC = () => {
     return (
         <ImprovedLayout
             svgLibrary={svgLibrary}
+            activeLibrary={activeLibrary}
+            onLibraryChange={handleLibraryChange}
             diagramComponents={diagramComponents}
             isCopied={isCopied}
             selected3DShape={selected3DShape}
@@ -397,12 +382,7 @@ const App: React.FC = () => {
             fileName={fileName}
             setFileName={handleSetFileName}
             onGetBoundingBox={handleGetBoundingBox}
-            spreadsheetUrl={spreadsheetUrl}
-            setSpreadsheetUrl={handleSetSpreadsheetUrl}
-            folderUrl={folderUrl}
-            setFolderUrl={handleSetFolderUrl}
             availableAttachmentPoints={availableAttachmentPoints}
-            onLoadShapesFromGoogleDrive={handleLoadFromGoogleDrive}
             errorMessage={errorMessage}
             setErrorMessage={setErrorMessage}
             onSaveDiagram={handleSaveDiagram}

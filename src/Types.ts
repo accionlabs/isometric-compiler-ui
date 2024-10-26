@@ -40,3 +40,14 @@ export interface DiagramComponent {
     cut: boolean;
 }
 
+export interface LibraryData {
+    id: string;
+    name: string;
+    description: string;
+    shapes: Shape[];
+    spreadsheetUrl?: string;
+    folderUrl?: string;
+    lastUpdated: Date;
+    isLoading?: boolean;
+  }
+

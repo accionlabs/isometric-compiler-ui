@@ -10,6 +10,7 @@ import { DiagramComponent, Shape } from './Types';
 
 interface ImprovedLayoutProps {
     svgLibrary: Shape[];
+    activeLibrary: string;
     diagramComponents: DiagramComponent[];
     isCopied: boolean;
     canvasSize: { width: number; height: number };
@@ -34,12 +35,7 @@ interface ImprovedLayoutProps {
     fileName: string;
     setFileName: (name: string) => void;
     onGetBoundingBox: (boundingBox: { x: number, y: number, width: number, height: number } | null) => void;
-    spreadsheetUrl: string;
-    setSpreadsheetUrl: (url: string) => void;
-    folderUrl: string;
-    setFolderUrl: (url: string) => void;
     availableAttachmentPoints: string[];
-    onLoadShapesFromGoogleDrive: () => void;
     errorMessage: string | null;
     setErrorMessage: (message: string | null) => void;
     onSaveDiagram: () => Promise<void>;
@@ -48,10 +44,13 @@ interface ImprovedLayoutProps {
     setFolderPath: (path: string) => void;
     showAttachmentPoints: boolean;
     setShowAttachmentPoints: (show: boolean) => void;
+    onLibraryChange: (libraryId: string) => void;
 }
 
 const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     svgLibrary,
+    activeLibrary,
+    onLibraryChange,
     diagramComponents,
     selected3DShape,
     canvasSize,
@@ -76,12 +75,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     fileName,
     setFileName,
     onGetBoundingBox,
-    spreadsheetUrl,
-    setSpreadsheetUrl,
-    folderUrl,
-    setFolderUrl,
     availableAttachmentPoints,
-    onLoadShapesFromGoogleDrive,
     errorMessage,
     setErrorMessage,
     onSaveDiagram,
@@ -105,13 +99,13 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     const handleSelectedPosition = useCallback((position: string | null) => {
         if (position) {
             console.log(`Improved Layout: position ${position}`);
-            onSelectedPosition(position);    
+            onSelectedPosition(position);
         }
     }, [onSelectedPosition, selectedPosition]);
 
     const handleSelectedAttachmentPoint = useCallback((point: string | null) => {
         onSelectedAttachmentPoint(point);
-        console.log('Improved Layout: attachment point',point);
+        console.log('Improved Layout: attachment point', point);
     }, [onSelectedAttachmentPoint]);
 
     const handleAdd3DShape = useCallback((shapeName: string) => {
@@ -125,31 +119,6 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     const handlePaste3DShape = useCallback((id: string) => {
         onPaste3DShape(id);
     }, [onPaste3DShape]);
-
-    const handleLoadFromGoogleDrive = async () => {
-        if (!spreadsheetUrl || !folderUrl) {
-            setErrorMessage('Please provide both Spreadsheet URL and Folder URL in the settings.');
-            setIsLoadingDialogOpen(true);
-            return;
-        }
-
-        setErrorMessage(null);
-        setLoadingProgress(null);
-        setIsLoadingDialogOpen(true);
-
-        try {
-            await onLoadShapesFromGoogleDrive();
-            setTimeout(() => setIsLoadingDialogOpen(false), 1000);
-        } catch (err) {
-            if (err instanceof Error) {
-                setErrorMessage(`Error loading shapes: ${err.message}`);
-            } else {
-                setErrorMessage('An unknown error occurred while loading shapes.');
-            }
-        } finally {
-            setLoadingProgress(null);
-        }
-    };
 
     const handleSaveDiagram = async () => {
         setIsSaveLoadDialogOpen(true);
@@ -208,6 +177,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                     {activePanel === 'shapes' && (
                         <ShapesPanel
                             svgLibrary={svgLibrary}
+                            activeLibrary={activeLibrary}
                             onAdd3DShape={handleAdd3DShape}
                             onAdd2DShape={onAdd2DShape}
                             selected3DShape={selected3DShape}
@@ -235,18 +205,16 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                             onSetCanvasSize={onSetCanvasSize}
                             fileName={fileName}
                             setFileName={setFileName}
-                            spreadsheetUrl={spreadsheetUrl}
-                            setSpreadsheetUrl={setSpreadsheetUrl}
-                            folderUrl={folderUrl}
-                            setFolderUrl={setFolderUrl}
-                            onLoadShapesFromGoogleDrive={handleLoadFromGoogleDrive}
                             onSaveDiagram={handleSaveDiagram}
                             onLoadDiagram={handleLoadDiagram}
+                            activeLibrary={activeLibrary}
+                            onLibraryChange={onLibraryChange}
                             folderPath={folderPath}
                             setFolderPath={setFolderPath}
                             onDownloadSVG={onDownloadSVG}
                             showAttachmentPoints={showAttachmentPoints}
                             setShowAttachmentPoints={setShowAttachmentPoints}
+                            onUpdateShapes={onUpdateSvgLibrary}
                         />
                     )}
                 </div>

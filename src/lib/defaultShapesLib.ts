@@ -9,8 +9,22 @@ export const defaultShapesLibrary: Shape[] = [
     svgContent: ""
   },
   {
+    name: "layer4x3-hd",
+    svgFile: "layer4x3-hd.svg",
+    type: "3D",
+    attachTo: "",
+    svgContent: ""
+  },
+  {
     name: "service",
     svgFile: "service3D.svg",
+    type: "3D",
+    attachTo: "",
+    svgContent: ""
+  },
+  {
+    name: "service-hd",
+    svgFile: "service3D-hd.svg",
     type: "3D",
     attachTo: "",
     svgContent: ""
@@ -23,6 +37,13 @@ export const defaultShapesLibrary: Shape[] = [
     svgContent: ""
   },
   {
+    name: "database-hd",
+    svgFile: "database3D-hd.svg",
+    type: "3D",
+    attachTo: "",
+    svgContent: ""
+  },
+    {
     name: "mainframe",
     svgFile: "mainframe3D.svg",
     type: "3D",

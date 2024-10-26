@@ -2,6 +2,8 @@ import React from 'react';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Checkbox } from '../components/ui/Checkbox';
+import LibraryManager from './LibraryManager';
+import { Shape } from '../Types';
 
 interface SettingsPanelProps {
     canvasSize: { width: number; height: number };
@@ -12,6 +14,8 @@ interface SettingsPanelProps {
     setSpreadsheetUrl: (url: string) => void;
     folderUrl: string;
     setFolderUrl: (url: string) => void;
+    activeLibrary: string;
+    onLibraryChange: (libraryId: string) => void;
     onLoadShapesFromGoogleDrive: () => void;
     onSaveDiagram: () => void;
     onLoadDiagram: () => void;
@@ -20,6 +24,7 @@ interface SettingsPanelProps {
     onDownloadSVG: () => void;
     showAttachmentPoints: boolean;
     setShowAttachmentPoints: (show: boolean) => void;
+    onUpdateShapes: (shapes: Shape[]) => void;  // Add this line
 }
 
 const SettingsPanel: React.FC<SettingsPanelProps> = ({
@@ -31,6 +36,8 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
     setSpreadsheetUrl,
     folderUrl,
     setFolderUrl,
+    activeLibrary,
+    onLibraryChange,
     onLoadShapesFromGoogleDrive,
     onSaveDiagram,
     onLoadDiagram,
@@ -39,6 +46,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
     onDownloadSVG,
     showAttachmentPoints,
     setShowAttachmentPoints,
+    onUpdateShapes,
 }) => (
     <div className="flex flex-col h-full p-4 overflow-y-auto">
         <div className="mb-6">
@@ -112,26 +120,11 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
         </div>
 
         <div className="mb-6">
-            <h3 className="text-lg font-semibold mb-2">Shapes Library Settings</h3>
-            <label className="block mb-2">Spreadsheet URL:</label>
-            <Input
-                type="text"
-                value={spreadsheetUrl}
-                onChange={(e) => setSpreadsheetUrl(e.target.value)}
-                className="w-full bg-gray-700 text-white p-2 rounded mb-2"
-                placeholder="https://docs.google.com/spreadsheets/d/..."
+            <LibraryManager
+                activeLibrary={activeLibrary}
+                onLibraryChange={onLibraryChange}
+                onUpdateShapes={onUpdateShapes}
             />
-            <label className="block my-2">Folder URL:</label>
-            <Input
-                type="text"
-                value={folderUrl}
-                onChange={(e) => setFolderUrl(e.target.value)}
-                className="w-full bg-gray-700 text-white p-2 rounded mb-2"
-                placeholder="https://drive.google.com/drive/folders/..."
-            />
-            <Button onClick={onLoadShapesFromGoogleDrive} className="w-full mt-2">
-                Load Shapes from Google Drive
-            </Button>
         </div>
     </div>
 );
