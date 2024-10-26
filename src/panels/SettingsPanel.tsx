@@ -10,13 +10,8 @@ interface SettingsPanelProps {
     onSetCanvasSize: (size: { width: number; height: number }) => void;
     fileName: string;
     setFileName: (name: string) => void;
-    spreadsheetUrl: string;
-    setSpreadsheetUrl: (url: string) => void;
-    folderUrl: string;
-    setFolderUrl: (url: string) => void;
     activeLibrary: string;
     onLibraryChange: (libraryId: string) => void;
-    onLoadShapesFromGoogleDrive: () => void;
     onSaveDiagram: () => void;
     onLoadDiagram: () => void;
     folderPath: string;
@@ -32,13 +27,8 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
     onSetCanvasSize,
     fileName,
     setFileName,
-    spreadsheetUrl,
-    setSpreadsheetUrl,
-    folderUrl,
-    setFolderUrl,
     activeLibrary,
     onLibraryChange,
-    onLoadShapesFromGoogleDrive,
     onSaveDiagram,
     onLoadDiagram,
     folderPath,

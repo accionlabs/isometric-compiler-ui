@@ -209,7 +209,9 @@ const App: React.FC = () => {
             const jsonFileName = getJsonFileName(fileName);
             const loadedData = await loadFileFromDrive(jsonFileName, folderPath);
             const loadedComponents = diagramComponentsLib.deserializeDiagramComponents(loadedData);
-            setDiagramComponents(loadedComponents);
+            const { svgContent, processedComponents } = diagramComponentsLib.compileDiagram(loadedComponents, canvasSize, svgLibrary, showAttachmentPoints);
+            setDiagramComponents(processedComponents);
+            setComposedSVG(svgContent);
             setErrorMessage(null);
 
             // Reset selection and update available attachment points
@@ -218,7 +220,7 @@ const App: React.FC = () => {
             console.error('Error loading diagram:', error);
             setErrorMessage('Failed to load diagram. Please check the file and folder path, then try again.');
         }
-    }, [fileName, folderPath, getJsonFileName]);
+    }, [fileName, folderPath, getJsonFileName, setDiagramComponents, setComposedSVG]);
 
     const handleSetCanvasSize = useCallback((newSize: { width: number; height: number }) => {
         setCanvasSize(newSize);

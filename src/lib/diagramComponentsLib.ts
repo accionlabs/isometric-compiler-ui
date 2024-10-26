@@ -1,4 +1,4 @@
-import { DiagramComponent, Point, AttachmentPoint, Shape } from '../Types';
+import { DiagramComponent, Point, AttachmentPoint, Shape, SerializedDiagramComponent } from '../Types';
 import { toggleAttachmentPoints } from './svgUtils';
 
 declare global {
@@ -196,7 +196,7 @@ export const add3DShape = (
             return { updatedComponents: diagramComponents, newComponent: null };
         }
 
-        const attachmentPoints = extractAttachmentPoints(svgElement);
+        //const attachmentPoints = extractAttachmentPoints(svgElement);
 
         if (attachmentPoint === 'none') {
             attachmentPoint = null;
@@ -208,7 +208,7 @@ export const add3DShape = (
             position: (attachmentPoint || position) as DiagramComponent['position'],
             relativeToId: diagramComponents.length === 0 ? null : selected3DShape,
             attached2DShapes: [],
-            attachmentPoints: attachmentPoints,
+            attachmentPoints: [],
             absolutePosition: { x: 0, y: 0 },
             cut: false,
         };
@@ -216,16 +216,16 @@ export const add3DShape = (
         let updatedComponents = diagramComponents;
         if (newComponent.relativeToId) {
             // if the relativeToId is set, then insert the component as the last child
-            const {dependentIds, maxIndex} = findDependentShapes(diagramComponents,newComponent.relativeToId);
+            const { dependentIds, maxIndex } = findDependentShapes(diagramComponents, newComponent.relativeToId);
             updatedComponents = [
-                ...diagramComponents.slice(0, maxIndex+1),
+                ...diagramComponents.slice(0, maxIndex + 1),
                 ...[newComponent],
-                ...diagramComponents.slice(maxIndex+1)
+                ...diagramComponents.slice(maxIndex + 1)
             ];
         } else {
             // insert at the end of diagramComponents
             updatedComponents = [...diagramComponents, newComponent];
-        }        
+        }
 
         return {
             updatedComponents,
@@ -264,7 +264,7 @@ export const remove3DShape = (
     id: string
 ): DiagramComponent[] => {
     console.log(`App: remove 3D shape ${id}`);
-    const {dependentIds, maxIndex} = findDependentShapes(diagramComponents, id);
+    const { dependentIds, maxIndex } = findDependentShapes(diagramComponents, id);
     return diagramComponents.filter(component => !dependentIds.has(component.id));
 };
 
@@ -294,7 +294,7 @@ export const cut3DShape = (
     }
     // cancel any previous cut objects
     let updatedComponents = cancelCut(diagramComponents, null);
-    const {dependentIds} = findDependentShapes(updatedComponents, id);
+    const { dependentIds } = findDependentShapes(updatedComponents, id);
     return updatedComponents.map(component =>
         dependentIds.has(component.id)
             ? { ...component, cut: true }
@@ -313,7 +313,7 @@ export const cancelCut = (
         }
     }
     if (id) {
-        const {dependentIds} = findDependentShapes(diagramComponents, id);
+        const { dependentIds } = findDependentShapes(diagramComponents, id);
         return diagramComponents.map(component =>
             dependentIds.has(component.id)
                 ? { ...component, cut: false }
@@ -367,7 +367,7 @@ export const pasteCut3DShapes = (
         }
     }
 
-    const {dependentIds} = findDependentShapes(diagramComponents, id);
+    const { dependentIds } = findDependentShapes(diagramComponents, id);
     let pastedComponent: DiagramComponent | null = null;
     let cutComponents: DiagramComponent[] = [];
     let nonCutComponents: DiagramComponent[] = [];
@@ -431,27 +431,13 @@ export const pasteCopied3DShapes = (
     });
 
     // Find all dependent objects of the target, so we can insert the pasted components at the end
-    const {dependentIds, maxIndex} = findDependentShapes(diagramComponents, targetId);
-
-    // Find the index of the last dependent object of the target
-    //let insertIndex = -1;
-    //for (let i = diagramComponents.length - 1; i >= 0; i--) {
-    //    if (dependentIds.has(diagramComponents[i].id)) {
-    //        insertIndex = i + 1;
-    //        break;
-    //    }
-    //}
-
-    // If no dependents were found, insert after the target
-    //if (insertIndex === -1) {
-    //    insertIndex = diagramComponents.findIndex(c => c.id === targetId) + 1;
-    //}
+    const { dependentIds, maxIndex } = findDependentShapes(diagramComponents, targetId);
 
     // Insert cut components after the last dependent of the target
     const updatedComponents = [
-        ...diagramComponents.slice(0, maxIndex+1),
+        ...diagramComponents.slice(0, maxIndex + 1),
         ...pastedComponents,
-        ...diagramComponents.slice(maxIndex+1)
+        ...diagramComponents.slice(maxIndex + 1)
     ];
 
     return {
@@ -486,7 +472,7 @@ export const compileDiagram = (
     svgLibrary: Shape[],
     showAttachmentPoints: boolean
 ): { svgContent: string; processedComponents: DiagramComponent[] } => {
-    console.log('Compiling diagram...');
+    console.log('Compiling diagram...', diagramComponents);
 
     let svgContent = '';
     const processedComponents: DiagramComponent[] = [];
@@ -500,6 +486,9 @@ export const compileDiagram = (
         }
 
         shape3DElement.setAttribute('id', component.id);
+
+        const attachmentPoints = extractAttachmentPoints(shape3DElement);
+        component.attachmentPoints = attachmentPoints;
 
         const referenceComponent = component.relativeToId
             ? processedComponents.find(c => c.id === component.relativeToId) || null
@@ -635,15 +624,27 @@ export const getClosestAttachmentPoint = (
 
 // Functions to Save and Load a composition in Diagram Components
 
-
 export const serializeDiagramComponents = (
     diagramComponents: DiagramComponent[]
 ): string => {
-    return JSON.stringify(diagramComponents, null, 2);
+    // Map each component to only include the necessary attributes
+    // SVG content is loaded from the active library when deserializing
+    const serializedComponents = diagramComponents.map(component => {
+        const serializedComponent: SerializedDiagramComponent = {
+            id: component.id,
+            shape: component.shape,
+            position: component.position,
+            relativeToId: component.relativeToId,
+            attached2DShapes: component.attached2DShapes
+        };
+        return serializedComponent;
+    });
+
+    return JSON.stringify(serializedComponents, null, 2);
 };
 
 export const deserializeDiagramComponents = (
-    serializedData: string
+    serializedData: string,
 ): DiagramComponent[] => {
     const parsedData = JSON.parse(serializedData);
 
@@ -651,35 +652,32 @@ export const deserializeDiagramComponents = (
         throw new Error('Invalid diagram components structure');
     }
 
-    return parsedData as DiagramComponent[];
+    // Reconstruct the full DiagramComponent structure
+    // SVG content for shapes will be loaded from the active library
+    return parsedData.map((component: SerializedDiagramComponent) => ({
+        ...component,
+        attachmentPoints: [],  // Will be computed by compileDiagram using library SVG
+        absolutePosition: { x: 0, y: 0 },  // Will be computed by compileDiagram
+        cut: false  // Reset cut state on load
+    }));
 };
 
-// Function to validate the structure of a loaded file
+// Update validation function to check only serialized attributes
 export const validateLoadedFile = (
     data: any
 ): boolean => {
     if (!Array.isArray(data)) return false;
 
-    // Check if diagramComponents have the correct structure
+    // Check if components have the required structure
     for (const component of data) {
         if (!component.id || !component.shape || !component.position) return false;
         if (!Array.isArray(component.attached2DShapes)) return false;
-        if (!Array.isArray(component.attachmentPoints)) return false;
 
-        // Validate attached2DShapes
+        // Validate attached2DShapes - only need name and attachedTo
+        // SVG content will be loaded from library
         for (const shape of component.attached2DShapes) {
             if (typeof shape.name !== 'string' || typeof shape.attachedTo !== 'string') return false;
         }
-
-        // Validate attachmentPoints
-        for (const point of component.attachmentPoints) {
-            if (typeof point.name !== 'string' || typeof point.x !== 'number' || typeof point.y !== 'number') return false;
-        }
-
-        // Validate absolutePosition
-        if (typeof component.absolutePosition !== 'object' ||
-            typeof component.absolutePosition.x !== 'number' ||
-            typeof component.absolutePosition.y !== 'number') return false;
     }
 
     return true;

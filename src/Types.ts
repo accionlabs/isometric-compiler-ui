@@ -40,6 +40,18 @@ export interface DiagramComponent {
     cut: boolean;
 }
 
+// Define a type for the serialized component structure
+export interface SerializedDiagramComponent {
+    id: string;
+    shape: string;  // Just the shape name - SVG content will be loaded from library
+    position: 'center' | 'top' | 'front-right' | 'front-left' | 'back-right' | 'back-left' | string;
+    relativeToId: string | null;
+    attached2DShapes: {  // Only stores references to shapes - SVG content from library
+        name: string;    // Shape name to look up in library
+        attachedTo: string;  // Attachment point identifier
+    }[];
+}
+
 export interface LibraryData {
     id: string;
     name: string;
