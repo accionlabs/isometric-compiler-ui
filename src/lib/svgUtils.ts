@@ -27,6 +27,43 @@ export const calculateBoundingBox = (svgElement: SVGSVGElement): { x: number, y:
     return null;
 };
 
+// Calculate bounding box from SVG string by temporarily rendering it
+export const calculateSVGBoundingBox = (svgString: string): { x: number, y: number, width: number, height: number } | null => {
+    try {
+        // Create an invisible container
+        const container = document.createElement('div');
+        container.style.position = 'absolute';
+        container.style.visibility = 'hidden';
+        container.style.pointerEvents = 'none';
+        document.body.appendChild(container);
+
+        // Parse and append the SVG
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(svgString, 'image/svg+xml');
+        
+        // Get the SVG element and verify it's the correct type
+        const svgElement = doc.querySelector('svg');
+        if (!(svgElement instanceof SVGSVGElement)) {
+            throw new Error('Invalid SVG string - could not get SVGSVGElement');
+        }
+
+        // Append to container
+        container.appendChild(svgElement);
+
+        // Calculate bounding box
+        const boundingBox = calculateBoundingBox(svgElement);
+
+        // Clean up
+        document.body.removeChild(container);
+
+        return boundingBox;
+
+    } catch (error) {
+        console.error('Error calculating SVG bounding box:', error);
+        return null;
+    }
+};
+
 export const cleanupSVG = (svgString: string): string => {
     // Remove sodipodi and inkscape elements
     svgString = svgString.replace(/<sodipodi:.*?>.*?<\/sodipodi:.*?>/g, '');
@@ -127,3 +164,5 @@ export const toggleAttachmentPoints = (svgElement: SVGElement, show: boolean): S
 
     return svgElement;
 };
+
+
