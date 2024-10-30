@@ -228,6 +228,7 @@ export const loadShapesFromGoogleDrive = async (
                     type: shapeData.type,
                     attachTo: shapeData.attachTo,
                     svgContent: svgContent,
+                    svgFile:shapeData.svgFile,
                 });
             } else {
                 console.warn(`SVG file not found: ${shapeData.svgFile}`);
