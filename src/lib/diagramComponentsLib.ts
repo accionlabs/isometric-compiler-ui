@@ -85,8 +85,11 @@ export const getAvailableAttachmentPoints = (
 };
 
 export const getAttachmentPoint = (component: DiagramComponent, pointName: string): Point | null => {
-    const point = component.attachmentPoints.find(p => p.name === pointName);
-    return point ? { x: point.x, y: point.y } : null;
+    if (component && component.attachmentPoints) {
+        const point = component.attachmentPoints.find(p => p.name === pointName);
+        return point ? { x: point.x, y: point.y } : null;    
+    }
+    return null;
 };
 
 export const calculateAbsolutePosition = (
@@ -151,9 +154,9 @@ export const deepCloneComponentWithDependents = (
             ...comp,
             id: newId,
             relativeToId: comp.relativeToId ? idMap.get(comp.relativeToId) || comp.relativeToId : null,
-            attached2DShapes: comp.attached2DShapes.map(shape => ({ ...shape })),
-            attachmentPoints: comp.attachmentPoints.map(point => ({ ...point })),
-            absolutePosition: { ...comp.absolutePosition },
+            attached2DShapes: comp.attached2DShapes?comp.attached2DShapes.map(shape => ({ ...shape })) : [],
+            attachmentPoints: comp.attachmentPoints?comp.attachmentPoints.map(point => ({ ...point })) : [],
+            absolutePosition: comp.absolutePosition?{ ...comp.absolutePosition } : {x:0,y:0},
         };
 
         clonedComponents.push(clonedComponent);
