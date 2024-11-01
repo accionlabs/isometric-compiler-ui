@@ -22,6 +22,47 @@ interface HandlePosition {
     pointName: string;
 }
 
+interface SVGLayout {
+    viewBox: {
+        x: number;
+        y: number;
+        width: number;
+        height: number;
+    };
+    scale: number;
+    offset: {
+        x: number;
+        y: number;
+    };
+}
+
+const styles = {
+    container: {
+        width: '100%',
+        height: '100%',
+        minHeight: '200px',
+        minWidth: '200px',
+        visibility: 'visible' as const,
+        position: 'relative' as const
+    },
+    svgWrapper: {
+        position: 'absolute' as const,
+        width: '100%',
+        height: '100%',
+        zIndex: -1,
+        pointerEvents: 'auto' as const,
+        visibility: 'visible' as const
+    },
+    handlePoint: {
+        position: 'absolute' as const,
+        width: 8,
+        height: 8,
+        background: '#4F46E5',
+        border: '2px solid white',
+        zIndex: 1
+    }
+} as const;
+
 const SVGNode = ({ data }: NodeProps<SVGNodeData>) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const svgRef = useRef<SVGSVGElement | null>(null);
@@ -29,7 +70,6 @@ const SVGNode = ({ data }: NodeProps<SVGNodeData>) => {
     const [isReady, setIsReady] = useState(false);
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
 
-    // Store SVG layout information
     const [viewBox, setViewBox] = useState({
         x: 0,
         y: 0,
@@ -39,30 +79,24 @@ const SVGNode = ({ data }: NodeProps<SVGNodeData>) => {
     const [scale, setScale] = useState(1);
     const [offset, setOffset] = useState({ x: 0, y: 0 });
 
-    // Get viewport transform from React Flow store
     const transform = useStore((state: ReactFlowState) => state.transform);
     const zoom = transform[2];
 
-    // Calculate SVG layout parameters based on current container and zoom
-    const calculateSvgLayout = useCallback(() => {
-        if (!containerRef.current || !svgRef.current) return;
+    const calculateSvgLayout = useCallback((): SVGLayout | null => {
+        if (!containerRef.current || !svgRef.current) return null;
 
-        // Get the current SVG bounding box
         const boundingBox = svgRef.current.getBBox();
         const newViewBox = calculateViewBox(boundingBox, DEFAULT_MARGIN);
 
-        // Get the container size (accounting for zoom)
         const container = containerRef.current.getBoundingClientRect();
         const containerWidth = container.width / zoom;
         const containerHeight = container.height / zoom;
 
-        // Calculate new scale to fit the container
         const newScale = Math.min(
             containerWidth / newViewBox.width,
             containerHeight / newViewBox.height
         );
 
-        // Calculate new offset to center the content
         const newOffset = {
             x: (containerWidth - newViewBox.width * newScale) / 2,
             y: (containerHeight - newViewBox.height * newScale) / 2
@@ -71,17 +105,7 @@ const SVGNode = ({ data }: NodeProps<SVGNodeData>) => {
         return { viewBox: newViewBox, scale: newScale, offset: newOffset };
     }, [zoom]);
 
-    // Update layout when container size or zoom changes
-    useEffect(() => {
-        const layout = calculateSvgLayout();
-        if (layout) {
-            setViewBox(layout.viewBox);
-            setScale(layout.scale);
-            setOffset(layout.offset);
-        }
-    }, [dimensions, zoom, calculateSvgLayout]);
-
-    // Measure container size
+    // Monitor container size
     useEffect(() => {
         if (!containerRef.current) return;
 
@@ -99,7 +123,7 @@ const SVGNode = ({ data }: NodeProps<SVGNodeData>) => {
         return () => observer.disconnect();
     }, []);
 
-    // Initial SVG render
+    // Initialize SVG content
     useEffect(() => {
         if (!containerRef.current || !dimensions.width || !dimensions.height) return;
 
@@ -116,7 +140,6 @@ const SVGNode = ({ data }: NodeProps<SVGNodeData>) => {
             svgWrapper.appendChild(svg);
             svgRef.current = svg;
 
-            // Initial layout calculation
             const layout = calculateSvgLayout();
             if (layout) {
                 svg.setAttribute('viewBox',
@@ -125,56 +148,72 @@ const SVGNode = ({ data }: NodeProps<SVGNodeData>) => {
                 setViewBox(layout.viewBox);
                 setScale(layout.scale);
                 setOffset(layout.offset);
+                
+                requestAnimationFrame(() => setIsReady(true));
             }
-
-            requestAnimationFrame(() => setIsReady(true));
         }
 
         return () => {
-            setIsReady(false);
             if (svgWrapper) {
                 svgWrapper.innerHTML = '';
             }
+            svgRef.current = null;
+            setIsReady(false);
         };
     }, [data.svgContent, dimensions]);
 
-    // Calculate handle positions
+    // Update layout when dimensions or zoom changes
     useEffect(() => {
-        if (!isReady || !svgRef.current || !containerRef.current) return;
+        if (svgRef.current) {
+            const layout = calculateSvgLayout();
+            if (layout) {
+                svgRef.current.setAttribute('viewBox',
+                    `${layout.viewBox.x} ${layout.viewBox.y} ${layout.viewBox.width} ${layout.viewBox.height}`
+                );
+                setViewBox(layout.viewBox);
+                setScale(layout.scale);
+                setOffset(layout.offset);
+            }
+        }
+    }, [dimensions, zoom, calculateSvgLayout]);
 
-        const globalPoints = extractGlobalAttachmentPoints(data.diagramComponents);
-        const newHandles: HandlePosition[] = [];
+    // Calculate handle positions
+useEffect(() => {
+    if (!isReady || !svgRef.current || !containerRef.current) return;
 
-        globalPoints.forEach(component => {
-            component.attachmentPoints.forEach(point => {
-                if (['attach-front-left', 'attach-front-right'].includes(point.name)) {
-                    // Convert from SVG coordinates to container space
-                    const x = ((point.x - viewBox.x) * scale + offset.x);
-                    const y = ((point.y - viewBox.y) * scale + offset.y);
+    const globalPoints = extractGlobalAttachmentPoints(data.diagramComponents);
+    const newHandles: HandlePosition[] = [];
 
-                    newHandles.push({
-                        id: `${component.componentId}-${point.name}`,
-                        position: Position.Left,
-                        x,
-                        y,
-                        componentId: component.componentId,
-                        pointName: point.name
-                    });
-                }
-            });
+    globalPoints.forEach(component => {
+        component.attachmentPoints.forEach(point => {
+            if (['attach-front-left', 'attach-front-right'].includes(point.name)) {
+                // Convert from SVG coordinates to container space
+                const x = ((point.x - viewBox.x) * scale + offset.x);
+                const y = ((point.y - viewBox.y) * scale + offset.y);
+
+                // Create handle ID without extra prefix - React Flow adds needed prefixes
+                const handleId = `${component.componentId}-${point.name}`;
+
+                newHandles.push({
+                    id: handleId,
+                    position: Position.Left,
+                    x,
+                    y,
+                    componentId: component.componentId,
+                    pointName: point.name
+                });
+            }
         });
+    });
 
-        setHandles(newHandles);
-    }, [isReady, data.diagramComponents, scale, offset, viewBox]);
+    setHandles(newHandles);
+}, [isReady, data.diagramComponents, scale, offset, viewBox]);
 
-    // Convert container coordinates to SVG coordinates
-    const containerToSvgCoords = useCallback((containerX: number, containerY: number): Point => {
-        const svgX = (containerX - offset.x) / scale + viewBox.x;
-        const svgY = (containerY - offset.y) / scale + viewBox.y;
-        return { x: svgX, y: svgY };
-    }, [viewBox, scale, offset]);
+    const containerToSvgCoords = useCallback((containerX: number, containerY: number): Point => ({
+        x: (containerX - offset.x) / scale + viewBox.x,
+        y: (containerY - offset.y) / scale + viewBox.y
+    }), [viewBox, scale, offset]);
 
-    // Handle click events on the SVG
     const handleClick = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
         event.stopPropagation();
 
@@ -189,15 +228,12 @@ const SVGNode = ({ data }: NodeProps<SVGNodeData>) => {
             data.onSelect3DShape(shapeId);
 
             if (component) {
-                // Get click coordinates relative to container
                 const containerRect = containerRef.current.getBoundingClientRect();
                 const containerX = (event.clientX - containerRect.left) / zoom;
                 const containerY = (event.clientY - containerRect.top) / zoom;
 
-                // Convert to SVG coordinates
                 const svgCoords = containerToSvgCoords(containerX, containerY);
 
-                // Get closest attachment point
                 const { position, attachmentPoint } = getClosestAttachmentPoint(
                     svgCoords.x - component.absolutePosition.x,
                     svgCoords.y - component.absolutePosition.y,
@@ -208,18 +244,15 @@ const SVGNode = ({ data }: NodeProps<SVGNodeData>) => {
                 data.setSelectedAttachmentPoint(attachmentPoint);
             }
 
-            // Update highlighting
             svgRef.current.querySelectorAll('.highlighted-shape').forEach(el => {
                 el.classList.remove('highlighted-shape');
             });
             shape3D.classList.add('highlighted-shape');
         } else {
-            // Clear selection
             data.onSelect3DShape(null);
             data.setSelectedPosition('top');
             data.setSelectedAttachmentPoint('none');
 
-            // Remove highlighting
             svgRef.current.querySelectorAll('.highlighted-shape').forEach(el => {
                 el.classList.remove('highlighted-shape');
             });
@@ -227,36 +260,21 @@ const SVGNode = ({ data }: NodeProps<SVGNodeData>) => {
     }, [data, containerToSvgCoords, zoom]);
 
     return (
-        <div
-            className="react-flow-svg-node"
-            ref={containerRef}
-            style={{ width: '100%', height: '100%', minHeight: '200px', minWidth: '200px' }}
-        >
-            <div
-                className="svg-wrapper"
-                onClick={handleClick}
-                style={{
-                    position: 'absolute',
-                    width: '100%',
-                    height: '100%',
-                    zIndex: -1,
-                    pointerEvents: 'auto'
-                }}
-            />
-
+        <div className="react-flow-svg-node" ref={containerRef} style={styles.container}>
+            <div className="svg-wrapper" onClick={handleClick} style={styles.svgWrapper} />
+            
             {handles.map((handle) => (
                 <Handle
                     key={handle.id}
                     type="target"
                     position={handle.position}
-                    id={handle.id}
+                    id={`svg-main-${handle.id}`}
                     className="handle-point"
                     style={{
-                        position: 'absolute',
+                        ...styles.handlePoint,
                         left: `${handle.x}px`,
                         top: `${handle.y}px`,
-                        transform: 'translate(-50%, -50%)',
-                        zIndex: 10,
+                        transform: 'translate(-50%, -50%)'
                     }}
                 />
             ))}
@@ -268,6 +286,7 @@ const SVGNode = ({ data }: NodeProps<SVGNodeData>) => {
                         display: flex;
                         align-items: center;
                         justify-content: center;
+                        visibility: visible !important;
                     }
                     .svg-wrapper {
                         position: absolute;
@@ -275,21 +294,23 @@ const SVGNode = ({ data }: NodeProps<SVGNodeData>) => {
                         left: 0;
                         right: 0;
                         bottom: 0;
+                        visibility: visible !important;
                     }
                     .svg-content {
                         width: 100%;
                         height: 100%;
                         object-fit: contain;
-                    }
-                    .handle-point {
-                        width: 8px;
-                        height: 8px;
-                        background: #4F46E5;
-                        border: 2px solid white;
+                        visibility: visible !important;
                     }
                     .highlighted-shape {
                         outline: 2px dashed #007bff;
                         outline-offset: 2px;
+                    }
+                    .react-flow__node {
+                        visibility: visible !important;
+                    }
+                    .react-flow__handle {
+                        visibility: visible !important;
                     }
                 `}
             </style>
