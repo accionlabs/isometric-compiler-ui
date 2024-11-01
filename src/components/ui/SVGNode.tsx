@@ -1,21 +1,13 @@
 import React, { useRef, useCallback, useEffect, useState } from 'react';
 import { Handle, Position, NodeProps, useStore, ReactFlowState } from 'reactflow';
-import { Point, CanvasSize, DiagramComponent, GlobalAttachmentPoint, TransformationContext, ViewBox, AttachmentPoint } from '@/Types';
-import { getClosestAttachmentPoint } from '@/lib/diagramComponentsLib';
-import {
-    calculateSVGBoundingBox,
-    calculateScale,
-    calculateViewBox,
-    DEFAULT_MARGIN
-} from '@/lib/svgUtils';
+import { DiagramComponent, Point } from '@/Types';
+import { getClosestAttachmentPoint, extractGlobalAttachmentPoints } from '@/lib/diagramComponentsLib';
+import { calculateSVGBoundingBox, calculateViewBox, DEFAULT_MARGIN } from '@/lib/svgUtils';
 
 interface SVGNodeData {
     svgContent: string;
-    attachmentPoints: GlobalAttachmentPoint[];
     diagramComponents: DiagramComponent[];
-    canvasSize: CanvasSize;
     selected3DShape: string | null;
-    transformationContext: TransformationContext;
     onSelect3DShape: (id: string | null) => void;
     setSelectedPosition: (position: string) => void;
     setSelectedAttachmentPoint: (point: string) => void;
@@ -36,74 +28,58 @@ const SVGNode = ({ data }: NodeProps<SVGNodeData>) => {
     const [handles, setHandles] = useState<HandlePosition[]>([]);
     const [isReady, setIsReady] = useState(false);
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
-    const [svgScale, setSVGScale] = useState<number>(1.0);
-    const [svgViewBox, setSVGViewBox] = useState<ViewBox>({
+
+    // Store SVG layout information
+    const [viewBox, setViewBox] = useState({
         x: 0,
         y: 0,
         width: 1000,
         height: 1000
     });
+    const [scale, setScale] = useState(1);
+    const [offset, setOffset] = useState({ x: 0, y: 0 });
 
-    // Get viewport zoom from React Flow store
-    const zoom = useStore((store: ReactFlowState) => store.transform[2]);
+    // Get viewport transform from React Flow store
+    const transform = useStore((state: ReactFlowState) => state.transform);
+    const zoom = transform[2];
 
-    // Function to adjust coordinates based on viewBox
-    const adjustToViewBox = useCallback((point: { x: number, y: number }) => {
-        return {
-            x: (point.x - svgViewBox.x) / svgScale,
-            y: (point.y - svgViewBox.y) / svgScale
-        };
-    }, [dimensions]);
+    // Calculate SVG layout parameters based on current container and zoom
+    const calculateSvgLayout = useCallback(() => {
+        if (!containerRef.current || !svgRef.current) return;
 
-    // Function to revert coordinates from viewBox-adjusted space
-    const revertFromViewBox = useCallback((point: { x: number, y: number }) => {
-        return {
-            x: (point.x * svgScale) + svgViewBox.x,
-            y: (point.y * svgScale) + svgViewBox.y
-        };
-    }, [dimensions]);
+        // Get the current SVG bounding box
+        const boundingBox = svgRef.current.getBBox();
+        const newViewBox = calculateViewBox(boundingBox, DEFAULT_MARGIN);
 
-    // Function to translate SVG coordinates to container-relative coordinates
-    const svgToContainer = useCallback((point: { x: number, y: number }) => {
-        if (!containerRef.current || !svgRef.current || !svgViewBox) return null;
+        // Get the container size (accounting for zoom)
+        const container = containerRef.current.getBoundingClientRect();
+        const containerWidth = container.width / zoom;
+        const containerHeight = container.height / zoom;
 
-        // First adjust the coordinates based on viewBox
-        const adjustedPoint = adjustToViewBox(point);
-
-        // Get container's bounding rect for relative positioning
-        const containerRect = containerRef.current.getBoundingClientRect();
-        const scale = Math.min(
-            (containerRect.width / svgViewBox.width),
-            (containerRect.height / svgViewBox.height)
+        // Calculate new scale to fit the container
+        const newScale = Math.min(
+            containerWidth / newViewBox.width,
+            containerHeight / newViewBox.height
         );
 
-        // Return container-relative coordinates
-        return {
-            x: adjustedPoint.x * scale - containerRect.x,
-            y: adjustedPoint.y * scale - containerRect.y
+        // Calculate new offset to center the content
+        const newOffset = {
+            x: (containerWidth - newViewBox.width * newScale) / 2,
+            y: (containerHeight - newViewBox.height * newScale) / 2
         };
-    }, [adjustToViewBox, svgViewBox, svgScale]);
 
-    // Function to translate container-relative coordinates to SVG coordinates
-    const containerToSvg = useCallback((x: number, y: number) => {
-        if (!containerRef.current || !svgRef.current || !svgViewBox) return null;
+        return { viewBox: newViewBox, scale: newScale, offset: newOffset };
+    }, [zoom]);
 
-        // First get the point in viewBox-adjusted coordinates
-        const point = { x, y };
-
-        // Get container's bounding rect for relative positioning
-        const containerRect = containerRef.current.getBoundingClientRect();
-        const scale = Math.min(
-            (containerRect.width / svgViewBox.width),
-            (containerRect.height / svgViewBox.height)
-        );
-        const svgPoint = {
-            x: point.x / scale + containerRect.x,
-            y: point.y / scale + containerRect.y
-        };
-        // Then revert the viewBox transformation
-        return revertFromViewBox(svgPoint);
-    }, [revertFromViewBox, svgViewBox, svgScale]);
+    // Update layout when container size or zoom changes
+    useEffect(() => {
+        const layout = calculateSvgLayout();
+        if (layout) {
+            setViewBox(layout.viewBox);
+            setScale(layout.scale);
+            setOffset(layout.offset);
+        }
+    }, [dimensions, zoom, calculateSvgLayout]);
 
     // Measure container size
     useEffect(() => {
@@ -127,7 +103,6 @@ const SVGNode = ({ data }: NodeProps<SVGNodeData>) => {
     useEffect(() => {
         if (!containerRef.current || !dimensions.width || !dimensions.height) return;
 
-        // Create SVG element
         const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         svg.innerHTML = data.svgContent;
         svg.setAttribute('width', '100%');
@@ -140,6 +115,18 @@ const SVGNode = ({ data }: NodeProps<SVGNodeData>) => {
             svgWrapper.innerHTML = '';
             svgWrapper.appendChild(svg);
             svgRef.current = svg;
+
+            // Initial layout calculation
+            const layout = calculateSvgLayout();
+            if (layout) {
+                svg.setAttribute('viewBox',
+                    `${layout.viewBox.x} ${layout.viewBox.y} ${layout.viewBox.width} ${layout.viewBox.height}`
+                );
+                setViewBox(layout.viewBox);
+                setScale(layout.scale);
+                setOffset(layout.offset);
+            }
+
             requestAnimationFrame(() => setIsReady(true));
         }
 
@@ -151,114 +138,74 @@ const SVGNode = ({ data }: NodeProps<SVGNodeData>) => {
         };
     }, [data.svgContent, dimensions]);
 
-    // Calculate handle positions using getBoundingClientRect
+    // Calculate handle positions
     useEffect(() => {
         if (!isReady || !svgRef.current || !containerRef.current) return;
 
-        // calculate SVG Bounding Box
-        //const boundingBox = calculateSVGBoundingBox(data.svgContent, data.canvasSize);
-        const boundingBox = svgRef.current.getBBox();
-        const viewBox = calculateViewBox(boundingBox, DEFAULT_MARGIN);
+        const globalPoints = extractGlobalAttachmentPoints(data.diagramComponents);
+        const newHandles: HandlePosition[] = [];
 
-        const { x, y, width, height } = viewBox;
-        svgRef.current.setAttribute('viewBox', `${x} ${y} ${width} ${height}`);
-
-        const container = containerRef.current.getBoundingClientRect();
-        console.log('container:', container);
-
-        const svg = svgRef.current.getBoundingClientRect();
-        console.log('svg:', svg);
-
-        // convert attachment point coordinates from svg to container
-        const adjustMadi = 1; // arbitrary factor to get the points to align... no idea why its required
-        const scale = Math.min(
-            Math.round(container.width) / Math.round(viewBox.width),
-            Math.round(container.height) / Math.round(viewBox.height)
-        ) * adjustMadi;
-
-        // svg is vertically and horizontally centered in container... calculate offset
-        const offset = {
-            x: Math.round((container.width - viewBox.width * scale) / 2),
-            y: Math.round((container.height - viewBox.height * scale) / 2)
-        }
-
-        console.log('scale:', scale, 'zoom', zoom, 'viewBox', viewBox, 'offset:', offset);
-        const adjustedPoints:{
-            name: string;
-            id: string;
-            componentId:string;
-            x: number;
-            y: number;
-        }[] = [];
-
-        data.attachmentPoints.forEach(component => {
+        globalPoints.forEach(component => {
             component.attachmentPoints.forEach(point => {
                 if (['attach-front-left', 'attach-front-right'].includes(point.name)) {
-                    console.log('attachment point:',point);
-                    adjustedPoints.push({
-                        name: point.name,
+                    // Convert from SVG coordinates to container space
+                    const x = ((point.x - viewBox.x) * scale + offset.x);
+                    const y = ((point.y - viewBox.y) * scale + offset.y);
+
+                    newHandles.push({
                         id: `${component.componentId}-${point.name}`,
+                        position: Position.Left,
+                        x,
+                        y,
                         componentId: component.componentId,
-                        x: Math.round((((point.x - viewBox.x) * scale) + offset.x) / zoom),
-                        y: Math.round((((point.y - viewBox.y) * scale) + offset.y) / zoom),
-                    })
+                        pointName: point.name
+                    });
                 }
-            })    
-        })
+            });
+        });
 
-        console.log('adjusted points:', adjustedPoints);
-
-        const newHandles: HandlePosition[] = adjustedPoints.map(point => {
-            return {
-                id: point.id,
-                position: Position.Left,
-                x: Math.round(point.x),
-                y: Math.round(point.y),
-                componentId: point.componentId,
-                pointName: point.name
-            };
-        })
-
-        console.log('Calculated handle positions:', newHandles);
         setHandles(newHandles);
-    }, [isReady]);
+    }, [isReady, data.diagramComponents, scale, offset, viewBox]);
 
+    // Convert container coordinates to SVG coordinates
+    const containerToSvgCoords = useCallback((containerX: number, containerY: number): Point => {
+        const svgX = (containerX - offset.x) / scale + viewBox.x;
+        const svgY = (containerY - offset.y) / scale + viewBox.y;
+        return { x: svgX, y: svgY };
+    }, [viewBox, scale, offset]);
+
+    // Handle click events on the SVG
     const handleClick = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
         event.stopPropagation();
 
-        if (!svgRef.current || !containerRef.current || !data.transformationContext?.viewBox) return;
+        if (!svgRef.current || !containerRef.current) return;
 
         const target = event.target as SVGElement;
         const shape3D = target.closest('[id^="shape-"]');
 
-
         if (shape3D) {
             const shapeId = shape3D.id;
+            const component = data.diagramComponents.find(c => c.id === shapeId);
             data.onSelect3DShape(shapeId);
 
-            console.log(`SVG Node click ${shapeId} at ${event.clientX}, ${event.clientY}`);
+            if (component) {
+                // Get click coordinates relative to container
+                const containerRect = containerRef.current.getBoundingClientRect();
+                const containerX = (event.clientX - containerRect.left) / zoom;
+                const containerY = (event.clientY - containerRect.top) / zoom;
 
-            // Get container-relative coordinates
-            const containerRect = containerRef.current.getBoundingClientRect();
-            const x = event.clientX;
-            const y = event.clientY;
+                // Convert to SVG coordinates
+                const svgCoords = containerToSvgCoords(containerX, containerY);
 
-            // Use existing coordinate transformation
-            const svgPoint = containerToSvg(x, y);
+                // Get closest attachment point
+                const { position, attachmentPoint } = getClosestAttachmentPoint(
+                    svgCoords.x - component.absolutePosition.x,
+                    svgCoords.y - component.absolutePosition.y,
+                    component
+                );
 
-            if (svgPoint) {
-                console.log(` -> container ${x},${y} -> svg ${svgPoint.x},${svgPoint.y}`);
-                const component = data.diagramComponents.find(c => c.id === shapeId);
-                if (component) {
-                    const { position, attachmentPoint } = getClosestAttachmentPoint(
-                        svgPoint.x - component.absolutePosition.x,
-                        svgPoint.y - component.absolutePosition.y,
-                        component
-                    );
-                    console.log(` --> closest point ${position} ${attachmentPoint}`);
-                    data.setSelectedPosition(position);
-                    data.setSelectedAttachmentPoint(attachmentPoint);
-                }
+                data.setSelectedPosition(position);
+                data.setSelectedAttachmentPoint(attachmentPoint);
             }
 
             // Update highlighting
@@ -267,6 +214,7 @@ const SVGNode = ({ data }: NodeProps<SVGNodeData>) => {
             });
             shape3D.classList.add('highlighted-shape');
         } else {
+            // Clear selection
             data.onSelect3DShape(null);
             data.setSelectedPosition('top');
             data.setSelectedAttachmentPoint('none');
@@ -276,7 +224,7 @@ const SVGNode = ({ data }: NodeProps<SVGNodeData>) => {
                 el.classList.remove('highlighted-shape');
             });
         }
-    }, [data, data.selected3DShape, containerToSvg, data.transformationContext]);
+    }, [data, containerToSvgCoords, zoom]);
 
     return (
         <div
@@ -292,7 +240,7 @@ const SVGNode = ({ data }: NodeProps<SVGNodeData>) => {
                     width: '100%',
                     height: '100%',
                     zIndex: -1,
-                    pointerEvents: 'auto' // Important: Make sure clicks are captured
+                    pointerEvents: 'auto'
                 }}
             />
 
@@ -307,7 +255,7 @@ const SVGNode = ({ data }: NodeProps<SVGNodeData>) => {
                         position: 'absolute',
                         left: `${handle.x}px`,
                         top: `${handle.y}px`,
-                        transform: 'translate(-50%,-50%)',
+                        transform: 'translate(-50%, -50%)',
                         zIndex: 10,
                     }}
                 />
