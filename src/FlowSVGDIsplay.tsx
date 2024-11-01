@@ -1,31 +1,38 @@
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import React, {
+    useState,
+    useCallback,
+    useEffect,
+    useMemo,
+    MouseEvent as ReactMouseEvent
+} from 'react';
 import ReactFlow, {
+    ReactFlowProvider,
     Node,
     Edge,
-    Background,
-    Controls,
-    ReactFlowProvider,
-    Position,
-    Handle,
-    NodeProps,
-    EdgeTypes,
-    EdgeProps,
-    EdgeMouseHandler,
     Connection,
     OnNodesChange,
     OnEdgesChange,
     OnConnect,
     NodeChange,
     EdgeChange,
+    Controls,
+    Background,
     applyNodeChanges,
-    applyEdgeChanges,
-    getBezierPath,
+    applyEdgeChanges
 } from 'reactflow';
-import SVGNode from './components/ui/SVGNode';
 import 'reactflow/dist/style.css';
-import { DiagramComponent } from './Types';
-import { getClosestAttachmentPoint } from './lib/diagramComponentsLib';
 
+import { DiagramComponent, CanvasSize, TransformationContext, GlobalAttachmentPoint } from '@/Types';
+import SVGNode from '@/components/ui/SVGNode';
+import LabelNode from '@/components/ui/LabelNode';
+import CustomEdge from '@/components/ui/CustomEdge';
+import {
+    calculateSVGBoundingBox,
+    calculateScale,
+    calculateViewBox,
+    DEFAULT_MARGIN
+} from '@/lib/svgUtils';
+import { extractGlobalAttachmentPoints } from './lib/diagramComponentsLib';
 
 interface FlowSVGDisplayProps {
     svgContent: string;
@@ -39,235 +46,65 @@ interface FlowSVGDisplayProps {
     setSelectedAttachmentPoint: (point: string) => void;
 }
 
-interface ConnectionPoint {
-    id: string;
-    position: Position;
-    x: number;
-    y: number;
-}
-
-interface SVGNodeData {
-    svgContent: string;
-    connectionPoints: ConnectionPoint[];
-    attachmentPoints: Array<{
-        id: string;
-        x: number;
-        y: number;
-        side: 'left' | 'right';
-    }>;
-}
-
-interface LabelNodeData {
-    label: string;
-}
-
-// Custom Edge with Delete Button
-const CustomEdge = ({
-    id,
-    sourceX,
-    sourceY,
-    targetX,
-    targetY,
-    sourcePosition,
-    targetPosition,
-    style = {},
-    markerEnd,
-    data,
-}: EdgeProps) => {
-    const [edgePath, labelX, labelY] = getBezierPath({
-        sourceX,
-        sourceY,
-        sourcePosition,
-        targetX,
-        targetY,
-        targetPosition,
-    });
-
-    return (
-        <>
-            <path
-                id={id}
-                style={{
-                    ...style,
-                    strokeWidth: 1.5,
-                    stroke: '#555',
-                }}
-                className="react-flow__edge-path"
-                d={edgePath}
-                markerEnd={markerEnd}
-            />
-            <g
-                className="edge-controls"
-                transform={`translate(${labelX - 12} ${labelY - 12})`}
-                style={{ opacity: 0, transition: 'opacity 0.2s' }}
-            >
-                <circle r="12" fill="#ffffff" />
-                <path
-                    d="M -6 -6 L 6 6 M -6 6 L 6 -6"
-                    stroke="#ff0000"
-                    strokeWidth="2"
-                    style={{ cursor: 'pointer' }}
-                />
-            </g>
-        </>
-    );
-};
-
-const edgeTypes: EdgeTypes = {
-    custom: CustomEdge,
-};
-
-type CustomNode = Node<SVGNodeData | LabelNodeData>;
-
-const MARGIN = 10;
-
-// Modified Label Node with both left and right handles
-const LabelNode = ({ data }: NodeProps<LabelNodeData>) => (
-    <div className="px-4 py-2 rounded bg-gray-800 text-white text-sm border border-gray-600 shadow-lg">
-        <Handle
-            type="source"
-            position={Position.Left}
-            id="left"
-            style={{ background: '#555', width: '8px', height: '8px' }}
-        />
-        {data.label}
-        <Handle
-            type="source"
-            position={Position.Right}
-            id="right"
-            style={{ background: '#555', width: '8px', height: '8px' }}
-        />
-    </div>
-);
-
 const nodeTypes = {
     svgNode: SVGNode,
     label: LabelNode
 };
 
+const edgeTypes = {
+    custom: CustomEdge
+};
+
+// Helper function to create initial nodes
 const createInitialNodes = (
     svgContent: string,
-    connectionPoints: ConnectionPoint[],
-    canvasSize: { width: number; height: number },
+    connectionPoints: GlobalAttachmentPoint[],
+    transformationContext: TransformationContext,
     selected3DShape: string | null,
     diagramComponents: DiagramComponent[],
+    canvasSize: CanvasSize,
     isCopied: boolean,
     onSelect3DShape: (id: string | null) => void,
     setSelectedPosition: (position: string) => void,
     setSelectedAttachmentPoint: (point: string) => void
-): CustomNode[] => [
-        {
-            id: 'svg-main',
-            type: 'svgNode',
-            position: { x: canvasSize.width / 2, y: canvasSize.height / 2 },
-            data: {
-                svgContent,
-                connectionPoints,
-                attachmentPoints: connectionPoints.map(point => ({
-                    id: point.id,
-                    x: point.x,
-                    y: point.y,
-                    side: point.position === Position.Left ? 'left' : 'right'
-                })),
-                selected3DShape,
-                diagramComponents,
-                isCopied,
-                onSelect3DShape,
-                setSelectedPosition,
-                setSelectedAttachmentPoint
-            },
-            style: {
-                width: canvasSize.width,
-                height: canvasSize.height,
-            },
-            draggable: false,
-            selectable: false,
-        } as Node<SVGNodeData>,
-        {
-            id: 'label-1',
-            type: 'label',
-            position: {
-                x: 0,
-                y: (canvasSize.height / 2) - 20
-            },
-            data: { label: 'Microservice Component' },
-            draggable: true
-        } as Node<LabelNodeData>,
-        {
-            id: 'label-2',
-            type: 'label',
-            position: {
-                x: 0,
-                y: (canvasSize.height / 2) + 20
-            },
-            data: { label: 'Database Storage' },
-            draggable: true
-        } as Node<LabelNodeData>
-    ];
+): Node[] => {
+    // Create main SVG node
+    const mainNode: Node = {
+        id: 'svg-main',
+        type: 'svgNode',
+        position: { x: 0, y: 0 },
+        data: {
+            svgContent,
+            attachmentPoints: connectionPoints,
+            diagramComponents,
+            selected3DShape,
+            transformationContext,
+            onSelect3DShape,
+            setSelectedPosition,
+            setSelectedAttachmentPoint
+        },
+        draggable: false,
+        selectable: false,
+        style: { zIndex: 0 }
+    };
 
-const createInitialEdges = (): Edge[] => [];
+    // Create label nodes for each shape if needed
+    const labelNodes: Node[] = diagramComponents.map((component, index) => ({
+        id: `label-${component.id}`,
+        type: 'label',
+        position: { x: 100 + (index * 50), y: 100 + (index * 30) },
+        data: {
+            label: component.shape,
+            handleType: 'source'
+        },
+        draggable: true,
+        style: { zIndex: 5 }
+    }));
 
-const createConnectionPoints = (diagramComponents: DiagramComponent[], canvasSize: { width: number; height: number }): ConnectionPoint[] => {
-    const points: ConnectionPoint[] = [];
-    diagramComponents.forEach(component => {
-        component.attachmentPoints.forEach((ap, index) => {
-            // Determine side based on x coordinate relative to component center
-            const side = ap.x < component.absolutePosition.x + canvasSize.width / 4 ? 'left' : 'right';
-            points.push({
-                id: `${component.id}-${ap.name}-${index}`, // Ensure unique ID
-                position: side === 'left' ? Position.Left : Position.Right,
-                x: ap.x,
-                y: ap.y
-            });
-        });
-    });
-    return points;
+    return [mainNode, ...labelNodes];
 };
 
-// Flow component to use React Flow hooks
-const Flow = ({
-    nodes,
-    edges,
-    onNodesChange,
-    onEdgesChange,
-    onConnect,
-    onNodeClick,
-    onPaneClick,
-}: {
-    nodes: Node[];
-    edges: Edge[];
-    onNodesChange: OnNodesChange;
-    onEdgesChange: OnEdgesChange;
-    onConnect: OnConnect;
-    onNodeClick: (event: React.MouseEvent, node: Node) => void;
-    onPaneClick: () => void;
-}) => {
-    return (
-        <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            nodeTypes={nodeTypes}
-            edgeTypes={edgeTypes}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            onNodeClick={onNodeClick}
-            onPaneClick={onPaneClick}
-            nodesDraggable={false}
-            nodesConnectable={true}
-            snapToGrid={true}
-            minZoom={0.5}
-            maxZoom={2}
-            fitView
-            selectNodesOnDrag={false}
-        >
-            <Background />
-            <Controls />
-        </ReactFlow>
-    );
-};
-
-const FlowSVGDisplay = ({
+const FlowSVGDisplay: React.FC<FlowSVGDisplayProps> = ({
     svgContent,
     selected3DShape,
     diagramComponents,
@@ -277,78 +114,82 @@ const FlowSVGDisplay = ({
     canvasSize,
     setSelectedPosition,
     setSelectedAttachmentPoint,
-}: FlowSVGDisplayProps) => {
-    const [highlightedShape, setHighlightedShape] = useState<string | null>(null);
+}) => {
+    // State for React Flow nodes and edges
+    const [nodes, setNodes] = useState<Node[]>([]);
+    const [edges, setEdges] = useState<Edge[]>([]);
 
-    // Updated connectionPoints memo to use diagramComponents
-    const connectionPoints = useMemo(() =>
-        svgContent ? createConnectionPoints(diagramComponents, canvasSize) : [],
-        [svgContent, diagramComponents, canvasSize]
-    );
-
-    const initialNodes = useMemo(() => {
-        if (!svgContent) return [];
-        return createInitialNodes(
-            svgContent, 
-            connectionPoints, 
-            canvasSize,
-            selected3DShape,
-            diagramComponents,
-            isCopied,
-            onSelect3DShape,
-            setSelectedPosition,
-            setSelectedAttachmentPoint
-        );
-    }, [
-        svgContent, 
-        connectionPoints, 
+    // State for transformation context
+    const [transformationContext, setTransformationContext] = useState<TransformationContext>({
+        viewBox: { x: 0, y: 0, width: canvasSize.width, height: canvasSize.height },
         canvasSize,
-        selected3DShape,
-        diagramComponents,
-        isCopied,
-        onSelect3DShape,
-        setSelectedPosition,
-        setSelectedAttachmentPoint
-    ]);
+        margin: DEFAULT_MARGIN,
+        scale: 1
+    });
 
-    const initialEdges = useMemo(() => {
-        if (!svgContent) return [];
-        return createInitialEdges();
-    }, [svgContent]);
-
-    const [nodes, setNodes] = useState<CustomNode[]>(initialNodes);
-    const [edges, setEdges] = useState<Edge[]>(initialEdges);
-
-    // Update highlighted shape when selected shape changes
+    // Calculate transformation context when SVG content changes
     useEffect(() => {
-        setHighlightedShape(selected3DShape);
-    }, [selected3DShape]);
+        if (!svgContent) return;
 
-    const handlePaneClick = useCallback(() => {
-        onSelect3DShape(null);
-        setHighlightedShape(null);
-    }, [onSelect3DShape]);
+        const boundingBox = calculateSVGBoundingBox(svgContent, canvasSize);
+        if (boundingBox) {
+            const viewBox = calculateViewBox(boundingBox, DEFAULT_MARGIN);
+            const scale = calculateScale(
+                viewBox,
+                canvasSize
+            );
 
-    // Update nodes when content changes
+            const newContext: TransformationContext = {
+                viewBox,
+                canvasSize,
+                margin: DEFAULT_MARGIN,
+                scale
+            };
+            setTransformationContext(newContext);
+            onGetBoundingBox(boundingBox);
+        }
+    }, [svgContent, canvasSize, onGetBoundingBox]);
+
+    // Update transformation context when canvas size changes
     useEffect(() => {
-        if (!svgContent) {
+        setTransformationContext(prev => {
+            const scale = calculateScale(
+                { width: prev.viewBox.width, height: prev.viewBox.height },
+                canvasSize
+            );
+            return {
+                ...prev,
+                canvasSize,
+                scale
+            };
+        });
+    }, [canvasSize]);
+
+    // Update nodes when content or components change
+    useEffect(() => {
+        if (!svgContent || !transformationContext) {
             setNodes([]);
             setEdges([]);
             return;
         }
-    
+
+        const connectionPoints = extractGlobalAttachmentPoints(diagramComponents);
+        console.log('FlowSVG:', connectionPoints);
+
         setNodes(prevNodes => {
             const newNodes = createInitialNodes(
                 svgContent,
                 connectionPoints,
-                canvasSize,
+                transformationContext,
                 selected3DShape,
                 diagramComponents,
+                canvasSize,
                 isCopied,
                 onSelect3DShape,
                 setSelectedPosition,
                 setSelectedAttachmentPoint
             );
+
             // Preserve positions of existing label nodes
             return newNodes.map(node => {
                 const existingNode = prevNodes.find(n => n.id === node.id);
@@ -362,198 +203,132 @@ const FlowSVGDisplay = ({
             });
         });
     }, [
-        svgContent, 
-        connectionPoints, 
-        canvasSize, 
-        selected3DShape, 
-        diagramComponents, 
+        svgContent,
+        transformationContext,
+        selected3DShape,
+        diagramComponents,
+        canvasSize,
         isCopied,
         onSelect3DShape,
         setSelectedPosition,
         setSelectedAttachmentPoint
     ]);
-    
-    useEffect(() => {
-        setNodes(prevNodes => prevNodes.map(node => {
-            if (node.type === 'svgNode') {
-                return {
-                    ...node,
-                    data: {
-                        ...node.data,
-                        isSelected: selected3DShape !== null
-                    }
-                };
-            }
-            return node;
-        }));
-    }, [selected3DShape]);
 
-    // Enhanced node click handler
-    const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
-        if (!svgContent) return; // Don't process clicks if no SVG content
-
-        if (node.type !== 'svgNode') {
-            // process any on click for label nodes
-        }
-    }, [svgContent, diagramComponents, onSelect3DShape, setSelectedPosition, setSelectedAttachmentPoint]);
-
-    // Handle node changes (position updates, etc.)
-    const onNodesChange: OnNodesChange = useCallback(
-        (changes: NodeChange[]) => {
-            setNodes((nds) => applyNodeChanges(changes, nds));
-        },
-        []
-    );
-
-    // Handle edge changes
-    const onEdgesChange: OnEdgesChange = useCallback(
-        (changes: EdgeChange[]) => {
-            setEdges((eds) => applyEdgeChanges(changes, eds));
-        },
-        []
-    );
-
-    const createEdge = useCallback((connection: Connection): Edge => {
-        if (!connection.source || !connection.target) {
-            throw new Error('Invalid connection: missing source or target');
-        }
-
-        const sourceNode = nodes.find(n => n.id === connection.source);
-        const targetNode = nodes.find(n => n.id === connection.target);
-
-        // Default to the provided handles or undefined
-        let sourceHandle = connection.sourceHandle ?? undefined;
-        let targetHandle = connection.targetHandle ?? undefined;
-
-        // If connecting from a label node, determine the best handle to use
-        if (sourceNode?.type === 'label' && targetNode) {
-            // Get the x positions of the source and target nodes
-            const sourceX = sourceNode.position.x;
-            const targetX = targetNode.position.x;
-
-            // Choose the appropriate handle based on relative positions
-            sourceHandle = sourceX < targetX ? 'right' : 'left';
-        }
-
-        return {
-            id: `edge-${edges.length + 1}`,
-            source: connection.source,
-            target: connection.target,
-            sourceHandle,
-            targetHandle,
-            type: 'smoothstep',
-            animated: true,
-            style: { stroke: '#555' }
-        } satisfies Edge;
-    }, [nodes, edges.length]);
-
-    // Enhanced connect handler with type safety
-    const onConnect = useCallback(
-        (connection: Connection) => {
-            if (!svgContent || !connection.source || !connection.target) return;
-
-            try {
-                const newEdge = createEdge(connection);
-                setEdges(eds => [...eds, newEdge]);
-            } catch (error) {
-                console.error('Failed to create edge:', error);
-            }
-        },
-        [svgContent, createEdge]
-    );
-
-    // Handle edge click (for deletion)
-    const onEdgeClick: EdgeMouseHandler = useCallback((event, edge) => {
-        const confirmed = window.confirm('Do you want to remove this connection?');
-        if (confirmed) {
-            setEdges((eds) => eds.filter((e) => e.id !== edge.id));
-        }
+    // Node change handler
+    const onNodesChange = useCallback((changes: NodeChange[]) => {
+        setNodes(prevNodes => applyNodeChanges(changes, prevNodes));
     }, []);
 
-    const onEdgeContextMenu = useCallback(
-        (event: React.MouseEvent, edge: Edge) => {
-            event.preventDefault();
-            const confirmed = window.confirm('Do you want to remove this connection?');
-            if (confirmed) {
-                setEdges((eds) => eds.filter((e) => e.id !== edge.id));
-            }
-        },
-        []
-    );
+    // Edge change handler
+    const onEdgesChange = useCallback((changes: EdgeChange[]) => {
+        setEdges(prevEdges => applyEdgeChanges(changes, prevEdges));
+    }, []);
+
+    // Connection handler
+    const onConnect = useCallback((connection: Connection) => {
+        if (!connection.source || !connection.target) return;
+
+        const newEdge: Edge = {
+            id: `edge-${Date.now()}`,
+            source: connection.source,
+            target: connection.target,
+            sourceHandle: connection.sourceHandle,
+            targetHandle: connection.targetHandle,
+            type: 'custom',
+            animated: true,
+            style: { stroke: '#555', zIndex: 10 }
+        };
+
+        setEdges(prevEdges => [...prevEdges, newEdge]);
+    }, []);
+
+    // Handle pane click for deselection
+    // In FlowSVGDisplay.tsx, update the onPaneClick handler:
+    const onPaneClick = useCallback((event: ReactMouseEvent<Element, MouseEvent>) => {
+        // Check if we clicked on a node or its contents
+        const target = event.target as HTMLElement;
+        const isNodeClick = target.closest('.svg-wrapper');
+        console.log('Flow click ', isNodeClick);
+
+        // Only handle pane clicks (not node clicks)
+        if (!isNodeClick) {
+            onSelect3DShape(null);
+            //setSelectedPosition('top');
+            //setSelectedAttachmentPoint('none');
+        }
+    }, [onSelect3DShape, setSelectedPosition, setSelectedAttachmentPoint]);
+
+    if (!transformationContext) return <div>Loading...</div>;
 
     return (
         <div className="w-full h-full bg-white relative">
             <ReactFlowProvider>
-                <div className="w-full h-full absolute" style={{ zIndex: 0 }}>
-                    <Flow
-                        nodes={nodes}
-                        edges={edges}
-                        onNodesChange={onNodesChange}
-                        onEdgesChange={onEdgesChange}
-                        onConnect={onConnect}
-                        onNodeClick={onNodeClick}
-                        onPaneClick={handlePaneClick}
-                    />
-                </div>
+                <ReactFlow
+                    nodes={nodes}
+                    edges={edges}
+                    nodeTypes={nodeTypes}
+                    edgeTypes={edgeTypes}
+                    onNodesChange={onNodesChange}
+                    onEdgesChange={onEdgesChange}
+                    onConnect={onConnect}
+                    onPaneClick={onPaneClick}
+                    fitView
+                    minZoom={0.5}
+                    maxZoom={10}
+                    snapToGrid
+                    snapGrid={[10, 10]}
+                >
+                    <Background />
+                    <Controls />
+                </ReactFlow>
             </ReactFlowProvider>
 
             <style>
                 {`
-                    .react-flow {
-                        z-index: auto !important;
-                    }
-                    .react-flow__edges {
-                        z-index: 3 !important;
-                    }
-                    .react-flow__edge {
-                        z-index: 3 !important;
-                    }
-                    .react-flow__edge-path {
-                        z-index: 3 !important;
-                    }
-                    .react-flow__handle {
-                        width: 8px;
-                        height: 8px;
-                        background: #4F46E5;
-                        border: 2px solid white;
-                        z-index: 4 !important;
-                    }
-                    .react-flow__handle-left {
-                        left: -4px;
-                    }
-                    .react-flow__handle-right {
-                        right: -4px;
-                    }
                     .react-flow__node {
-                        z-index: 1 !important;
+                        max-width: none;
+                        max-height: none;
                     }
-                    .react-flow__node.selected {
-                        z-index: 2 !important;
+
+                    /* Force edges container to be above nodes */
+                    .react-flow__edges {
+                        z-index: 10 !important;
                     }
-                    .react-flow__controls {
-                        z-index: 5 !important;
-                    }
+                    
+                    /* Ensure edge paths are visible */
                     .react-flow__edge-path {
-                        stroke: #555;
-                        stroke-width: 1.5;
+                        z-index: 10 !important;;
                     }
-                    .react-flow__edge.animated path {
-                        stroke-dasharray: 5;
-                        animation: dashedEdge 20s linear infinite;
+
+                    /* Style edge interactions */
+                    .react-flow__edge {
+                        z-index: 10!important;;
                     }
-                    .highlighted-shape {
-                        outline: 2px dashed #007bff;
-                        outline-offset: 2px;
+                    .react-flow__edge:hover {
+                        z-index: 11;
                     }
-                    @keyframes dashedEdge {
-                        from { stroke-dashoffset: 100; }
-                        to { stroke-dashoffset: 0; }
+                    .react-flow__edge.selected {
+                        z-index: 12;
                     }
-                    .edge-controls {
-                        z-index: 4 !important;
+
+                    /* Keep handles above edges */
+                    .react-flow__handle {
+                        z-index: 15!important;;
                     }
-                    .react-flow__edge-interaction {
-                        z-index: 3 !important;
+
+                    /* Keep edge labels above everything */
+                    .react-flow__edgelabel-renderer {
+                        z-index: 15;
+                    }
+
+                    /* Keep connection line above other elements */
+                    .react-flow__connection {
+                        z-index: 16!important;;
+                    }
+
+                    /* Controls should stay on top */
+                    .react-flow__controls {
+                        z-index: 20;
                     }
                 `}
             </style>

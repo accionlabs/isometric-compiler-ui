@@ -1,4 +1,4 @@
-import { DiagramComponent, Point, AttachmentPoint, Shape, SerializedDiagramComponent } from '../Types';
+import { DiagramComponent, Point, AttachmentPoint, Shape, SerializedDiagramComponent, GlobalAttachmentPoint } from '../Types';
 import { toggleAttachmentPoints } from './svgUtils';
 
 declare global {
@@ -195,8 +195,6 @@ export const add3DShape = (
             console.error('Failed to parse SVG content');
             return { updatedComponents: diagramComponents, newComponent: null };
         }
-
-        //const attachmentPoints = extractAttachmentPoints(svgElement);
 
         if (attachmentPoint === 'none') {
             attachmentPoint = null;
@@ -619,6 +617,100 @@ export const getClosestAttachmentPoint = (
 ): { position: string, attachmentPoint: string } => {
     const clickPoint: Point = { x: clickX, y: clickY };
     return findClosestAttachmentPoint(clickPoint, component);
+};
+
+// Functions for attachment points at a global level across all diagram
+
+export const extractGlobalAttachmentPoints = (
+    diagramComponents: DiagramComponent[]
+): GlobalAttachmentPoint[] => {
+    const globalPoints:GlobalAttachmentPoint[] = [];
+
+    for (const component of diagramComponents) {
+        // Skip if component has no absolute position (shouldn't happen after compilation)
+        if (!component.absolutePosition) {
+            console.warn(`Component ${component.id} has no absolute position`);
+            continue;
+        }
+
+        const componentPoints = component.attachmentPoints.map(point => {
+            // Convert the relative point coordinates to global coordinates by adding
+            // the component's absolute position
+            return {
+                ...point,
+                x: point.x + component.absolutePosition.x,
+                y: point.y + component.absolutePosition.y
+            }
+        });
+
+        globalPoints.push(<GlobalAttachmentPoint>{
+            componentId: component.id,
+            attachmentPoints: componentPoints
+        });
+    }
+
+    return globalPoints;
+};
+
+// Helper function to get a specific attachment point's global coordinates
+export const getGlobalAttachmentPointCoordinates = (
+    diagramComponents: DiagramComponent[],
+    componentId: string,
+    pointName: string
+): { x: number; y: number } | null => {
+    const component = diagramComponents.find(comp => comp.id === componentId);
+    if (!component || !component.absolutePosition) {
+        return null;
+    }
+
+    const point = component.attachmentPoints.find(p => p.name === pointName);
+    if (!point) {
+        return null;
+    }
+
+    return {
+        x: component.absolutePosition.x + point.x,
+        y: component.absolutePosition.y + point.y
+    };
+};
+
+// Helper function to find the closest attachment point to a given coordinate
+export const findClosestGlobalAttachmentPoint = (
+    diagramComponents: DiagramComponent[],
+    x: number,
+    y: number,
+    filter?: (pointName: string) => boolean
+): { componentId: string; pointName: string; x: number; y: number; distance: number } | null => {
+    let closestPoint = null;
+    let minDistance = Infinity;
+
+    const allPoints = extractGlobalAttachmentPoints(diagramComponents);
+
+    for (const component of allPoints) {
+        for (const point of component.attachmentPoints) {
+            // Apply filter if provided
+            if (filter && !filter(point.name)) {
+                continue;
+            }
+
+            const dx = x - point.x;
+            const dy = y - point.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance < minDistance) {
+                minDistance = distance;
+                closestPoint = {
+                    componentId: component.componentId,
+                    pointName: point.name,
+                    x: point.x,
+                    y: point.y,
+                    distance
+                };
+            }
+        }
+    }
+
+    return closestPoint;
 };
 
 
