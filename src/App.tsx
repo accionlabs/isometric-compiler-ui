@@ -315,6 +315,7 @@ const App: React.FC = () => {
     ]);
 
     const handleLoadDiagramFromJSON = (loadedComponents: DiagramComponent[]) => {
+        console.log('Load From JSON', loadedComponents);
         const { svgContent, processedComponents } =
             diagramComponentsLib.compileDiagram(
                 loadedComponents,
@@ -468,7 +469,10 @@ const App: React.FC = () => {
             showAttachmentPoints
         );
         setComposedSVG(svgContent);
-        setDiagramComponents(processedComponents);
+        // Only update if the processed components are different
+        if (!diagramComponentsLib.areComponentArraysEqual(processedComponents, diagramComponents)) {
+            setDiagramComponents(processedComponents);
+        }
     }, [diagramComponents, canvasSize, svgLibrary, showAttachmentPoints]);
 
     useEffect(() => {

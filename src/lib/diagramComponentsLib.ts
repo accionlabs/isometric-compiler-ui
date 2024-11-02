@@ -604,6 +604,26 @@ const reorderComponents = (components: DiagramComponent[]): DiagramComponent[] =
     return orderedComponents;
 };
 
+// First, add these helper functions
+export const areComponentsEqual = (comp1: DiagramComponent, comp2: DiagramComponent): boolean => {
+    return (
+        comp1.id === comp2.id &&
+        comp1.shape === comp2.shape &&
+        comp1.position === comp2.position &&
+        comp1.relativeToId === comp2.relativeToId &&
+        comp1.cut === comp2.cut &&
+        JSON.stringify(comp1.attached2DShapes) === JSON.stringify(comp2.attached2DShapes) &&
+        JSON.stringify(comp1.absolutePosition) === JSON.stringify(comp2.absolutePosition) &&
+        JSON.stringify(comp1.attachmentPoints) === JSON.stringify(comp2.attachmentPoints)
+    );
+};
+
+export const areComponentArraysEqual = (arr1: DiagramComponent[], arr2: DiagramComponent[]): boolean => {
+    if (arr1.length !== arr2.length) return false;
+    return arr1.every((comp, index) => areComponentsEqual(comp, arr2[index]));
+};
+
+
 export const compileDiagram = (
     diagramComponents: DiagramComponent[],
     canvasSize: { width: number; height: number },
