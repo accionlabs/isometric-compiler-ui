@@ -1,10 +1,11 @@
 import React, { useRef, useCallback, useEffect, useState } from 'react';
-import { Handle, Position, NodeProps, useStore, ReactFlowState } from 'reactflow';
-import { DiagramComponent, Point } from '@/Types';
+import { Handle, Position, NodeProps, useStore, ReactFlowState, HandleType } from 'reactflow';
+import { CanvasSize, DiagramComponent, Point } from '@/Types';
 import { getClosestAttachmentPoint, extractGlobalAttachmentPoints } from '@/lib/diagramComponentsLib';
 import { calculateSVGBoundingBox, calculateViewBox, DEFAULT_MARGIN } from '@/lib/svgUtils';
 
 interface SVGNodeData {
+    canvasSize: CanvasSize;
     svgContent: string;
     diagramComponents: DiagramComponent[];
     selected3DShape: string | null;
@@ -16,6 +17,7 @@ interface SVGNodeData {
 interface HandlePosition {
     id: string;
     position: Position;
+    type: HandleType;
     x: number;
     y: number;
     componentId: string;
@@ -73,8 +75,8 @@ const SVGNode = ({ data }: NodeProps<SVGNodeData>) => {
     const [viewBox, setViewBox] = useState({
         x: 0,
         y: 0,
-        width: 1000,
-        height: 1000
+        width: data.canvasSize.width,
+        height: data.canvasSize.height,
     });
     const [scale, setScale] = useState(1);
     const [offset, setOffset] = useState({ x: 0, y: 0 });
@@ -82,6 +84,7 @@ const SVGNode = ({ data }: NodeProps<SVGNodeData>) => {
     const transform = useStore((state: ReactFlowState) => state.transform);
     const zoom = transform[2];
 
+    // calculate the layout parameters every time zoom level changes
     const calculateSvgLayout = useCallback((): SVGLayout | null => {
         if (!containerRef.current || !svgRef.current) return null;
 
@@ -148,7 +151,7 @@ const SVGNode = ({ data }: NodeProps<SVGNodeData>) => {
                 setViewBox(layout.viewBox);
                 setScale(layout.scale);
                 setOffset(layout.offset);
-                
+
                 requestAnimationFrame(() => setIsReady(true));
             }
         }
@@ -178,36 +181,42 @@ const SVGNode = ({ data }: NodeProps<SVGNodeData>) => {
     }, [dimensions, zoom, calculateSvgLayout]);
 
     // Calculate handle positions
-useEffect(() => {
-    if (!isReady || !svgRef.current || !containerRef.current) return;
+    useEffect(() => {
+        if (!isReady || !svgRef.current || !containerRef.current) return;
 
-    const globalPoints = extractGlobalAttachmentPoints(data.diagramComponents);
-    const newHandles: HandlePosition[] = [];
+        const globalPoints = extractGlobalAttachmentPoints(data.diagramComponents);
+        const newHandles: HandlePosition[] = [];
 
-    globalPoints.forEach(component => {
-        component.attachmentPoints.forEach(point => {
-            if (['attach-front-left', 'attach-front-right'].includes(point.name)) {
-                // Convert from SVG coordinates to container space
-                const x = ((point.x - viewBox.x) * scale + offset.x);
-                const y = ((point.y - viewBox.y) * scale + offset.y);
+        globalPoints.forEach(component => {
+            component.attachmentPoints.forEach(point => {
+                if ([
+                    'attach-front-left', 
+                    'attach-front-right',
+                    'attach-back-left', 
+                    'attach-back-right'
+                ].includes(point.name)) {
+                    // Convert from SVG coordinates to container space
+                    const x = ((point.x - viewBox.x) * scale + offset.x);
+                    const y = ((point.y - viewBox.y) * scale + offset.y);
 
-                // Create handle ID without extra prefix - React Flow adds needed prefixes
-                const handleId = `${component.componentId}-${point.name}`;
+                    // Create handle ID without extra prefix - React Flow adds needed prefixes
+                    const handleId = `${component.componentId}-${point.name}`;
 
-                newHandles.push({
-                    id: handleId,
-                    position: Position.Left,
-                    x,
-                    y,
-                    componentId: component.componentId,
-                    pointName: point.name
-                });
-            }
+                    newHandles.push({
+                        id: handleId,
+                        position: point.name.includes('left')?Position.Left:Position.Right,
+                        type: point.name.includes('front')?'source':'target',
+                        x,
+                        y,
+                        componentId: component.componentId,
+                        pointName: point.name
+                    });
+                }
+            });
         });
-    });
 
-    setHandles(newHandles);
-}, [isReady, data.diagramComponents, scale, offset, viewBox]);
+        setHandles(newHandles);
+    }, [isReady, data.diagramComponents, scale, offset, viewBox]);
 
     const containerToSvgCoords = useCallback((containerX: number, containerY: number): Point => ({
         x: (containerX - offset.x) / scale + viewBox.x,
@@ -262,11 +271,11 @@ useEffect(() => {
     return (
         <div className="react-flow-svg-node" ref={containerRef} style={styles.container}>
             <div className="svg-wrapper" onClick={handleClick} style={styles.svgWrapper} />
-            
+
             {handles.map((handle) => (
                 <Handle
                     key={handle.id}
-                    type="target"
+                    type={handle.type}
                     position={handle.position}
                     id={`svg-main-${handle.id}`}
                     className="handle-point"

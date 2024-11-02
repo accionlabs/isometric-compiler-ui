@@ -32,7 +32,6 @@ import {
     calculateViewBox,
     DEFAULT_MARGIN
 } from '@/lib/svgUtils';
-import { extractGlobalAttachmentPoints } from './lib/diagramComponentsLib';
 
 interface FlowSVGDisplayProps {
     svgContent: string;
@@ -57,12 +56,10 @@ const edgeTypes = {
 
 // Helper function to create initial nodes
 const createInitialNodes = (
+    canvasSize: CanvasSize,
     svgContent: string,
-    connectionPoints: GlobalAttachmentPoint[],
-    transformationContext: TransformationContext,
     selected3DShape: string | null,
     diagramComponents: DiagramComponent[],
-    canvasSize: CanvasSize,
     isCopied: boolean,
     onSelect3DShape: (id: string | null) => void,
     setSelectedPosition: (position: string) => void,
@@ -74,17 +71,18 @@ const createInitialNodes = (
         type: 'svgNode',
         position: { x: 0, y: 0 },
         data: {
+            canvasSize,
             svgContent,
-            attachmentPoints: connectionPoints,
             diagramComponents,
             selected3DShape,
-            transformationContext,
+            isCopied,
             onSelect3DShape,
             setSelectedPosition,
             setSelectedAttachmentPoint
         },
         draggable: false,
         selectable: false,
+        deletable: false,
         style: { zIndex: 0 }
     };
 
@@ -119,71 +117,20 @@ const FlowSVGDisplay: React.FC<FlowSVGDisplayProps> = ({
     const [nodes, setNodes] = useState<Node[]>([]);
     const [edges, setEdges] = useState<Edge[]>([]);
 
-    // State for transformation context
-    const [transformationContext, setTransformationContext] = useState<TransformationContext>({
-        viewBox: { x: 0, y: 0, width: canvasSize.width, height: canvasSize.height },
-        canvasSize,
-        margin: DEFAULT_MARGIN,
-        scale: 1
-    });
-
-    // Calculate transformation context when SVG content changes
-    useEffect(() => {
-        if (!svgContent) return;
-
-        const boundingBox = calculateSVGBoundingBox(svgContent, canvasSize);
-        if (boundingBox) {
-            const viewBox = calculateViewBox(boundingBox, DEFAULT_MARGIN);
-            const scale = calculateScale(
-                viewBox,
-                canvasSize
-            );
-
-            const newContext: TransformationContext = {
-                viewBox,
-                canvasSize,
-                margin: DEFAULT_MARGIN,
-                scale
-            };
-            setTransformationContext(newContext);
-            onGetBoundingBox(boundingBox);
-        }
-    }, [svgContent, canvasSize, onGetBoundingBox]);
-
-    // Update transformation context when canvas size changes
-    useEffect(() => {
-        setTransformationContext(prev => {
-            const scale = calculateScale(
-                { width: prev.viewBox.width, height: prev.viewBox.height },
-                canvasSize
-            );
-            return {
-                ...prev,
-                canvasSize,
-                scale
-            };
-        });
-    }, [canvasSize]);
-
     // Update nodes when content or components change
     useEffect(() => {
-        if (!svgContent || !transformationContext) {
+        if (!svgContent) {
             setNodes([]);
             setEdges([]);
             return;
         }
 
-        const connectionPoints = extractGlobalAttachmentPoints(diagramComponents);
-        console.log('FlowSVG:', connectionPoints);
-
         setNodes(prevNodes => {
             const newNodes = createInitialNodes(
+                canvasSize,
                 svgContent,
-                connectionPoints,
-                transformationContext,
                 selected3DShape,
                 diagramComponents,
-                canvasSize,
                 isCopied,
                 onSelect3DShape,
                 setSelectedPosition,
@@ -204,7 +151,6 @@ const FlowSVGDisplay: React.FC<FlowSVGDisplayProps> = ({
         });
     }, [
         svgContent,
-        transformationContext,
         selected3DShape,
         diagramComponents,
         canvasSize,
@@ -257,8 +203,6 @@ const FlowSVGDisplay: React.FC<FlowSVGDisplayProps> = ({
             //setSelectedAttachmentPoint('none');
         }
     }, [onSelect3DShape, setSelectedPosition, setSelectedAttachmentPoint]);
-
-    if (!transformationContext) return <div>Loading...</div>;
 
     return (
         <div className="w-full h-full bg-white relative">
