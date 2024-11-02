@@ -329,7 +329,7 @@ const App: React.FC = () => {
         // Reset selection and update available attachment points
         updateSelected3DShape(null);
     };
-    
+
     const handleSetCanvasSize = useCallback(
         (newSize: { width: number; height: number }) => {
             setCanvasSize(newSize);
@@ -461,13 +461,14 @@ const App: React.FC = () => {
     }, [handleKeyboardShortcuts]);
 
     useEffect(() => {
-        const { svgContent } = diagramComponentsLib.compileDiagram(
+        const { svgContent, processedComponents } = diagramComponentsLib.compileDiagram(
             diagramComponents,
             canvasSize,
             svgLibrary,
             showAttachmentPoints
         );
         setComposedSVG(svgContent);
+        setDiagramComponents(processedComponents);
     }, [diagramComponents, canvasSize, svgLibrary, showAttachmentPoints]);
 
     useEffect(() => {

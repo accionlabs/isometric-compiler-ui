@@ -612,14 +612,14 @@ export const compileDiagram = (
 ): { svgContent: string; processedComponents: DiagramComponent[] } => {
     console.log('Compiling diagram...', diagramComponents);
 
-    let svgContent = '';
-    const processedComponents: DiagramComponent[] = [];
-
     // Standardize component IDs before processing
     const standardizedComponents = standardizeComponentIds(diagramComponents);
 
     // Then reorder components
     const orderedComponents = reorderComponents(standardizedComponents);
+
+    let svgContent = '';
+    const processedComponents: DiagramComponent[] = [];
 
     orderedComponents.forEach((component) => {
         const shape3DElement = getSvgFromLibrary(component.shape, svgLibrary);
