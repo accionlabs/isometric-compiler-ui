@@ -26,18 +26,18 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
     const [shapes, setShapes] = useState<Shape[]>([]);
 
     // Update shapes when svgLibrary or activeLibrary changes
-    useEffect(() => {
-        console.log('Shapes:', activeLibrary, svgLibrary);
-        if (svgLibrary.length > 0) {
-            setShapes(svgLibrary);
-        } else {
-            // Fallback to getting shapes from active library
-            const library = SVGLibraryManager.getLibrary(activeLibrary);
-            if (library) {
-                setShapes(library.shapes);
-            }
-        }
-    }, [svgLibrary, activeLibrary]);
+//    useEffect(() => {
+//        console.log('Shapes:', activeLibrary, svgLibrary);
+//        if (svgLibrary.length > 0) {
+//            setShapes(svgLibrary);
+//        } else {
+//            // Fallback to getting shapes from active library
+//            const library = SVGLibraryManager.getLibrary(activeLibrary);
+//            if (library) {
+//                setShapes(library.shapes);
+//            }
+//        }
+//    }, [svgLibrary, activeLibrary]);
 
     // Get active library details
     const activeLibraryData = useMemo(() => {
