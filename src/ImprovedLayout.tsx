@@ -221,7 +221,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
               }`}
               onClick={() => setActivePanel("chat")}
             >
-              Chat
+              AI Model
             </button>
           </div>
 
