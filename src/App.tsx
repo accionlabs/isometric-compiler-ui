@@ -313,6 +313,7 @@ const App: React.FC = () => {
         setDiagramComponents,
         setComposedSVG,
     ]);
+
     const handleLoadDiagramFromJSON = (loadedComponents: DiagramComponent[]) => {
         const { svgContent, processedComponents } =
             diagramComponentsLib.compileDiagram(
@@ -328,6 +329,7 @@ const App: React.FC = () => {
         // Reset selection and update available attachment points
         updateSelected3DShape(null);
     };
+    
     const handleSetCanvasSize = useCallback(
         (newSize: { width: number; height: number }) => {
             setCanvasSize(newSize);

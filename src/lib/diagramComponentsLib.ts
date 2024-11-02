@@ -87,7 +87,7 @@ export const getAvailableAttachmentPoints = (
 export const getAttachmentPoint = (component: DiagramComponent, pointName: string): Point | null => {
     if (component && component.attachmentPoints) {
         const point = component.attachmentPoints.find(p => p.name === pointName);
-        return point ? { x: point.x, y: point.y } : null;    
+        return point ? { x: point.x, y: point.y } : null;
     }
     return null;
 };
@@ -154,9 +154,9 @@ export const deepCloneComponentWithDependents = (
             ...comp,
             id: newId,
             relativeToId: comp.relativeToId ? idMap.get(comp.relativeToId) || comp.relativeToId : null,
-            attached2DShapes: comp.attached2DShapes?comp.attached2DShapes.map(shape => ({ ...shape })) : [],
-            attachmentPoints: comp.attachmentPoints?comp.attachmentPoints.map(point => ({ ...point })) : [],
-            absolutePosition: comp.absolutePosition?{ ...comp.absolutePosition } : {x:0,y:0},
+            attached2DShapes: comp.attached2DShapes ? comp.attached2DShapes.map(shape => ({ ...shape })) : [],
+            attachmentPoints: comp.attachmentPoints ? comp.attachmentPoints.map(point => ({ ...point })) : [],
+            absolutePosition: comp.absolutePosition ? { ...comp.absolutePosition } : { x: 0, y: 0 },
         };
 
         clonedComponents.push(clonedComponent);
@@ -469,6 +469,141 @@ export const getSvgFromLibrary = (shapeName: string, svgLibrary: Shape[]): SVGGE
     return group;
 };
 
+// Function to ensure all component IDs start with 'shape-'
+const standardizeComponentIds = (components: DiagramComponent[]): DiagramComponent[] => {
+    // Map old IDs to new IDs
+    const idMap = new Map<string, string>();
+
+    // First pass: create mapping of old to new IDs
+    components.forEach(component => {
+        if (!component.id.startsWith('shape-')) {
+            const newId = `shape-${component.id}`;
+            idMap.set(component.id, newId);
+        }
+    });
+
+    // Second pass: update all components with new IDs and references
+    return components.map(component => {
+        // If this component needs a new ID
+        const newId = idMap.get(component.id) || component.id;
+
+        // Update relativeToId if it exists and needs updating
+        let newRelativeToId = component.relativeToId;
+        if (component.relativeToId && idMap.has(component.relativeToId)) {
+            newRelativeToId = idMap.get(component.relativeToId) || component.relativeToId;
+        }
+
+        return {
+            ...component,
+            id: newId,
+            relativeToId: newRelativeToId
+        };
+    });
+};
+
+// Define valid position prefixes
+type PositionPrefix = 'top' | 'front-left' | 'front-right';
+
+// Helper function to extract position parts (prefix and suffix)
+const parsePosition = (position: string): { prefix: string; suffix: string | null } => {
+    // Match basic position (top, front-left, front-right) and optional suffix
+    const match = position.match(/^(top|front-left|front-right)(?:-(.+))?$/);
+    if (!match) {
+        return { prefix: position, suffix: null };
+    }
+    return {
+        prefix: match[1],
+        suffix: match[2] || null
+    };
+};
+
+// Helper function to check if string is a valid PositionPrefix
+const isValidPositionPrefix = (prefix: string): prefix is PositionPrefix => {
+    return ['top', 'front-left', 'front-right'].includes(prefix);
+};
+
+// Helper function to compare two components by their position
+const comparePositions = (pos1: string, pos2: string): number => {
+    const { prefix: prefix1, suffix: suffix1 } = parsePosition(pos1);
+    const { prefix: prefix2, suffix: suffix2 } = parsePosition(pos2);
+
+    // First compare prefixes
+    if (prefix1 !== prefix2) {
+        // Define custom order for prefixes with explicit typing
+        const prefixOrder: Record<PositionPrefix, number> = {
+            'top': 0,
+            'front-left': 1,
+            'front-right': 2
+        };
+
+        // Get order values with type safety
+        const order1 = isValidPositionPrefix(prefix1) ? prefixOrder[prefix1] : 999;
+        const order2 = isValidPositionPrefix(prefix2) ? prefixOrder[prefix2] : 999;
+
+        return order1 - order2;
+    }
+
+    // If prefixes are the same and both have suffixes, compare suffixes
+    if (suffix1 && suffix2) {
+        // Try numeric comparison first
+        const num1 = parseInt(suffix1);
+        const num2 = parseInt(suffix2);
+        if (!isNaN(num1) && !isNaN(num2)) {
+            return num1 - num2;
+        }
+        // Fall back to string comparison
+        return suffix1.localeCompare(suffix2);
+    }
+
+    // If only one has a suffix, the one without comes first
+    if (suffix1) return 1;
+    if (suffix2) return -1;
+
+    // If neither has a suffix, they're equal
+    return 0;
+};
+
+// Main reordering function
+const reorderComponents = (components: DiagramComponent[]): DiagramComponent[] => {
+    // First, group components by their relativeToId
+    const groupedComponents = new Map<string | null, DiagramComponent[]>();
+
+    // Initialize with null group (root components)
+    groupedComponents.set(null, []);
+
+    // Group components
+    components.forEach(component => {
+        const relativeId = component.relativeToId;
+        if (!groupedComponents.has(relativeId)) {
+            groupedComponents.set(relativeId, []);
+        }
+        groupedComponents.get(relativeId)!.push(component);
+    });
+
+    // Sort each group by position
+    groupedComponents.forEach(group => {
+        group.sort((a, b) => comparePositions(a.position, b.position));
+    });
+
+    // Function to recursively build ordered list
+    const buildOrderedList = (relativeId: string | null, result: DiagramComponent[]) => {
+        const group = groupedComponents.get(relativeId) || [];
+
+        // Add all components in this group
+        group.forEach(component => {
+            result.push(component);
+            // Recursively add any components that are relative to this one
+            buildOrderedList(component.id, result);
+        });
+    };
+
+    // Build final ordered list starting from root components
+    const orderedComponents: DiagramComponent[] = [];
+    buildOrderedList(null, orderedComponents);
+
+    return orderedComponents;
+};
+
 export const compileDiagram = (
     diagramComponents: DiagramComponent[],
     canvasSize: { width: number; height: number },
@@ -480,7 +615,13 @@ export const compileDiagram = (
     let svgContent = '';
     const processedComponents: DiagramComponent[] = [];
 
-    diagramComponents.forEach((component) => {
+    // Standardize component IDs before processing
+    const standardizedComponents = standardizeComponentIds(diagramComponents);
+
+    // Then reorder components
+    const orderedComponents = reorderComponents(standardizedComponents);
+
+    orderedComponents.forEach((component) => {
         const shape3DElement = getSvgFromLibrary(component.shape, svgLibrary);
         if (!shape3DElement) {
             console.warn(`3D shape not found in library:`, component.shape);

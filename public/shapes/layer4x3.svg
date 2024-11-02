@@ -62,7 +62,7 @@
      r="1.6773911" />
   <circle
      style="fill:#ff0000;stroke:none;stroke-width:0.264583;stroke-linecap:round;stroke-miterlimit:4.1"
-     id="attach-top-a1"
+     id="attach-top-a3"
      cx="66.101936"
      cy="89.445198"
      r="1.6773911" />
@@ -74,13 +74,13 @@
      r="1.6773911" />
   <circle
      style="fill:#ff0000;stroke:none;stroke-width:0.264583;stroke-linecap:round;stroke-miterlimit:4.1"
-     id="attach-top-a3"
+     id="attach-top-a1"
      cx="134.84274"
      cy="49.757717"
      r="1.6773911" />
   <circle
      style="fill:#ff0000;stroke:none;stroke-width:0.264583;stroke-linecap:round;stroke-miterlimit:4.1"
-     id="attach-top-b1"
+     id="attach-top-b3"
      cx="111.92912"
      cy="115.77987"
      r="1.6773911" />
@@ -92,13 +92,13 @@
      r="1.6773911" />
   <circle
      style="fill:#ff0000;stroke:none;stroke-width:0.264583;stroke-linecap:round;stroke-miterlimit:4.1"
-     id="attach-top-b3"
+     id="attach-top-b1"
      cx="180.66992"
      cy="76.092369"
      r="1.6773911" />
   <circle
      style="fill:#ff0000;stroke:none;stroke-width:0.264583;stroke-linecap:round;stroke-miterlimit:4.1"
-     id="attach-top-c1"
+     id="attach-top-c3"
      cx="157.75632"
      cy="142.32689"
      r="1.6773911" />
@@ -110,13 +110,13 @@
      r="1.6773911" />
   <circle
      style="fill:#ff0000;stroke:none;stroke-width:0.264583;stroke-linecap:round;stroke-miterlimit:4.1"
-     id="attach-top-c3"
+     id="attach-top-c1"
      cx="226.49709"
      cy="102.63939"
      r="1.6773911" />
   <circle
      style="fill:#ff0000;stroke:none;stroke-width:0.264583;stroke-linecap:round;stroke-miterlimit:4.1"
-     id="attach-top-d1"
+     id="attach-top-d3"
      cx="203.5835"
      cy="168.82019"
      r="1.6773911" />
@@ -128,7 +128,7 @@
      r="1.6773911" />
   <circle
      style="fill:#ff0000;stroke:none;stroke-width:0.264583;stroke-linecap:round;stroke-miterlimit:4.1"
-     id="attach-top-d3"
+     id="attach-top-d1"
      cx="272.32425"
      cy="129.13269"
      r="1.6773911" />
