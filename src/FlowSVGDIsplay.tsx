@@ -58,7 +58,8 @@ const createInitialNodes = (
     setSelectedPosition: (position: string) => void,
     setSelectedAttachmentPoint: (point: string) => void,
     isConnecting: boolean,
-    isInteractive: boolean
+    isInteractive: boolean,
+    addTestLabels: boolean
 ): Node[] => {
     // Create main SVG node
     const mainNode: Node = {
@@ -84,7 +85,7 @@ const createInitialNodes = (
     };
 
     // Create label nodes for each shape if needed
-    const labelNodes: Node[] = diagramComponents.map((component, index) => ({
+    const labelNodes: Node[] = addTestLabels ? diagramComponents.map((component, index) => ({
         id: `label-${component.id}`,
         type: 'label',
         position: { x: 100 + (index * 50), y: 100 + (index * 30) },
@@ -95,7 +96,7 @@ const createInitialNodes = (
         },
         draggable: isInteractive,
         style: { zIndex: 5 }
-    }));
+    })) : [];
 
     return [mainNode, ...labelNodes];
 };
@@ -116,6 +117,8 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
     const [edges, setEdges, onEdgesChange] = useEdgesState<Edge[]>([]);
     const [isConnecting, setIsConnecting] = useState(false);
     const store = useStoreApi();
+
+    const addTestLabels:boolean = false;
 
     const isInteractive = useStore((state) => state.nodesDraggable && state.nodesConnectable && state.elementsSelectable);
 
@@ -138,7 +141,8 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
                 setSelectedPosition,
                 setSelectedAttachmentPoint,
                 isConnecting,
-                isInteractive
+                isInteractive,
+                addTestLabels
             );
 
             // Preserve positions of existing label nodes
