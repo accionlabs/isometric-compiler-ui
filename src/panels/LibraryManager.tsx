@@ -69,15 +69,9 @@ const LibraryManager: React.FC<LibraryManagerProps> = ({
       const loadedLibraries = SVGLibraryManager.getLibraries();
       setLibraries(loadedLibraries);
 
-      // If there's a default library with shapes, update the shapes in the parent
-      const defaultLibrary = loadedLibraries.find(lib => lib.id === 'default');
-      if (defaultLibrary?.shapes.length) {
-        onUpdateShapes(defaultLibrary.shapes);
-      }
     };
-
     initializeLibraries();
-  }, [onUpdateShapes]);
+  }, []);
 
   const resetForm = () => {
     setLibraryForm({
