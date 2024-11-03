@@ -21,6 +21,7 @@ interface SVGNodeData {
     setSelectedPosition: (position: string) => void;
     setSelectedAttachmentPoint: (point: string) => void;
     isConnecting: boolean;
+    isInteractive: boolean;
 }
 
 interface HandlePosition {
@@ -250,7 +251,7 @@ const SVGNode = ({ id, data }: NodeProps<SVGNodeData>) => {
     const handleClick = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
         event.stopPropagation();
 
-        if (!svgRef.current || !containerRef.current) return;
+        if (!svgRef.current || !containerRef.current || !data.isInteractive) return;
 
         const target = event.target as SVGElement;
         const shape3D = target.closest('[id^="shape-"]');

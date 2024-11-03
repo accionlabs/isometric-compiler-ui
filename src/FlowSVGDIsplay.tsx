@@ -16,7 +16,8 @@ import ReactFlow, {
     useEdgesState,
     addEdge,
     useStoreApi,
-    ReactFlowState
+    ReactFlowState,
+    useStore
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 
@@ -56,7 +57,8 @@ const createInitialNodes = (
     onSelect3DShape: (id: string | null) => void,
     setSelectedPosition: (position: string) => void,
     setSelectedAttachmentPoint: (point: string) => void,
-    isConnecting: boolean
+    isConnecting: boolean,
+    isInteractive: boolean
 ): Node[] => {
     // Create main SVG node
     const mainNode: Node = {
@@ -72,7 +74,8 @@ const createInitialNodes = (
             onSelect3DShape,
             setSelectedPosition,
             setSelectedAttachmentPoint,
-            isConnecting
+            isConnecting,
+            isInteractive
         },
         draggable: false,
         selectable: false,
@@ -87,9 +90,10 @@ const createInitialNodes = (
         position: { x: 100 + (index * 50), y: 100 + (index * 30) },
         data: {
             label: component.shape,
-            handleType: 'source'
+            handleType: 'source',
+            isInteractive
         },
-        draggable: true,
+        draggable: isInteractive,
         style: { zIndex: 5 }
     }));
 
@@ -113,6 +117,8 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
     const [isConnecting, setIsConnecting] = useState(false);
     const store = useStoreApi();
 
+    const isInteractive = useStore((state) => state.nodesDraggable && state.nodesConnectable && state.elementsSelectable);
+
     // Update nodes when content or components change
     useEffect(() => {
         if (!svgContent) {
@@ -131,7 +137,8 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
                 onSelect3DShape,
                 setSelectedPosition,
                 setSelectedAttachmentPoint,
-                isConnecting
+                isConnecting,
+                isInteractive
             );
 
             // Preserve positions of existing label nodes
@@ -140,7 +147,8 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
                 if (existingNode && node.type === 'label') {
                     return {
                         ...node,
-                        position: existingNode.position
+                        position: existingNode.position,
+                        draggable: isInteractive
                     };
                 }
                 return node;
@@ -155,7 +163,8 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
         onSelect3DShape,
         setSelectedPosition,
         setSelectedAttachmentPoint,
-        isConnecting
+        isConnecting,
+        isInteractive
     ]);
 
     // Track connection state
@@ -168,12 +177,15 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
 
     // Connection handler
     const onConnect = useCallback((connection: Connection) => {
+        if (!isInteractive) return; // Prevent edge creation when not interactive
         if (!connection.source || !connection.target) return;
         setEdges((eds) => addEdge(connection, eds));
-    }, [setEdges]);
+    }, [setEdges, isInteractive]);
 
     // Handle pane click for deselection
     const onPaneClick = useCallback((event: ReactMouseEvent<Element, MouseEvent>) => {
+        if (!isInteractive) return; // Prevent interaction when not interactive
+        
         const target = event.target as HTMLElement;
         const isNodeClick = target.closest('.svg-wrapper');
 
@@ -182,7 +194,6 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
             setSelectedPosition('top');
             setSelectedAttachmentPoint('none');
             
-            // Update the SVG node's data to reflect deselection
             setNodes(prevNodes => 
                 prevNodes.map(node => {
                     if (node.type === 'svgNode') {
@@ -198,7 +209,7 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
                 })
             );
         }
-    }, [onSelect3DShape, setSelectedPosition, setSelectedAttachmentPoint, setNodes]);
+    }, [isInteractive, onSelect3DShape, setSelectedPosition, setSelectedAttachmentPoint, setNodes]);
 
     return (
         <ReactFlow
@@ -216,6 +227,9 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
             maxZoom={10}
             snapToGrid
             snapGrid={[10, 10]}
+            nodesConnectable={isInteractive}
+            nodesDraggable={isInteractive}
+            elementsSelectable={isInteractive}
         >
             <Background />
             <Controls />
@@ -230,7 +244,6 @@ const FlowSVGDisplay: React.FC<FlowSVGDisplayProps> = (props) => {
             <ReactFlowProvider>
                 <FlowContent {...props} />
             </ReactFlowProvider>
-
             <style>
                 {`
                     .react-flow__node {
