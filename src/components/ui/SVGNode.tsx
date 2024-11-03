@@ -1,5 +1,13 @@
 import React, { useRef, useCallback, useEffect, useState } from 'react';
-import { Handle, Position, NodeProps, useStore, ReactFlowState, HandleType } from 'reactflow';
+import { 
+    Handle, 
+    Position, 
+    NodeProps, 
+    useStore, 
+    ReactFlowState, 
+    HandleType,
+    useUpdateNodeInternals 
+} from 'reactflow';
 import { CanvasSize, DiagramComponent, Point } from '@/Types';
 import { getClosestAttachmentPoint, extractGlobalAttachmentPoints } from '@/lib/diagramComponentsLib';
 import { calculateSVGBoundingBox, calculateViewBox, DEFAULT_MARGIN } from '@/lib/svgUtils';
@@ -57,20 +65,17 @@ const styles = {
     },
     handlePoint: {
         position: 'absolute' as const,
-        width: 8,
-        height: 8,
-        background: '#4F46E5',
-        border: '2px solid white',
         zIndex: 1
     }
 } as const;
 
-const SVGNode = ({ data }: NodeProps<SVGNodeData>) => {
+const SVGNode = ({ id, data }: NodeProps<SVGNodeData>) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const svgRef = useRef<SVGSVGElement | null>(null);
     const [handles, setHandles] = useState<HandlePosition[]>([]);
     const [isReady, setIsReady] = useState(false);
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+    const updateNodeInternals = useUpdateNodeInternals();
 
     const [viewBox, setViewBox] = useState({
         x: 0,
@@ -180,7 +185,7 @@ const SVGNode = ({ data }: NodeProps<SVGNodeData>) => {
         }
     }, [dimensions, zoom, calculateSvgLayout]);
 
-    // Calculate handle positions
+    // Calculate handle positions and update node internals
     useEffect(() => {
         if (!isReady || !svgRef.current || !containerRef.current) return;
 
@@ -199,13 +204,13 @@ const SVGNode = ({ data }: NodeProps<SVGNodeData>) => {
                     const x = ((point.x - viewBox.x) * scale + offset.x);
                     const y = ((point.y - viewBox.y) * scale + offset.y);
 
-                    // Create handle ID without extra prefix - React Flow adds needed prefixes
+                    // Create handle ID without 'svg-main-' prefix
                     const handleId = `${component.componentId}-${point.name}`;
 
                     newHandles.push({
                         id: handleId,
-                        position: point.name.includes('left')?Position.Left:Position.Right,
-                        type: point.name.includes('front')?'source':'target',
+                        position: point.name.includes('left') ? Position.Left : Position.Right,
+                        type: 'target',
                         x,
                         y,
                         componentId: component.componentId,
@@ -216,7 +221,9 @@ const SVGNode = ({ data }: NodeProps<SVGNodeData>) => {
         });
 
         setHandles(newHandles);
-    }, [isReady, data.diagramComponents, scale, offset, viewBox]);
+        // Update node internals after setting handles
+        updateNodeInternals(id);
+    }, [isReady, data.diagramComponents, scale, offset, viewBox, updateNodeInternals, id]);
 
     const containerToSvgCoords = useCallback((containerX: number, containerY: number): Point => ({
         x: (containerX - offset.x) / scale + viewBox.x,
@@ -243,11 +250,12 @@ const SVGNode = ({ data }: NodeProps<SVGNodeData>) => {
 
                 const svgCoords = containerToSvgCoords(containerX, containerY);
 
-                const { position, attachmentPoint } = getClosestAttachmentPoint(
-                    svgCoords.x - component.absolutePosition.x,
-                    svgCoords.y - component.absolutePosition.y,
-                    component
-                );
+                const { position, attachmentPoint } = component.absolutePosition ?
+                    getClosestAttachmentPoint(
+                        svgCoords.x - component.absolutePosition.x,
+                        svgCoords.y - component.absolutePosition.y,
+                        component
+                    ) : { position: 'top', attachmentPoint: 'none' };
 
                 data.setSelectedPosition(position);
                 data.setSelectedAttachmentPoint(attachmentPoint);
@@ -277,7 +285,7 @@ const SVGNode = ({ data }: NodeProps<SVGNodeData>) => {
                     key={handle.id}
                     type={handle.type}
                     position={handle.position}
-                    id={`svg-main-${handle.id}`}
+                    id={handle.id}
                     className="handle-point"
                     style={{
                         ...styles.handlePoint,

@@ -1,13 +1,3 @@
-import React, { useState, useCallback } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './components/ui/Dialog';
-import { Button } from './components/ui/Button';
-// import SVGDisplay from './SVGDisplay';
-import FlowSVGDisplay from '@/FlowSVGDIsplay';
-import ShapesPanel from './panels/ShapesPanel';
-import CompositionPanel from './panels/CompositionPanel';
-import SettingsPanel from './panels/SettingsPanel';
-import AttachmentOptionsPanel from './panels/AttachmentOptionsPanel';
-import { DiagramComponent, Shape } from './Types';
 import React, { useState, useCallback } from "react";
 import {
   Dialog,
@@ -17,7 +7,7 @@ import {
   DialogDescription,
 } from "./components/ui/Dialog";
 import { Button } from "./components/ui/Button";
-import SVGDisplay from "./SVGDisplay";
+import FlowSVGDisplay from "./FlowSVGDIsplay";
 import ShapesPanel from "./panels/ShapesPanel";
 import CompositionPanel from "./panels/CompositionPanel";
 import SettingsPanel from "./panels/SettingsPanel";
@@ -294,24 +284,10 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
             Composed SVG
           </h2>
 
-                {/* Relative container for SVG Display and Attachment Options Panel */}
-                <div className="relative flex-grow overflow-hidden">
-                    {/* SVG Display */}
-                    <FlowSVGDisplay
-                        svgContent={composedSVG}
-                        selected3DShape={selected3DShape}
-                        diagramComponents={diagramComponents}
-                        isCopied={isCopied}
-                        onSelect3DShape={handleSelect3DShape}
-                        onGetBoundingBox={onGetBoundingBox}
-                        canvasSize={canvasSize}
-                        setSelectedPosition={handleSelectedPosition}
-                        setSelectedAttachmentPoint={handleSelectedAttachmentPoint}
-                    />
           {/* Relative container for SVG Display and Attachment Options Panel */}
           <div className="relative flex-grow overflow-hidden">
             {/* SVG Display */}
-            <SVGDisplay
+            <FlowSVGDisplay
               svgContent={composedSVG}
               selected3DShape={selected3DShape}
               diagramComponents={diagramComponents}

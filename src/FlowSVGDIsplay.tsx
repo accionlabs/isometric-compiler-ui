@@ -18,7 +18,10 @@ import ReactFlow, {
     Controls,
     Background,
     applyNodeChanges,
-    applyEdgeChanges
+    applyEdgeChanges,
+    useNodesState,
+    useEdgesState,
+    addEdge
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 
@@ -114,11 +117,12 @@ const FlowSVGDisplay: React.FC<FlowSVGDisplayProps> = ({
     setSelectedAttachmentPoint,
 }) => {
     // State for React Flow nodes and edges
-    const [nodes, setNodes] = useState<Node[]>([]);
-    const [edges, setEdges] = useState<Edge[]>([]);
+    const [nodes, setNodes, onNodesChange] = useNodesState<Node[]>([]);
+    const [edges, setEdges, onEdgesChange] = useEdgesState<Edge[]>([]);
 
     // Update nodes when content or components change
     useEffect(() => {
+        console.log('Flow - setNodes');
         if (!svgContent) {
             setNodes([]);
             setEdges([]);
@@ -150,6 +154,7 @@ const FlowSVGDisplay: React.FC<FlowSVGDisplayProps> = ({
             });
         });
     }, [
+        setNodes,
         svgContent,
         selected3DShape,
         diagramComponents,
@@ -161,31 +166,20 @@ const FlowSVGDisplay: React.FC<FlowSVGDisplayProps> = ({
     ]);
 
     // Node change handler
-    const onNodesChange = useCallback((changes: NodeChange[]) => {
-        setNodes(prevNodes => applyNodeChanges(changes, prevNodes));
-    }, []);
+    //const onNodesChange = useCallback((changes: NodeChange[]) => {
+    //    setNodes(prevNodes => applyNodeChanges(changes, prevNodes));
+    //}, []);
 
     // Edge change handler
-    const onEdgesChange = useCallback((changes: EdgeChange[]) => {
-        setEdges(prevEdges => applyEdgeChanges(changes, prevEdges));
-    }, []);
+    //const onEdgesChange = useCallback((changes: EdgeChange[]) => {
+    //    setEdges(prevEdges => applyEdgeChanges(changes, prevEdges));
+    //}, []);
 
     // Connection handler
     const onConnect = useCallback((connection: Connection) => {
         if (!connection.source || !connection.target) return;
-
-        const newEdge: Edge = {
-            id: `edge-${Date.now()}`,
-            source: connection.source,
-            target: connection.target,
-            sourceHandle: connection.sourceHandle,
-            targetHandle: connection.targetHandle,
-            type: 'custom',
-            animated: true,
-            style: { stroke: '#555', zIndex: 10 }
-        };
-
-        setEdges(prevEdges => [...prevEdges, newEdge]);
+        console.log('Flow - addEdge');
+        setEdges((eds) => addEdge(connection, eds))
     }, []);
 
     // Handle pane click for deselection
