@@ -117,6 +117,22 @@ const SVGNode = ({ id, data }: NodeProps<SVGNodeData>) => {
         return { viewBox: newViewBox, scale: newScale, offset: newOffset };
     }, [zoom]);
 
+    useEffect(() => {
+        if (!svgRef.current) return;
+
+        const svg = svgRef.current;
+        svg.querySelectorAll('.highlighted-shape').forEach(el => {
+            el.classList.remove('highlighted-shape');
+        });
+
+        if (data.selected3DShape) {
+            const selectedElement = svg.getElementById(data.selected3DShape);
+            if (selectedElement) {
+                selectedElement.classList.add('highlighted-shape');
+            }
+        }
+    }, [data.selected3DShape]);
+
     // Monitor container size
     useEffect(() => {
         if (!containerRef.current) return;

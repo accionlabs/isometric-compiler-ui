@@ -169,13 +169,7 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
     // Connection handler
     const onConnect = useCallback((connection: Connection) => {
         if (!connection.source || !connection.target) return;
-        //setEdges((eds) => addEdge({
-        //    ...connection,
-        //    type: 'custom',
-        //    animated: true,
-        //    style: { stroke: '#555', zIndex: 10 }
-        //}, eds));
-        setEdges((eds) => addEdge(connection,eds));
+        setEdges((eds) => addEdge(connection, eds));
     }, [setEdges]);
 
     // Handle pane click for deselection
@@ -185,8 +179,26 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
 
         if (!isNodeClick) {
             onSelect3DShape(null);
+            setSelectedPosition('top');
+            setSelectedAttachmentPoint('none');
+            
+            // Update the SVG node's data to reflect deselection
+            setNodes(prevNodes => 
+                prevNodes.map(node => {
+                    if (node.type === 'svgNode') {
+                        return {
+                            ...node,
+                            data: {
+                                ...node.data,
+                                selected3DShape: null
+                            }
+                        };
+                    }
+                    return node;
+                })
+            );
         }
-    }, [onSelect3DShape]);
+    }, [onSelect3DShape, setSelectedPosition, setSelectedAttachmentPoint, setNodes]);
 
     return (
         <ReactFlow
