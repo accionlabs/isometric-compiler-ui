@@ -19,6 +19,11 @@ export interface AttachmentPoint extends Point {
   name: string;
 }
 
+export interface GlobalAttachmentPoint extends Point {
+    componentId: string;  // ID of the component this point belongs to
+    attachmentPoints: AttachmentPoint[];
+}
+
 // Shape interface
 export interface Shape {
   name: string;
@@ -68,12 +73,26 @@ export interface SerializedDiagramComponent {
 }
 
 export interface LibraryData {
-  id: string;
-  name: string;
-  description: string;
-  shapes: Shape[];
-  spreadsheetUrl?: string;
-  folderUrl?: string;
-  lastUpdated: Date;
-  isLoading?: boolean;
+    id: string;
+    name: string;
+    description: string;
+    shapes: Shape[];
+    spreadsheetUrl?: string;
+    folderUrl?: string;
+    lastUpdated: Date;
+    isLoading?: boolean;
+  }
+
+export interface ViewBox {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+}
+
+export interface TransformationContext {
+    viewBox: ViewBox;
+    canvasSize: CanvasSize;
+    margin: number,
+    scale: number;
 }
