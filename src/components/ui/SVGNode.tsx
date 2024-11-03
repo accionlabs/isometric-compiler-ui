@@ -1,12 +1,12 @@
 import React, { useRef, useCallback, useEffect, useState } from 'react';
-import { 
-    Handle, 
-    Position, 
-    NodeProps, 
-    useStore, 
-    ReactFlowState, 
+import {
+    Handle,
+    Position,
+    NodeProps,
+    useStore,
+    ReactFlowState,
     HandleType,
-    useUpdateNodeInternals 
+    useUpdateNodeInternals
 } from 'reactflow';
 import { CanvasSize, DiagramComponent, Point } from '@/Types';
 import { getClosestAttachmentPoint, extractGlobalAttachmentPoints } from '@/lib/diagramComponentsLib';
@@ -20,6 +20,7 @@ interface SVGNodeData {
     onSelect3DShape: (id: string | null) => void;
     setSelectedPosition: (position: string) => void;
     setSelectedAttachmentPoint: (point: string) => void;
+    isCopied: boolean;
     isConnecting: boolean;
     isInteractive: boolean;
 }
@@ -134,6 +135,33 @@ const SVGNode = ({ id, data }: NodeProps<SVGNodeData>) => {
         }
     }, [data.selected3DShape]);
 
+    useEffect(() => {
+        if (svgRef.current) {
+            const svg = svgRef.current;
+
+            // Remove all highlights
+            svg.querySelectorAll('.highlighted-shape').forEach(el => {
+                el.classList.remove('highlighted-shape');
+            });
+
+            // Add highlight to the selected element if there is one
+            if (data.selected3DShape) {
+                const selectedElement = svg.getElementById(data.selected3DShape);
+                if (selectedElement) {
+                    selectedElement.classList.add('highlighted-shape');
+                }
+            }
+
+            // Apply reduced opacity to cut objects
+            data.diagramComponents.forEach(component => {
+                const element = svg.getElementById(component.id);
+                if (element instanceof SVGElement) {
+                    element.style.opacity = component.cut ? (data.isCopied ? '0.75' : '0.5') : '1';
+                }
+            });
+        }
+    }, [data.selected3DShape, data.diagramComponents, data.svgContent]);
+
     // Monitor container size
     useEffect(() => {
         if (!containerRef.current) return;
@@ -180,6 +208,23 @@ const SVGNode = ({ id, data }: NodeProps<SVGNodeData>) => {
 
                 requestAnimationFrame(() => setIsReady(true));
             }
+
+            // Apply reduced opacity to cut objects
+            data.diagramComponents.forEach(component => {
+                const element = svgRef.current?.getElementById(component.id);
+                if (element instanceof SVGElement) {
+                    element.style.opacity = component.cut ? (data.isCopied ? '0.75' : '0.5') : '1';
+                }
+            });
+
+            // Add highlight to the selected element if there is one
+            if (data.selected3DShape) {
+                const selectedElement = svg.getElementById(data.selected3DShape);
+                if (selectedElement) {
+                    selectedElement.classList.add('highlighted-shape');
+                }
+            }
+
         }
 
         return () => {
@@ -216,9 +261,9 @@ const SVGNode = ({ id, data }: NodeProps<SVGNodeData>) => {
         globalPoints.forEach(component => {
             component.attachmentPoints.forEach(point => {
                 if ([
-                    'attach-front-left', 
+                    'attach-front-left',
                     'attach-front-right',
-                    'attach-back-left', 
+                    'attach-back-left',
                     'attach-back-right'
                 ].includes(point.name)) {
                     const x = ((point.x - viewBox.x) * scale + offset.x);

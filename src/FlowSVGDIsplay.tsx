@@ -118,7 +118,7 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
     const [isConnecting, setIsConnecting] = useState(false);
     const store = useStoreApi();
 
-    const addTestLabels:boolean = false;
+    const addTestLabels: boolean = false;
 
     const isInteractive = useStore((state) => state.nodesDraggable && state.nodesConnectable && state.elementsSelectable);
 
@@ -189,7 +189,7 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
     // Handle pane click for deselection
     const onPaneClick = useCallback((event: ReactMouseEvent<Element, MouseEvent>) => {
         if (!isInteractive) return; // Prevent interaction when not interactive
-        
+
         const target = event.target as HTMLElement;
         const isNodeClick = target.closest('.svg-wrapper');
 
@@ -197,8 +197,8 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
             onSelect3DShape(null);
             setSelectedPosition('top');
             setSelectedAttachmentPoint('none');
-            
-            setNodes(prevNodes => 
+
+            setNodes(prevNodes =>
                 prevNodes.map(node => {
                     if (node.type === 'svgNode') {
                         return {
@@ -233,6 +233,7 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
             snapGrid={[10, 10]}
             nodesConnectable={isInteractive}
             nodesDraggable={isInteractive}
+            nodesFocusable={false}
             elementsSelectable={isInteractive}
         >
             <Background />
