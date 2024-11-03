@@ -2,7 +2,6 @@ import React, {
     useState,
     useCallback,
     useEffect,
-    useMemo,
     MouseEvent as ReactMouseEvent
 } from 'react';
 import ReactFlow, {
@@ -10,31 +9,21 @@ import ReactFlow, {
     Node,
     Edge,
     Connection,
-    OnNodesChange,
-    OnEdgesChange,
-    OnConnect,
-    NodeChange,
-    EdgeChange,
     Controls,
     Background,
-    applyNodeChanges,
-    applyEdgeChanges,
+    ConnectionMode,
     useNodesState,
     useEdgesState,
-    addEdge
+    addEdge,
+    useStoreApi,
+    ReactFlowState
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 
-import { DiagramComponent, CanvasSize, TransformationContext, GlobalAttachmentPoint } from '@/Types';
+import { DiagramComponent, CanvasSize } from '@/Types';
 import SVGNode from '@/components/ui/SVGNode';
 import LabelNode from '@/components/ui/LabelNode';
 import CustomEdge from '@/components/ui/CustomEdge';
-import {
-    calculateSVGBoundingBox,
-    calculateScale,
-    calculateViewBox,
-    DEFAULT_MARGIN
-} from '@/lib/svgUtils';
 
 interface FlowSVGDisplayProps {
     svgContent: string;
@@ -66,7 +55,8 @@ const createInitialNodes = (
     isCopied: boolean,
     onSelect3DShape: (id: string | null) => void,
     setSelectedPosition: (position: string) => void,
-    setSelectedAttachmentPoint: (point: string) => void
+    setSelectedAttachmentPoint: (point: string) => void,
+    isConnecting: boolean
 ): Node[] => {
     // Create main SVG node
     const mainNode: Node = {
@@ -81,7 +71,8 @@ const createInitialNodes = (
             isCopied,
             onSelect3DShape,
             setSelectedPosition,
-            setSelectedAttachmentPoint
+            setSelectedAttachmentPoint,
+            isConnecting
         },
         draggable: false,
         selectable: false,
@@ -105,7 +96,8 @@ const createInitialNodes = (
     return [mainNode, ...labelNodes];
 };
 
-const FlowSVGDisplay: React.FC<FlowSVGDisplayProps> = ({
+// Separate internal component that uses React Flow hooks
+const FlowContent: React.FC<FlowSVGDisplayProps> = ({
     svgContent,
     selected3DShape,
     diagramComponents,
@@ -116,13 +108,13 @@ const FlowSVGDisplay: React.FC<FlowSVGDisplayProps> = ({
     setSelectedPosition,
     setSelectedAttachmentPoint,
 }) => {
-    // State for React Flow nodes and edges
     const [nodes, setNodes, onNodesChange] = useNodesState<Node[]>([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState<Edge[]>([]);
+    const [isConnecting, setIsConnecting] = useState(false);
+    const store = useStoreApi();
 
     // Update nodes when content or components change
     useEffect(() => {
-        console.log('Flow - setNodes');
         if (!svgContent) {
             setNodes([]);
             setEdges([]);
@@ -138,7 +130,8 @@ const FlowSVGDisplay: React.FC<FlowSVGDisplayProps> = ({
                 isCopied,
                 onSelect3DShape,
                 setSelectedPosition,
-                setSelectedAttachmentPoint
+                setSelectedAttachmentPoint,
+                isConnecting
             );
 
             // Preserve positions of existing label nodes
@@ -154,7 +147,6 @@ const FlowSVGDisplay: React.FC<FlowSVGDisplayProps> = ({
             });
         });
     }, [
-        setNodes,
         svgContent,
         selected3DShape,
         diagramComponents,
@@ -162,63 +154,69 @@ const FlowSVGDisplay: React.FC<FlowSVGDisplayProps> = ({
         isCopied,
         onSelect3DShape,
         setSelectedPosition,
-        setSelectedAttachmentPoint
+        setSelectedAttachmentPoint,
+        isConnecting
     ]);
 
-    // Node change handler
-    //const onNodesChange = useCallback((changes: NodeChange[]) => {
-    //    setNodes(prevNodes => applyNodeChanges(changes, prevNodes));
-    //}, []);
-
-    // Edge change handler
-    //const onEdgesChange = useCallback((changes: EdgeChange[]) => {
-    //    setEdges(prevEdges => applyEdgeChanges(changes, prevEdges));
-    //}, []);
+    // Track connection state
+    useEffect(() => {
+        const subscription = store.subscribe((state: ReactFlowState) => {
+            setIsConnecting(state.connectionStartHandle !== null);
+        });
+        return () => subscription();
+    }, [store]);
 
     // Connection handler
     const onConnect = useCallback((connection: Connection) => {
         if (!connection.source || !connection.target) return;
-        console.log('Flow - addEdge');
-        setEdges((eds) => addEdge(connection, eds))
-    }, []);
+        //setEdges((eds) => addEdge({
+        //    ...connection,
+        //    type: 'custom',
+        //    animated: true,
+        //    style: { stroke: '#555', zIndex: 10 }
+        //}, eds));
+        setEdges((eds) => addEdge(connection,eds));
+    }, [setEdges]);
 
     // Handle pane click for deselection
-    // In FlowSVGDisplay.tsx, update the onPaneClick handler:
     const onPaneClick = useCallback((event: ReactMouseEvent<Element, MouseEvent>) => {
-        // Check if we clicked on a node or its contents
         const target = event.target as HTMLElement;
         const isNodeClick = target.closest('.svg-wrapper');
-        console.log('Flow click ', isNodeClick);
 
-        // Only handle pane clicks (not node clicks)
         if (!isNodeClick) {
             onSelect3DShape(null);
-            //setSelectedPosition('top');
-            //setSelectedAttachmentPoint('none');
         }
-    }, [onSelect3DShape, setSelectedPosition, setSelectedAttachmentPoint]);
+    }, [onSelect3DShape]);
 
+    return (
+        <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            nodeTypes={nodeTypes}
+            edgeTypes={edgeTypes}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+            onPaneClick={onPaneClick}
+            connectionMode={ConnectionMode.Loose}
+            fitView
+            minZoom={0.5}
+            maxZoom={10}
+            snapToGrid
+            snapGrid={[10, 10]}
+        >
+            <Background />
+            <Controls />
+        </ReactFlow>
+    );
+};
+
+// Main component that provides the ReactFlow context
+const FlowSVGDisplay: React.FC<FlowSVGDisplayProps> = (props) => {
     return (
         <div className="w-full h-full bg-white relative">
             <ReactFlowProvider>
-                <ReactFlow
-                    nodes={nodes}
-                    edges={edges}
-                    nodeTypes={nodeTypes}
-                    edgeTypes={edgeTypes}
-                    onNodesChange={onNodesChange}
-                    onEdgesChange={onEdgesChange}
-                    onConnect={onConnect}
-                    onPaneClick={onPaneClick}
-                    fitView
-                    minZoom={0.5}
-                    maxZoom={10}
-                    snapToGrid
-                    snapGrid={[10, 10]}
-                >
-                    <Background />
-                    <Controls />
-                </ReactFlow>
+                <FlowContent {...props} />
             </ReactFlowProvider>
 
             <style>
@@ -227,20 +225,14 @@ const FlowSVGDisplay: React.FC<FlowSVGDisplayProps> = ({
                         max-width: none;
                         max-height: none;
                     }
-
-                    /* Force edges container to be above nodes */
                     .react-flow__edges {
                         z-index: 10 !important;
                     }
-                    
-                    /* Ensure edge paths are visible */
                     .react-flow__edge-path {
-                        z-index: 10 !important;;
+                        z-index: 10 !important;
                     }
-
-                    /* Style edge interactions */
                     .react-flow__edge {
-                        z-index: 10!important;;
+                        z-index: 10!important;
                     }
                     .react-flow__edge:hover {
                         z-index: 11;
@@ -248,23 +240,15 @@ const FlowSVGDisplay: React.FC<FlowSVGDisplayProps> = ({
                     .react-flow__edge.selected {
                         z-index: 12;
                     }
-
-                    /* Keep handles above edges */
                     .react-flow__handle {
-                        z-index: 15!important;;
+                        z-index: 15!important;
                     }
-
-                    /* Keep edge labels above everything */
                     .react-flow__edgelabel-renderer {
                         z-index: 15;
                     }
-
-                    /* Keep connection line above other elements */
                     .react-flow__connection {
-                        z-index: 16!important;;
+                        z-index: 16!important;
                     }
-
-                    /* Controls should stay on top */
                     .react-flow__controls {
                         z-index: 20;
                     }

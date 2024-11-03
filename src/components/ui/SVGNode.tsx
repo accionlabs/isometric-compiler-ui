@@ -20,6 +20,7 @@ interface SVGNodeData {
     onSelect3DShape: (id: string | null) => void;
     setSelectedPosition: (position: string) => void;
     setSelectedAttachmentPoint: (point: string) => void;
+    isConnecting: boolean;
 }
 
 interface HandlePosition {
@@ -65,6 +66,10 @@ const styles = {
     },
     handlePoint: {
         position: 'absolute' as const,
+        width: 8,
+        height: 8,
+        background: '#4F46E5',
+        border: '2px solid white',
         zIndex: 1
     }
 } as const;
@@ -89,7 +94,6 @@ const SVGNode = ({ id, data }: NodeProps<SVGNodeData>) => {
     const transform = useStore((state: ReactFlowState) => state.transform);
     const zoom = transform[2];
 
-    // calculate the layout parameters every time zoom level changes
     const calculateSvgLayout = useCallback((): SVGLayout | null => {
         if (!containerRef.current || !svgRef.current) return null;
 
@@ -200,11 +204,8 @@ const SVGNode = ({ id, data }: NodeProps<SVGNodeData>) => {
                     'attach-back-left', 
                     'attach-back-right'
                 ].includes(point.name)) {
-                    // Convert from SVG coordinates to container space
                     const x = ((point.x - viewBox.x) * scale + offset.x);
                     const y = ((point.y - viewBox.y) * scale + offset.y);
-
-                    // Create handle ID without 'svg-main-' prefix
                     const handleId = `${component.componentId}-${point.name}`;
 
                     newHandles.push({
@@ -286,12 +287,14 @@ const SVGNode = ({ id, data }: NodeProps<SVGNodeData>) => {
                     type={handle.type}
                     position={handle.position}
                     id={handle.id}
-                    className="handle-point"
+                    className={`handle-point ${data.isConnecting ? 'visible' : 'invisible'}`}
                     style={{
                         ...styles.handlePoint,
                         left: `${handle.x}px`,
                         top: `${handle.y}px`,
-                        transform: 'translate(-50%, -50%)'
+                        transform: 'translate(-50%, -50%)',
+                        opacity: data.isConnecting ? 1 : 0,
+                        transition: 'opacity 0.2s ease-in-out'
                     }}
                 />
             ))}
@@ -328,6 +331,13 @@ const SVGNode = ({ id, data }: NodeProps<SVGNodeData>) => {
                     }
                     .react-flow__handle {
                         visibility: visible !important;
+                        pointer-events: ${data.isConnecting ? 'auto' : 'none'};
+                    }
+                    .react-flow__handle.invisible {
+                        opacity: 0;
+                    }
+                    .react-flow__handle.visible {
+                        opacity: 1;
                     }
                 `}
             </style>
