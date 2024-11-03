@@ -788,7 +788,7 @@ export const getClosestAttachmentPoint = (
 export const extractGlobalAttachmentPoints = (
     diagramComponents: DiagramComponent[]
 ): GlobalAttachmentPoint[] => {
-    const globalPoints:GlobalAttachmentPoint[] = [];
+    const globalPoints: GlobalAttachmentPoint[] = [];
 
     for (const component of diagramComponents) {
         // Skip if component has no absolute position (shouldn't happen after compilation)
@@ -797,20 +797,24 @@ export const extractGlobalAttachmentPoints = (
             continue;
         }
 
-        const componentPoints = component.attachmentPoints.map(point => {
-            // Convert the relative point coordinates to global coordinates by adding
-            // the component's absolute position
-            return {
-                ...point,
-                x: point.x + component.absolutePosition.x,
-                y: point.y + component.absolutePosition.y
-            }
-        });
+        if (component.attachmentPoints !== undefined && component.attachmentPoints.length > 0) {
+            const componentPoints = component.attachmentPoints.map(point => {
+                // Convert the relative point coordinates to global coordinates by adding
+                // the component's absolute position
+                return component.absolutePosition !== undefined?
+                    {
+                        ...point,
+                        x: point.x + component.absolutePosition.x,
+                        y: point.y + component.absolutePosition.y
+                    } : point;
 
-        globalPoints.push(<GlobalAttachmentPoint>{
-            componentId: component.id,
-            attachmentPoints: componentPoints
-        });
+            });
+
+            globalPoints.push(<GlobalAttachmentPoint>{
+                componentId: component.id,
+                attachmentPoints: componentPoints
+            });
+        }
     }
 
     return globalPoints;
@@ -823,11 +827,11 @@ export const getGlobalAttachmentPointCoordinates = (
     pointName: string
 ): { x: number; y: number } | null => {
     const component = diagramComponents.find(comp => comp.id === componentId);
-    if (!component || !component.absolutePosition) {
+    if (!component || component.absolutePosition === undefined) {
         return null;
     }
 
-    const point = component.attachmentPoints.find(p => p.name === pointName);
+    const point = component.attachmentPoints?.find(p => p.name === pointName);
     if (!point) {
         return null;
     }

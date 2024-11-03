@@ -24,13 +24,15 @@ export const calculateConnectionPoints = (
     const scaleY = canvasSize.height / svgViewBox.height;
 
     diagramComponents.forEach(component => {
-        component.attachmentPoints.forEach((ap: AttachmentPoint) => {
+        component.attachmentPoints?.forEach((ap: AttachmentPoint) => {
             // Transform SVG coordinates to canvas coordinates
             const transformedX = (ap.x - svgViewBox.x) * scaleX;
             const transformedY = (ap.y - svgViewBox.y) * scaleY;
 
             // Calculate relative position from component center
-            const componentCenterX = (component.absolutePosition.x - svgViewBox.x) * scaleX + (canvasSize.width / 2);
+            const componentCenterX = component.absolutePosition ?
+                (component.absolutePosition.x - svgViewBox.x) * scaleX + (canvasSize.width / 2)
+                : canvasSize.width/2;
             const isLeftSide = transformedX < componentCenterX;
 
             points.push({
