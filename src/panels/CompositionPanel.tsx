@@ -15,6 +15,7 @@ interface CompositionPanelProps {
     onCancelCut3DShape: (id: string) => void;
     onPaste3DShape: (id: string) => void;
     selected3DShape: string | null;
+    onUpdateMetadata: (id: string, type: string | undefined, metadata: any) => void;
 }
 
 const CompositionPanel: React.FC<CompositionPanelProps> = ({
@@ -29,6 +30,7 @@ const CompositionPanel: React.FC<CompositionPanelProps> = ({
     onCancelCut3DShape,
     onPaste3DShape,
     selected3DShape,
+    onUpdateMetadata,
 }) => {
     const componentRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
@@ -105,6 +107,7 @@ const CompositionPanel: React.FC<CompositionPanelProps> = ({
                                     onRemove2DShape={onRemove2DShape}
                                     onScrollToParent={handleScrollToParent}
                                     svgPreview={<SVGPreview svgContent={getSVGContent(component.shape)} className="w-12 h-12" />}
+                                    onUpdateMetadata={onUpdateMetadata}
                                 />
                             </div>
                         ))}
@@ -136,6 +139,7 @@ const CompositionPanel: React.FC<CompositionPanelProps> = ({
                                     onRemove2DShape={onRemove2DShape}
                                     onScrollToParent={handleScrollToParent}
                                     svgPreview={<SVGPreview svgContent={getSVGContent(component.shape)} className="w-12 h-12" />}
+                                    onUpdateMetadata={onUpdateMetadata}
                                 />
                             ))}
                         </div>

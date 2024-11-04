@@ -1,7 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '../components/ui/Button';
+import { RadixSelect } from '../components/ui/Select';
 import { DiagramComponent } from '../Types';
 import { handleWithStopPropagation } from '../lib/eventUtils';
+import { schemaLoader } from '../lib/componentSchemaLib';
+import MetadataForm from '../components/ui/MetadataForm';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/Dialog';
 
 interface DiagramComponentCardProps {
     component: DiagramComponent;
@@ -20,6 +24,7 @@ interface DiagramComponentCardProps {
     onRemove2DShape: (parentId: string, shapeIndex: number) => void;
     onScrollToParent: (parentId: string) => void;
     svgPreview: React.ReactNode;
+    onUpdateMetadata: (id: string, type: string | undefined, metadata: any) => void;
 }
 
 const DiagramComponentCard: React.FC<DiagramComponentCardProps> = ({
@@ -39,7 +44,19 @@ const DiagramComponentCard: React.FC<DiagramComponentCardProps> = ({
     onRemove2DShape,
     onScrollToParent,
     svgPreview,
+    onUpdateMetadata,
 }) => {
+    const [isMetadataDialogOpen, setIsMetadataDialogOpen] = useState(false);
+    const availableTypes = schemaLoader.getAvailableTypes();
+
+    const handleTypeChange = (type: string) => {
+        onUpdateMetadata(component.id, type === '' ? undefined : type, {});
+    };
+
+    const handleMetadataChange = (metadata: any) => {
+        onUpdateMetadata(component.id, component.type, metadata);
+    };
+
     return (
         <div
             className={`p-4 rounded-lg ${isSelected ? 'bg-blue-800' : 'bg-gray-800'}`}
@@ -47,7 +64,9 @@ const DiagramComponentCard: React.FC<DiagramComponentCardProps> = ({
         >
             <div className="flex justify-between items-center mb-2">
                 {svgPreview}
-                <h3 className="text-lg font-semibold">{component.shape} (3D-{index + 1})</h3>
+                <h3 className="text-lg font-semibold">
+                    {component.shape} (3D-{index + 1})
+                </h3>
                 <div>
                     {isCut ? (
                         isFirst && (
@@ -73,7 +92,6 @@ const DiagramComponentCard: React.FC<DiagramComponentCardProps> = ({
                                     <Button onClick={(e) => handleWithStopPropagation(e, () => onCancelCut(component.id))} className="mr-2">
                                         Cancel
                                     </Button>
-
                                 </>
                             )
                         ) : (
@@ -98,6 +116,7 @@ const DiagramComponentCard: React.FC<DiagramComponentCardProps> = ({
                         ))}
                 </div>
             </div>
+
             {!isCut && !isCopied && (
                 <>
                     <div className="grid grid-cols-2 gap-2 mb-2">
@@ -117,6 +136,7 @@ const DiagramComponentCard: React.FC<DiagramComponentCardProps> = ({
                             }
                         </div>
                     </div>
+
                     <div>
                         <h4 className="font-semibold mb-1">Attached 2D Shapes:</h4>
                         {component.attached2DShapes.length > 0 ? (
@@ -137,8 +157,70 @@ const DiagramComponentCard: React.FC<DiagramComponentCardProps> = ({
                             <p className="text-gray-400">No 2D shapes attached</p>
                         )}
                     </div>
+
+                    {/* Metadata Section */}
+                    <div className="mt-4 border-t border-gray-700 pt-4">
+                        <div className="flex items-center justify-between">
+                            <div className="flex-1 mr-2">
+                                <label className="block text-sm font-medium text-gray-300 mb-1">
+                                    Component Type
+                                </label>
+                                <RadixSelect
+                                    options={[
+                                        { value: '', label: 'No Type' },
+                                        ...availableTypes.map(type => ({
+                                            value: type,
+                                            label: schemaLoader.getComponentType(type)?.displayName || type
+                                        }))
+                                    ]}
+                                    value={component.type || ''}
+                                    onChange={handleTypeChange}
+                                    placeholder="Select component type"
+                                />
+                            </div>
+                            {component.type && (
+                                <Button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setIsMetadataDialogOpen(true);
+                                    }}
+                                    className="mt-6"
+                                >
+                                    Edit Metadata
+                                </Button>
+                            )}
+                        </div>
+
+                        {component.type && component.metadata && (
+                            <div className="mt-2 p-2 bg-gray-700 rounded">
+                                <h4 className="text-sm font-medium text-gray-300 mb-1">Current Metadata:</h4>
+                                <div className="text-sm text-gray-400">
+                                    {Object.entries(component.metadata).map(([key, value]) => (
+                                        <div key={key}>
+                                            <span className="font-medium">{key}:</span> {value?.toString()}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </>
             )}
+
+            <Dialog open={isMetadataDialogOpen} onOpenChange={setIsMetadataDialogOpen}>
+                <DialogContent className="bg-gray-800 text-white">
+                    <DialogHeader>
+                        <DialogTitle>Edit Metadata - {schemaLoader.getComponentType(component.type || '')?.displayName}</DialogTitle>
+                    </DialogHeader>
+                    {component.type && (
+                        <MetadataForm
+                            fields={schemaLoader.getComponentType(component.type)?.fields || []}
+                            values={component.metadata || {}}
+                            onChange={handleMetadataChange}
+                        />
+                    )}
+                </DialogContent>
+            </Dialog>
         </div>
     );
 };

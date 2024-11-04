@@ -602,7 +602,6 @@ const reorderComponents = (components: DiagramComponent[]): DiagramComponent[] =
     return orderedComponents;
 };
 
-// First, add these helper functions
 export const areComponentsEqual = (comp1: DiagramComponent, comp2: DiagramComponent): boolean => {
     return (
         comp1.id === comp2.id &&
@@ -610,6 +609,8 @@ export const areComponentsEqual = (comp1: DiagramComponent, comp2: DiagramCompon
         comp1.position === comp2.position &&
         comp1.relativeToId === comp2.relativeToId &&
         comp1.cut === comp2.cut &&
+        comp1.type === comp2.type &&
+        JSON.stringify(comp1.metadata) === JSON.stringify(comp2.metadata) &&
         JSON.stringify(comp1.attached2DShapes) === JSON.stringify(comp2.attached2DShapes) &&
         JSON.stringify(comp1.absolutePosition) === JSON.stringify(comp2.absolutePosition) &&
         JSON.stringify(comp1.attachmentPoints) === JSON.stringify(comp2.attachmentPoints)
@@ -888,14 +889,15 @@ export const serializeDiagramComponents = (
     diagramComponents: DiagramComponent[]
 ): string => {
     // Map each component to only include the necessary attributes
-    // SVG content is loaded from the active library when deserializing
     const serializedComponents = diagramComponents.map(component => {
         const serializedComponent: SerializedDiagramComponent = {
             id: component.id,
             shape: component.shape,
             position: component.position,
             relativeToId: component.relativeToId,
-            attached2DShapes: component.attached2DShapes
+            attached2DShapes: component.attached2DShapes,
+            type: component.type, // Include type
+            metadata: component.metadata // Include metadata
         };
         return serializedComponent;
     });
@@ -913,16 +915,17 @@ export const deserializeDiagramComponents = (
     }
 
     // Reconstruct the full DiagramComponent structure
-    // SVG content for shapes will be loaded from the active library
     return parsedData.map((component: SerializedDiagramComponent) => ({
         ...component,
-        attachmentPoints: [],  // Will be computed by compileDiagram using library SVG
-        absolutePosition: { x: 0, y: 0 },  // Will be computed by compileDiagram
-        cut: false  // Reset cut state on load
+        attachmentPoints: [], // Will be computed by compileDiagram
+        absolutePosition: { x: 0, y: 0 }, // Will be computed by compileDiagram
+        cut: false, // Reset cut state on load
+        type: component.type, // Preserve type
+        metadata: component.metadata // Preserve metadata
     }));
 };
 
-// Update validation function to check only serialized attributes
+// Update validation function to check metadata attributes
 export const validateLoadedFile = (
     data: any
 ): boolean => {
@@ -933,11 +936,14 @@ export const validateLoadedFile = (
         if (!component.id || !component.shape || !component.position) return false;
         if (!Array.isArray(component.attached2DShapes)) return false;
 
-        // Validate attached2DShapes - only need name and attachedTo
-        // SVG content will be loaded from library
+        // Validate attached2DShapes
         for (const shape of component.attached2DShapes) {
             if (typeof shape.name !== 'string' || typeof shape.attachedTo !== 'string') return false;
         }
+
+        // Validate optional metadata fields
+        if (component.type !== undefined && typeof component.type !== 'string') return false;
+        if (component.metadata !== undefined && typeof component.metadata !== 'object') return false;
     }
 
     return true;

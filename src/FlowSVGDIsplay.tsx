@@ -12,6 +12,7 @@ import ReactFlow, {
     Controls,
     Background,
     ConnectionMode,
+    useReactFlow,
     useNodesState,
     useEdgesState,
     addEdge,
@@ -25,6 +26,7 @@ import { DiagramComponent, CanvasSize } from '@/Types';
 import SVGNode from '@/components/ui/SVGNode';
 import LabelNode from '@/components/ui/LabelNode';
 import CustomEdge from '@/components/ui/CustomEdge';
+import { exportAsSVG, exportAsPNG } from '@/lib/exportUtils';
 
 interface FlowSVGDisplayProps {
     svgContent: string;
@@ -120,6 +122,8 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
 
     const addTestLabels: boolean = false;
 
+    const { fitView } = useReactFlow();
+
     const isInteractive = useStore((state) => state.nodesDraggable && state.nodesConnectable && state.elementsSelectable);
 
     // Update nodes when content or components change
@@ -213,7 +217,28 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
                 })
             );
         }
+        
     }, [isInteractive, onSelect3DShape, setSelectedPosition, setSelectedAttachmentPoint, setNodes]);
+
+    const handleExportSVG = useCallback(async () => {
+        try {
+            // Ensure the diagram is properly fitted before export
+            fitView({ padding: 0.2 });
+            await exportAsSVG();
+        } catch (error) {
+            console.error('Failed to export SVG:', error);
+        }
+    }, [fitView]);
+
+    const handleExportPNG = useCallback(async () => {
+        try {
+            // Ensure the diagram is properly fitted before export
+            fitView({ padding: 0.2 });
+            await exportAsPNG();
+        } catch (error) {
+            console.error('Failed to export PNG:', error);
+        }
+    }, [fitView]);
 
     return (
         <ReactFlow

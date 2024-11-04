@@ -26,7 +26,7 @@ const ToggleGroup = React.forwardRef<
     onValueChange={(value) => {
       if (value) onValueChange(value);
     }}
-    {...props as any}
+    {...props}
   >
     {options.map((option) => (
       <ToggleGroupPrimitive.Item

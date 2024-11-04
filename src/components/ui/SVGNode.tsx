@@ -296,9 +296,16 @@ const SVGNode = ({ id, data }: NodeProps<SVGNodeData>) => {
     const handleClick = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
         event.stopPropagation();
 
-        if (!svgRef.current || !containerRef.current || !data.isInteractive) return;
+        // If we're in connecting mode, don't handle shape selection
+        if (!svgRef.current || !containerRef.current || !data.isInteractive || data.isConnecting) return;
 
         const target = event.target as SVGElement;
+
+        // Check if we clicked on a handle
+        if (target.closest('.react-flow__handle')) {
+            return; // Don't process clicks on handles
+        }
+
         const shape3D = target.closest('[id^="shape-"]');
 
         if (shape3D) {
@@ -346,7 +353,7 @@ const SVGNode = ({ id, data }: NodeProps<SVGNodeData>) => {
             {handles.map((handle) => (
                 <Handle
                     key={handle.id}
-                    type={handle.type}
+                    type="target"  // Force all handles to be target type only
                     position={handle.position}
                     id={handle.id}
                     className={`handle-point ${data.isConnecting ? 'visible' : 'invisible'}`}
@@ -356,8 +363,11 @@ const SVGNode = ({ id, data }: NodeProps<SVGNodeData>) => {
                         top: `${handle.y}px`,
                         transform: 'translate(-50%, -50%)',
                         opacity: data.isConnecting ? 1 : 0,
+                        pointerEvents: data.isConnecting ? 'auto' : 'none',
                         transition: 'opacity 0.2s ease-in-out'
                     }}
+                    isConnectableStart={false}  // Prevent starting connections from these handles
+                    isConnectableEnd={true}     // Only allow ending connections on these handles
                 />
             ))}
 

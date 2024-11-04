@@ -3,14 +3,14 @@ import { Shape, DiagramComponent } from "./Types";
 import ImprovedLayout from "./ImprovedLayout";
 import { cleanupSVG, clipSVGToContents } from "./lib/svgUtils";
 import {
-    loadShapesFromGoogleDrive,
     loadFileFromDrive,
     saveFileToDrive,
 } from "./lib/googleDriveLib";
 import * as diagramComponentsLib from "./lib/diagramComponentsLib";
-import { defaultShapesLibrary } from "./lib/defaultShapesLib";
 import { createKeyboardShortcuts } from "./KeyboardShortcuts";
 import { SVGLibraryManager } from "./lib/svgLibraryUtils";
+import { schemaLoader } from "./lib/componentSchemaLib";
+import { StorageType, loadFile, saveFile } from "./lib/fileOperations";
 
 const App: React.FC = () => {
     const [svgLibrary, setSvgLibrary] = useState<Shape[]>([]);
@@ -48,6 +48,8 @@ const App: React.FC = () => {
         const stored = localStorage.getItem("activeLibrary");
         return stored || "default";
     });
+    const [schemaUrl] = useState('/schemas/component-types.yaml'); // URL to your schema file
+    const [storageType, setStorageType] = useState<StorageType>(StorageType.Local);
 
     // Update shapes when active library changes
     const handleLibraryChange = useCallback((libraryId: string) => {
@@ -58,6 +60,31 @@ const App: React.FC = () => {
         if (library) {
             setSvgLibrary(library.shapes);
         }
+    }, []);
+
+    // update diagram component metadata when added
+    const handleUpdateMetadata = useCallback((
+        id: string,
+        type: string | undefined,
+        metadata: any
+    ) => {
+        setDiagramComponents(prevComponents =>
+            prevComponents.map(component => {
+                if (component.id === id) {
+                    return {
+                        ...component,
+                        type,
+                        metadata: type ? metadata : undefined
+                    };
+                }
+                return component;
+            })
+        );
+    }, []);
+
+    // on selection of storage type for saving and loading the diagram
+    const handleStorageTypeChange = useCallback((type: StorageType) => {
+        setStorageType(type);
     }, []);
 
     // handle select 3D shape from Composition panel or SVG diagram
@@ -283,36 +310,47 @@ const App: React.FC = () => {
     const handleSaveDiagram = useCallback(async () => {
         try {
             const jsonFileName = getJsonFileName(fileName);
-            const serializedData =
-                diagramComponentsLib.serializeDiagramComponents(diagramComponents);
-            await saveFileToDrive(jsonFileName, serializedData, folderPath);
+            const serializedData = diagramComponentsLib.serializeDiagramComponents(diagramComponents);
+            await saveFile(storageType, jsonFileName, serializedData, folderPath);
             setErrorMessage(null);
         } catch (error) {
             console.error("Error saving diagram:", error);
             setErrorMessage("Failed to save diagram. Please try again.");
         }
-    }, [diagramComponents, fileName, folderPath, getJsonFileName]);
+    }, [diagramComponents, fileName, folderPath, storageType]);
 
-    const handleLoadDiagram = useCallback(async () => {
+    const handleLoadDiagram = useCallback(async (fileOrPath?: File) => {
+        console.log('handleLoadDiagram called with:', fileOrPath); // Debug log
+        console.log('Current storage type:', storageType); // Debug log
+
         try {
-            const jsonFileName = getJsonFileName(fileName);
-            const loadedData = await loadFileFromDrive(jsonFileName, folderPath);
-            const loadedComponents =
-                diagramComponentsLib.deserializeDiagramComponents(loadedData);
+            let loadedData: string;
+
+            if (storageType === StorageType.Local) {
+                if (!fileOrPath) {
+                    throw new Error('No file selected for local storage');
+                }
+                loadedData = await loadFile(StorageType.Local, fileOrPath);
+            } else {
+                const jsonFileName = getJsonFileName(fileName);
+                loadedData = await loadFile(StorageType.GoogleDrive, {
+                    fileName: jsonFileName,
+                    folderPath
+                });
+            }
+
+            const loadedComponents = diagramComponentsLib.deserializeDiagramComponents(loadedData);
             handleLoadDiagramFromJSON(loadedComponents);
+            setErrorMessage(null);
         } catch (error) {
             console.error("Error loading diagram:", error);
             setErrorMessage(
-                "Failed to load diagram. Please check the file and folder path, then try again."
+                error instanceof Error
+                    ? error.message
+                    : "Failed to load diagram. Please check the file and try again."
             );
         }
-    }, [
-        fileName,
-        folderPath,
-        getJsonFileName,
-        setDiagramComponents,
-        setComposedSVG,
-    ]);
+    }, [fileName, folderPath, storageType]);
 
     const handleLoadDiagramFromJSON = (loadedComponents: DiagramComponent[]) => {
         console.log('Load From JSON', loadedComponents);
@@ -413,6 +451,20 @@ const App: React.FC = () => {
         selectedPosition,
         selectedAttachmentPoint,
     ]);
+
+    // load the component metadata schema
+    useEffect(() => {
+        const loadComponentSchema = async () => {
+            try {
+                await schemaLoader.loadSchema(schemaUrl);
+            } catch (error) {
+                console.error('Failed to load component schema:', error);
+                setErrorMessage('Failed to load component schema');
+            }
+        };
+
+        loadComponentSchema();
+    }, [schemaUrl]);
 
     // Initialize libraries - Modified to handle active library properly
     useEffect(() => {
@@ -533,6 +585,9 @@ const App: React.FC = () => {
             setFolderPath={handleSetFolderPath}
             showAttachmentPoints={showAttachmentPoints}
             setShowAttachmentPoints={handleSetShowAttachmentPoints}
+            onUpdateMetadata={handleUpdateMetadata}
+            storageType={storageType}
+            onStorageTypeChange={handleStorageTypeChange}
         />
     );
 };

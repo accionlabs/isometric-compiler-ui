@@ -31,12 +31,14 @@
     "@xmldom/xmldom": "^0.9.5",
     "clsx": "^2.1.1",
     "dotenv": "^16.4.5",
+    "html-to-image": "^1.11.11",
     "lucide-react": "^0.447.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "reactflow": "^11.11.4",
     "react-syntax-highlighter": "^15.6.1",
-    "tailwind-merge": "^2.5.3"
+    "reactflow": "^11.11.4",
+    "tailwind-merge": "^2.5.3",
+    "yaml": "^2.6.0"
   },
   "devDependencies": {
     "@types/node": "^18.16.0",
