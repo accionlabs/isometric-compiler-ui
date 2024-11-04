@@ -1,0 +1,50 @@
+componentTypes:
+  service:
+    displayName: "Service Component"
+    fields:
+      - name: "serviceName"
+        type: "string"
+        label: "Service Name"
+        required: true
+      
+      - name: "version"
+        type: "string"
+        label: "Version"
+      
+      - name: "owner"
+        type: "string"  
+        label: "Service Owner"
+        
+      - name: "status"
+        type: "select"
+        label: "Status"
+        options:
+          - label: "Active"
+            value: "active"
+          - label: "Deprecated" 
+            value: "deprecated"
+          - label: "Planning"
+            value: "planning"
+
+  database:
+    displayName: "Database Component"
+    fields:
+      - name: "databaseName"
+        type: "string"
+        label: "Database Name"
+        required: true
+        
+      - name: "engine"
+        type: "select"
+        label: "Database Engine"
+        options:
+          - label: "PostgreSQL"
+            value: "postgres" 
+          - label: "MySQL"
+            value: "mysql"
+          - label: "MongoDB"
+            value: "mongodb"
+            
+      - name: "version"
+        type: "string"
+        label: "Engine Version"
