@@ -42,9 +42,9 @@ export const createKeyboardShortcuts = (
             }
         },
         {
-            key: 'Backspace',
-            modifierKey: false,
-            description: `${isMac ? '⌫' : 'Delete'}: Remove selected 3D shape`,
+            key: 'd',
+            modifierKey: true,
+            description: `${isMac ? '⌘' : 'Ctrl'}+D: Remove selected 3D shape`,
             action: () => {
                 if (selected3DShape) {
                     console.log('Removing selected 3D shape:', selected3DShape);
