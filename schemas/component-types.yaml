@@ -1,7 +1,22 @@
 componentTypes:
   service:
-    displayName: "Service Component"
+    displayName: "Service"
     fields:
+      - name: "name"
+        type: "string"
+        label: "Name"
+        required: true
+      
+      - name: "description"
+        type: "string"
+        label: "Description"
+        required: false
+
+      - name: "lastModified"
+        type: "string"
+        label: "Last Modified"
+        required: false
+      
       - name: "serviceName"
         type: "string"
         label: "Service Name"
@@ -27,8 +42,23 @@ componentTypes:
             value: "planning"
 
   database:
-    displayName: "Database Component"
+    displayName: "Database"
     fields:
+      - name: "name"
+        type: "string"
+        label: "Name"
+        required: true
+      
+      - name: "description"
+        type: "string"
+        label: "Description"
+        required: false
+
+      - name: "lastModified"
+        type: "string"
+        label: "Last Modified"
+        required: false
+        
       - name: "databaseName"
         type: "string"
         label: "Database Name"
