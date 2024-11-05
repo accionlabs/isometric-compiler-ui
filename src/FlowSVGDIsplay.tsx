@@ -2,7 +2,8 @@ import React, {
     useState,
     useCallback,
     useEffect,
-    MouseEvent as ReactMouseEvent
+    MouseEvent as ReactMouseEvent,
+    useMemo
 } from 'react';
 import ReactFlow, {
     ReactFlowProvider,
@@ -18,7 +19,8 @@ import ReactFlow, {
     addEdge,
     useStoreApi,
     ReactFlowState,
-    useStore
+    useStore,
+    XYPosition
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 
@@ -26,7 +28,7 @@ import { DiagramComponent, CanvasSize } from '@/Types';
 import SVGNode from '@/components/ui/SVGNode';
 import LabelNode from '@/components/ui/LabelNode';
 import CustomEdge from '@/components/ui/CustomEdge';
-import { exportAsSVG, exportAsPNG } from '@/lib/exportUtils';
+import MetadataNode from '@/components/ui/MetadataNode';
 
 interface FlowSVGDisplayProps {
     svgContent: string;
@@ -42,11 +44,28 @@ interface FlowSVGDisplayProps {
 
 const nodeTypes = {
     svgNode: SVGNode,
-    label: LabelNode
+    label: LabelNode,
+    metadata: MetadataNode
 };
 
 const edgeTypes = {
     custom: CustomEdge
+};
+
+// Constants for metadata node positioning
+const METADATA_NODE_SPACING = 250; // Space between nodes
+const INITIAL_RADIUS = 400; // Initial distance from center
+const ANGLE_INCREMENT = Math.PI / 6; // 30 degrees in radians
+
+const calculateMetadataNodePosition = (index: number, totalNodes: number): XYPosition => {
+    // Calculate position in a spiral pattern
+    const angle = ANGLE_INCREMENT * index;
+    const radius = INITIAL_RADIUS + (Math.floor(index / 12) * METADATA_NODE_SPACING);
+    
+    return {
+        x: Math.cos(angle) * radius,
+        y: Math.sin(angle) * radius
+    };
 };
 
 // Helper function to create initial nodes
@@ -60,10 +79,9 @@ const createInitialNodes = (
     setSelectedPosition: (position: string) => void,
     setSelectedAttachmentPoint: (point: string) => void,
     isConnecting: boolean,
-    isInteractive: boolean,
-    addTestLabels: boolean
+    isInteractive: boolean
 ): Node[] => {
-    // Create main SVG node
+    // Create main SVG node at the center
     const mainNode: Node = {
         id: 'svg-main',
         type: 'svgNode',
@@ -86,24 +104,35 @@ const createInitialNodes = (
         style: { zIndex: 0 }
     };
 
-    // Create label nodes for each shape if needed
-    const labelNodes: Node[] = addTestLabels ? diagramComponents.map((component, index) => ({
-        id: `label-${component.id}`,
-        type: 'label',
-        position: { x: 100 + (index * 50), y: 100 + (index * 30) },
-        data: {
-            label: component.shape,
-            handleType: 'source',
-            isInteractive
-        },
-        draggable: isInteractive,
-        style: { zIndex: 5 }
-    })) : [];
+    // Filter components with metadata
+    const componentsWithMetadata = diagramComponents.filter(
+        component => component.type && component.metadata
+    );
 
-    return [mainNode, ...labelNodes];
+    // Create metadata nodes positioned around the main SVG
+    const metadataNodes: Node[] = componentsWithMetadata.map((component, index) => {
+        const position = calculateMetadataNodePosition(index, componentsWithMetadata.length);
+        
+        return {
+            id: `metadata-${component.id}`,
+            type: 'metadata',
+            position: position,
+            data: {
+                componentId: component.id,
+                type: component.type,
+                metadata: component.metadata,
+                isInteractive,
+                isConnecting
+            },
+            draggable: isInteractive,
+            style: { zIndex: 4 }
+        };
+    });
+
+    return [mainNode, ...metadataNodes];
 };
 
-// Separate internal component that uses React Flow hooks
+// FlowContent Component
 const FlowContent: React.FC<FlowSVGDisplayProps> = ({
     svgContent,
     selected3DShape,
@@ -119,12 +148,11 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
     const [edges, setEdges, onEdgesChange] = useEdgesState<Edge[]>([]);
     const [isConnecting, setIsConnecting] = useState(false);
     const store = useStoreApi();
-
-    const addTestLabels: boolean = false;
-
     const { fitView } = useReactFlow();
 
-    const isInteractive = useStore((state) => state.nodesDraggable && state.nodesConnectable && state.elementsSelectable);
+    const isInteractive = useStore((state) => 
+        state.nodesDraggable && state.nodesConnectable && state.elementsSelectable
+    );
 
     // Update nodes when content or components change
     useEffect(() => {
@@ -145,14 +173,13 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
                 setSelectedPosition,
                 setSelectedAttachmentPoint,
                 isConnecting,
-                isInteractive,
-                addTestLabels
+                isInteractive
             );
 
-            // Preserve positions of existing label nodes
+            // Preserve positions of existing nodes when possible
             return newNodes.map(node => {
                 const existingNode = prevNodes.find(n => n.id === node.id);
-                if (existingNode && node.type === 'label') {
+                if (existingNode && (node.type === 'metadata')) {
                     return {
                         ...node,
                         position: existingNode.position,
@@ -183,16 +210,23 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
         return () => subscription();
     }, [store]);
 
+    // Fit view after nodes are updated
+    useEffect(() => {
+        if (nodes.length > 0) {
+            fitView({ padding: 0.2 });
+        }
+    }, [nodes.length, fitView]);
+
     // Connection handler
     const onConnect = useCallback((connection: Connection) => {
-        if (!isInteractive) return; // Prevent edge creation when not interactive
+        if (!isInteractive) return;
         if (!connection.source || !connection.target) return;
         setEdges((eds) => addEdge(connection, eds));
     }, [setEdges, isInteractive]);
 
     // Handle pane click for deselection
     const onPaneClick = useCallback((event: ReactMouseEvent<Element, MouseEvent>) => {
-        if (!isInteractive) return; // Prevent interaction when not interactive
+        if (!isInteractive) return;
 
         const target = event.target as HTMLElement;
         const isNodeClick = target.closest('.svg-wrapper');
@@ -201,44 +235,8 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
             onSelect3DShape(null);
             setSelectedPosition('top');
             setSelectedAttachmentPoint('none');
-
-            setNodes(prevNodes =>
-                prevNodes.map(node => {
-                    if (node.type === 'svgNode') {
-                        return {
-                            ...node,
-                            data: {
-                                ...node.data,
-                                selected3DShape: null
-                            }
-                        };
-                    }
-                    return node;
-                })
-            );
         }
-        
-    }, [isInteractive, onSelect3DShape, setSelectedPosition, setSelectedAttachmentPoint, setNodes]);
-
-    const handleExportSVG = useCallback(async () => {
-        try {
-            // Ensure the diagram is properly fitted before export
-            fitView({ padding: 0.2 });
-            await exportAsSVG();
-        } catch (error) {
-            console.error('Failed to export SVG:', error);
-        }
-    }, [fitView]);
-
-    const handleExportPNG = useCallback(async () => {
-        try {
-            // Ensure the diagram is properly fitted before export
-            fitView({ padding: 0.2 });
-            await exportAsPNG();
-        } catch (error) {
-            console.error('Failed to export PNG:', error);
-        }
-    }, [fitView]);
+    }, [isInteractive, onSelect3DShape, setSelectedPosition, setSelectedAttachmentPoint]);
 
     return (
         <ReactFlow
@@ -267,7 +265,7 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
     );
 };
 
-// Main component that provides the ReactFlow context
+// Main component wrapper with ReactFlow provider
 const FlowSVGDisplay: React.FC<FlowSVGDisplayProps> = (props) => {
     return (
         <div className="w-full h-full bg-white relative">

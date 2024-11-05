@@ -1,24 +1,33 @@
 import { SchemaDefinition, ComponentType, ComponentTypes, MetadataField } from '../Types';
 import { parse as parseYaml } from 'yaml';
 
+// Define required default fields that must exist in all component types
+const DEFAULT_REQUIRED_FIELDS: MetadataField[] = [
+    {
+        name: "name",
+        type: "string",
+        label: "Name",
+        required: true
+    },
+    {
+        name: "description",
+        type: "string",
+        label: "Description",
+        required: false
+    },
+    {
+        name: "lastModified",
+        type: "string",
+        label: "Last Modified",
+        required: false
+    }
+];
+
 const DEFAULT_SCHEMA: SchemaDefinition = {
     componentTypes: {
         basic: {
-            displayName: "Basic Component",
-            fields: [
-                {
-                    name: "name",
-                    type: "string",
-                    label: "Name",
-                    required: false
-                },
-                {
-                    name: "description",
-                    type: "string",
-                    label: "Description",
-                    required: false
-                }
-            ]
+            displayName: "Component",
+            fields: DEFAULT_REQUIRED_FIELDS
         }
     }
 };
@@ -71,45 +80,97 @@ class SchemaLoader {
         return true;
     }
 
+    private hasRequiredDefaultFields(fields: MetadataField[]): boolean {
+        return DEFAULT_REQUIRED_FIELDS.every(defaultField => {
+            const matchingField = fields.find(f => f.name === defaultField.name);
+            if (!matchingField) return false;
+
+            // Check if required field properties match
+            return (
+                matchingField.type === defaultField.type &&
+                matchingField.label === defaultField.label &&
+                (defaultField.required ? matchingField.required === true : true)
+            );
+        });
+    }
+
+    private ensureRequiredDefaultFields(fields: MetadataField[]): MetadataField[] {
+        const updatedFields = [...fields];
+        
+        DEFAULT_REQUIRED_FIELDS.forEach(defaultField => {
+            const existingFieldIndex = updatedFields.findIndex(f => f.name === defaultField.name);
+            
+            if (existingFieldIndex === -1) {
+                // Add missing default field
+                updatedFields.unshift(defaultField);
+            } else {
+                // Update existing field to match default requirements
+                updatedFields[existingFieldIndex] = {
+                    ...updatedFields[existingFieldIndex],
+                    type: defaultField.type,
+                    label: defaultField.label,
+                    required: defaultField.required || updatedFields[existingFieldIndex].required
+                };
+            }
+        });
+
+        return updatedFields;
+    }
+
     private isValidComponentType(type: unknown): type is ComponentType {
-        // First check if it's an object
         if (!type || typeof type !== 'object') return false;
 
-        // Type assertion after object check
         const componentType = type as Record<string, unknown>;
 
-        // Check displayName
         if (!('displayName' in componentType) ||
             typeof componentType.displayName !== 'string') {
             return false;
         }
 
-        // Check fields array
         if (!('fields' in componentType) ||
             !Array.isArray(componentType.fields)) {
             return false;
         }
 
         // Validate each field
-        return componentType.fields.every(field => this.isValidField(field));
+        if (!componentType.fields.every(field => this.isValidField(field))) {
+            return false;
+        }
+
+        // Validate required default fields
+        return this.hasRequiredDefaultFields(componentType.fields);
     }
 
-    private validateSchema(schema: any): schema is SchemaDefinition {
-        if (!schema || typeof schema !== 'object') return false;
-        if (!schema.componentTypes || typeof schema.componentTypes !== 'object') return false;
+    private validateAndEnhanceSchema(schema: any): SchemaDefinition | null {
+        if (!schema || typeof schema !== 'object') return null;
+        if (!schema.componentTypes || typeof schema.componentTypes !== 'object') return null;
 
-        // Type assertion to help TypeScript understand the structure
         const componentTypes = schema.componentTypes as Record<string, unknown>;
+        const enhancedComponentTypes: ComponentTypes = {};
 
-        // Check each component type
+        // Process each component type
         for (const [key, type] of Object.entries(componentTypes)) {
             if (!this.isValidComponentType(type)) {
                 console.warn(`Invalid component type definition for: ${key}`);
-                return false;
+                const componentType = type as any;
+                
+                // Try to fix the component type by adding required fields
+                if (componentType.displayName && Array.isArray(componentType.fields)) {
+                    const enhancedFields = this.ensureRequiredDefaultFields(componentType.fields);
+                    enhancedComponentTypes[key] = {
+                        displayName: componentType.displayName,
+                        fields: enhancedFields
+                    };
+                    console.log(`Enhanced component type ${key} with required fields`);
+                } else {
+                    return null;
+                }
+            } else {
+                enhancedComponentTypes[key] = type as ComponentType;
             }
         }
 
-        return true;
+        return { componentTypes: enhancedComponentTypes };
     }
 
     public async loadSchema(schemaUrl: string): Promise<SchemaDefinition> {
@@ -123,8 +184,14 @@ class SchemaLoader {
             const content = await response.text();
             const schema = await this.parseSchema(content);
 
-            if (!schema || !this.validateSchema(schema)) {
+            if (!schema) {
                 console.warn('Invalid schema structure, using default schema');
+                return this.loadedSchema;
+            }
+
+            const validatedSchema = this.validateAndEnhanceSchema(schema);
+            if (!validatedSchema) {
+                console.warn('Schema validation failed, using default schema');
                 return this.loadedSchema;
             }
 
@@ -132,7 +199,7 @@ class SchemaLoader {
             this.loadedSchema = {
                 componentTypes: {
                     ...DEFAULT_SCHEMA.componentTypes,
-                    ...schema.componentTypes
+                    ...validatedSchema.componentTypes
                 }
             };
 
