@@ -127,7 +127,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     const handleMessage = (event: MessageEvent) => {
       try {
         //message origin later can be handled by array of origins which we can fetch from db
-        if (event.origin === "http://localhost:4100") {
+        if (event.origin === "https://assistant.accionbreeze.com") {
           const { diagramComponents = [] } = event.data;
           handleLoadDiagramFromJSON(diagramComponents);
         }

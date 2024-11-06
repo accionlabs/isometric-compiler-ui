@@ -1,11 +1,12 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
 import { Button } from "../components/ui/Button";
-import { Input } from "../components/ui/Input";
 import { CodeBlock } from "./CodeBlockCard";
 import { DiagramComponent } from "@/Types";
 import { useChat } from "@/hooks/useChatProvider";
 import { sendChatRequest } from "@/services/chat";
+import { useEnterSubmit } from "@/hooks/useEnterSubmit";
+import { Textarea } from "@/components/ui/textarea";
 
 interface ChatPanelProps {
   handleLoadDiagramFromJSON: (loadedComponents: DiagramComponent[]) => void;
@@ -13,10 +14,12 @@ interface ChatPanelProps {
 
 const ChatPanel: React.FC<ChatPanelProps> = ({ handleLoadDiagramFromJSON }) => {
   const { messages, setMessages } = useChat();
+  const { formRef, onKeyDown } = useEnterSubmit();
 
   const [input, setInput] = useState("");
   const [isLoading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = React.useRef<HTMLTextAreaElement>(null);
 
   // Scroll to the bottom when a new message is added
   useEffect(() => {
@@ -55,7 +58,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ handleLoadDiagramFromJSON }) => {
   return (
     <div className="p-4 flex flex-col gap-4 ">
       {/* chat container */}
-      <div className="h-[85vh] overflow-scroll flex flex-col gap-2">
+      <div className="h-[82vh] overflow-x-hidden flex flex-col gap-2">
         {messages.map((message, index) => (
           <div
             key={index}
@@ -65,7 +68,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ handleLoadDiagramFromJSON }) => {
           >
             {message.isUser ? (
               <div
-                className={`max-w-xs px-4 py-2 rounded-lg ${
+                className={`max-w-xs h-auto px-4 py-2 rounded-lg break-words ${
                   message.isUser ? "bg-blue-600" : "bg-gray-700"
                 }`}
               >
@@ -85,22 +88,32 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ handleLoadDiagramFromJSON }) => {
       </div>
 
       {/* input container */}
-      <form onSubmit={handleSend}>
-        <div className="flex bottom-2 gap-2">
-          <Input
+
+      <form onSubmit={handleSend} ref={formRef}>
+        <div className="relative flex max-h-60 w-full grow flex-col overflow-hidden bg-background px-8 sm:rounded-md sm:border sm:p-1 sm:pr-20">
+          <Textarea
+            id="messageInput"
+            ref={inputRef}
             tabIndex={0}
+            onKeyDown={onKeyDown}
+            placeholder="Send a message."
+            className="min-h-[60px] w-full resize-none bg-transparent px-4 py-[1.3rem] focus-within:outline-none sm:text-sm"
             autoFocus
             spellCheck={false}
             autoComplete="off"
             autoCorrect="off"
+            name="message"
+            rows={1}
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Enter your requirement"
-            className="w-full bg-gray-700 text-white border-gray-600 focus:border-blue-500 placeholder-gray-400"
           />
-          <Button type="submit" className="bg-blue-600 hover:bg-blue-500">
-            Send
-          </Button>
+
+          <div className="absolute right-0 top-[13px] sm:right-4">
+            <Button type="submit" disabled={!input}>
+              send
+              <span className="sr-only">Send message</span>
+            </Button>
+          </div>
         </div>
       </form>
     </div>
