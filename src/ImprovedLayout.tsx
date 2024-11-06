@@ -1,10 +1,10 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
     Dialog,
     DialogContent,
     DialogHeader,
     DialogTitle,
-    DialogDescription,
+    DialogDescription
 } from "./components/ui/Dialog";
 import { Button } from "./components/ui/Button";
 import FlowSVGDisplay from "./FlowSVGDIsplay";
@@ -44,7 +44,12 @@ interface ImprovedLayoutProps {
     fileName: string;
     setFileName: (name: string) => void;
     onGetBoundingBox: (
-        boundingBox: { x: number; y: number; width: number; height: number } | null
+        boundingBox: {
+            x: number;
+            y: number;
+            width: number;
+            height: number;
+        } | null
     ) => void;
     availableAttachmentPoints: string[];
     errorMessage: string | null;
@@ -57,7 +62,11 @@ interface ImprovedLayoutProps {
     showAttachmentPoints: boolean;
     setShowAttachmentPoints: (show: boolean) => void;
     onLibraryChange: (libraryId: string) => void;
-    onUpdateMetadata: (id: string, type: string | undefined, metadata: any) => void;
+    onUpdateMetadata: (
+        id: string,
+        type: string | undefined,
+        metadata: any
+    ) => void;
     storageType: StorageType;
     onStorageTypeChange: (type: StorageType) => void;
 }
@@ -102,8 +111,11 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     setShowAttachmentPoints,
     onUpdateMetadata,
     storageType,
-    onStorageTypeChange,
+    onStorageTypeChange
 }) => {
+    const params = new URLSearchParams(window.location.search);
+    const isReadModeEnabled = params.get("mode") === "read";
+
     const [activePanel, setActivePanel] = useState<
         "shapes" | "composition" | "settings" | "chat"
     >("shapes");
@@ -115,6 +127,27 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
         totalFiles: number;
     } | null>(null);
     const [saveLoadMessage, setSaveLoadMessage] = useState<string | null>(null);
+
+    useEffect(() => {
+        const handleMessage = (event: MessageEvent) => {
+            try {
+                //message origin later can be handled by array of origins which we can fetch from db
+                if (event.origin === "https://assistant.accionbreeze.com") {
+                    const { diagramComponents = [] } = event.data;
+                    handleLoadDiagramFromJSON(diagramComponents);
+                }
+            } catch (error) {
+                console.error("Error processing message event: ", error);
+            }
+        };
+        // Add event listener for message events
+        window.addEventListener("message", handleMessage);
+
+        // Clean up the event listener on component unmount
+        return () => {
+            window.removeEventListener("message", handleMessage);
+        };
+    }, []);
 
     const handleSelect3DShape = useCallback(
         (id: string | null) => {
@@ -176,116 +209,136 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
         }
     };
 
-    const handleLoadDiagram = useCallback(async (file?: File) => {
-        setIsSaveLoadDialogOpen(true);
-        setSaveLoadMessage("Loading diagram...");
-        try {
-            await onLoadDiagram(file);
-            setSaveLoadMessage("Diagram loaded successfully!");
-        } catch (error) {
-            setSaveLoadMessage(
-                error instanceof Error
-                    ? error.message
-                    : "Failed to load diagram. Please check the file and try again."
-            );
-        } finally {
-            setTimeout(() => setIsSaveLoadDialogOpen(false), 5000);
-        }
-    }, [onLoadDiagram]);
+    const handleLoadDiagram = useCallback(
+        async (file?: File) => {
+            setIsSaveLoadDialogOpen(true);
+            setSaveLoadMessage("Loading diagram...");
+            try {
+                await onLoadDiagram(file);
+                setSaveLoadMessage("Diagram loaded successfully!");
+            } catch (error) {
+                setSaveLoadMessage(
+                    error instanceof Error
+                        ? error.message
+                        : "Failed to load diagram. Please check the file and try again."
+                );
+            } finally {
+                setTimeout(() => setIsSaveLoadDialogOpen(false), 5000);
+            }
+        },
+        [onLoadDiagram]
+    );
 
     return (
         <ChatProvider>
             <div className="flex flex-row h-screen w-screen bg-gray-900 text-white">
                 {/* Left side control panels */}
-                <div className="flex flex-col border-r border-gray-700 w-1/3">
-                    {/* Tab buttons */}
-                    <div className="flex flex-row h-14 px-2 pt-2 space-x-2 border-b border-gray-700">
-                        <button
-                            className={`flex-col h-12 w-1/3 py-2 ${activePanel === "shapes" ? "bg-blue-600" : "bg-gray-800"
+                {!isReadModeEnabled && (
+                    <div className="flex flex-col border-r border-gray-700 w-1/3">
+                        {/* Tab buttons */}
+                        <div className="flex flex-row h-14 px-2 pt-2 space-x-2 border-b border-gray-700">
+                            <button
+                                className={`flex-col h-12 w-1/3 py-2 ${
+                                    activePanel === "shapes"
+                                        ? "bg-blue-600"
+                                        : "bg-gray-800"
                                 }`}
-                            onClick={() => setActivePanel("shapes")}
-                        >
-                            Shapes
-                        </button>
-                        <button
-                            className={`flex-col h-12 w-1/3 py-2 ${activePanel === "composition" ? "bg-blue-600" : "bg-gray-800"
+                                onClick={() => setActivePanel("shapes")}
+                            >
+                                Shapes
+                            </button>
+                            <button
+                                className={`flex-col h-12 w-1/3 py-2 ${
+                                    activePanel === "composition"
+                                        ? "bg-blue-600"
+                                        : "bg-gray-800"
                                 }`}
-                            onClick={() => setActivePanel("composition")}
-                        >
-                            Composition
-                        </button>
-                        <button
-                            className={`flex-col h-12 w-1/3 py-2 ${activePanel === "settings" ? "bg-blue-600" : "bg-gray-800"
+                                onClick={() => setActivePanel("composition")}
+                            >
+                                Composition
+                            </button>
+                            <button
+                                className={`flex-col h-12 w-1/3 py-2 ${
+                                    activePanel === "settings"
+                                        ? "bg-blue-600"
+                                        : "bg-gray-800"
                                 }`}
-                            onClick={() => setActivePanel("settings")}
-                        >
-                            Settings
-                        </button>
-                        <button
-                            className={`flex-col h-12 w-1/3 py-2 ${activePanel === "chat" ? "bg-blue-600" : "bg-gray-800"
+                                onClick={() => setActivePanel("settings")}
+                            >
+                                Settings
+                            </button>
+                            <button
+                                className={`flex-col h-12 w-1/3 py-2 ${
+                                    activePanel === "chat"
+                                        ? "bg-blue-600"
+                                        : "bg-gray-800"
                                 }`}
-                            onClick={() => setActivePanel("chat")}
-                        >
-                            AI Model
-                        </button>
-                    </div>
+                                onClick={() => setActivePanel("chat")}
+                            >
+                                AI Model
+                            </button>
+                        </div>
 
-                    {/* Panel content */}
-                    <div className="flex-grow overflow-hidden">
-                        {activePanel === "shapes" && (
-                            <ShapesPanel
-                                svgLibrary={svgLibrary}
-                                activeLibrary={activeLibrary}
-                                onAdd3DShape={handleAdd3DShape}
-                                onAdd2DShape={onAdd2DShape}
-                                selected3DShape={selected3DShape}
-                                diagramComponents={diagramComponents}
-                            />
-                        )}
-                        {activePanel === "composition" && (
-                            <CompositionPanel
-                                diagramComponents={diagramComponents}
-                                isCopied={isCopied}
-                                svgLibrary={svgLibrary}
-                                onRemove3DShape={onRemove3DShape}
-                                onRemove2DShape={onRemove2DShape}
-                                onSelect3DShape={onSelect3DShape}
-                                selected3DShape={selected3DShape}
-                                onCut3DShape={onCut3DShape}
-                                onCopy3DShape={handleCopy3DShape}
-                                onCancelCut3DShape={onCancelCut3DShape}
-                                onPaste3DShape={handlePaste3DShape}
-                                onUpdateMetadata={onUpdateMetadata}
-                            />
-                        )}
-                        {activePanel === "settings" && (
-                            <SettingsPanel
-                                canvasSize={canvasSize}
-                                onSetCanvasSize={onSetCanvasSize}
-                                fileName={fileName}
-                                setFileName={setFileName}
-                                onSaveDiagram={handleSaveDiagram}
-                                onLoadDiagram={handleLoadDiagram}
-                                activeLibrary={activeLibrary}
-                                onLibraryChange={onLibraryChange}
-                                folderPath={folderPath}
-                                setFolderPath={setFolderPath}
-                                onDownloadSVG={onDownloadSVG}
-                                showAttachmentPoints={showAttachmentPoints}
-                                setShowAttachmentPoints={setShowAttachmentPoints}
-                                onUpdateShapes={onUpdateSvgLibrary}
-                                storageType={storageType}
-                                onStorageTypeChange={onStorageTypeChange}
-                            />
-                        )}
-                        {activePanel === "chat" && (
-                            <ChatPanel
-                                handleLoadDiagramFromJSON={handleLoadDiagramFromJSON}
-                            />
-                        )}
+                        {/* Panel content */}
+                        <div className="flex-grow overflow-hidden">
+                            {activePanel === "shapes" && (
+                                <ShapesPanel
+                                    svgLibrary={svgLibrary}
+                                    activeLibrary={activeLibrary}
+                                    onAdd3DShape={handleAdd3DShape}
+                                    onAdd2DShape={onAdd2DShape}
+                                    selected3DShape={selected3DShape}
+                                    diagramComponents={diagramComponents}
+                                />
+                            )}
+                            {activePanel === "composition" && (
+                                <CompositionPanel
+                                    diagramComponents={diagramComponents}
+                                    isCopied={isCopied}
+                                    svgLibrary={svgLibrary}
+                                    onRemove3DShape={onRemove3DShape}
+                                    onRemove2DShape={onRemove2DShape}
+                                    onSelect3DShape={onSelect3DShape}
+                                    selected3DShape={selected3DShape}
+                                    onCut3DShape={onCut3DShape}
+                                    onCopy3DShape={handleCopy3DShape}
+                                    onCancelCut3DShape={onCancelCut3DShape}
+                                    onPaste3DShape={handlePaste3DShape}
+                                    onUpdateMetadata={onUpdateMetadata}
+                                />
+                            )}
+                            {activePanel === "settings" && (
+                                <SettingsPanel
+                                    canvasSize={canvasSize}
+                                    onSetCanvasSize={onSetCanvasSize}
+                                    fileName={fileName}
+                                    setFileName={setFileName}
+                                    onSaveDiagram={handleSaveDiagram}
+                                    onLoadDiagram={handleLoadDiagram}
+                                    activeLibrary={activeLibrary}
+                                    onLibraryChange={onLibraryChange}
+                                    folderPath={folderPath}
+                                    setFolderPath={setFolderPath}
+                                    onDownloadSVG={onDownloadSVG}
+                                    showAttachmentPoints={showAttachmentPoints}
+                                    setShowAttachmentPoints={
+                                        setShowAttachmentPoints
+                                    }
+                                    onUpdateShapes={onUpdateSvgLibrary}
+                                    storageType={storageType}
+                                    onStorageTypeChange={onStorageTypeChange}
+                                />
+                            )}
+                            {activePanel === "chat" && (
+                                <ChatPanel
+                                    handleLoadDiagramFromJSON={
+                                        handleLoadDiagramFromJSON
+                                    }
+                                />
+                            )}
+                        </div>
                     </div>
-                </div>
-
+                )}
                 <div className="flex-grow flex flex-col relative">
                     {/* Heading */}
                     <h2 className="text-xl h-14 font-semibold p-4 bg-gray-800 z-10">
@@ -304,23 +357,36 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                             onGetBoundingBox={onGetBoundingBox}
                             canvasSize={canvasSize}
                             setSelectedPosition={handleSelectedPosition}
-                            setSelectedAttachmentPoint={handleSelectedAttachmentPoint}
+                            setSelectedAttachmentPoint={
+                                handleSelectedAttachmentPoint
+                            }
                         />
 
                         {/* Attachment Options Panel - slides behind the heading */}
-                        <div
-                            className={`absolute top-0 left-0 right-0 transition-transform duration-300 ease-in-out transform ${selected3DShape ? "translate-y-0" : "-translate-y-full"
+                        {!isReadModeEnabled && (
+                            <div
+                                className={`absolute top-0 left-0 right-0 transition-transform duration-300 ease-in-out transform ${
+                                    selected3DShape
+                                        ? "translate-y-0"
+                                        : "-translate-y-full"
                                 }`}
-                            style={{ top: "-1px" }} // Slight overlap to prevent gap
-                        >
-                            <AttachmentOptionsPanel
-                                selectedPosition={selectedPosition}
-                                setSelectedPosition={handleSelectedPosition}
-                                selectedAttachmentPoint={selectedAttachmentPoint}
-                                setSelectedAttachmentPoint={handleSelectedAttachmentPoint}
-                                availableAttachmentPoints={availableAttachmentPoints}
-                            />
-                        </div>
+                                style={{ top: "-1px" }} // Slight overlap to prevent gap
+                            >
+                                <AttachmentOptionsPanel
+                                    selectedPosition={selectedPosition}
+                                    setSelectedPosition={handleSelectedPosition}
+                                    selectedAttachmentPoint={
+                                        selectedAttachmentPoint
+                                    }
+                                    setSelectedAttachmentPoint={
+                                        handleSelectedAttachmentPoint
+                                    }
+                                    availableAttachmentPoints={
+                                        availableAttachmentPoints
+                                    }
+                                />
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -335,14 +401,17 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                 Loading Shapes from Google Drive
                             </DialogTitle>
                             <DialogDescription className="text-gray-300">
-                                Please wait while we load the shapes from your Google Drive.
+                                Please wait while we load the shapes from your
+                                Google Drive.
                             </DialogDescription>
                         </DialogHeader>
                         {errorMessage && (
                             <div className="mt-4">
                                 <p className="text-red-400">{errorMessage}</p>
                                 <Button
-                                    onClick={() => setIsLoadingDialogOpen(false)}
+                                    onClick={() =>
+                                        setIsLoadingDialogOpen(false)
+                                    }
                                     className="mt-2"
                                 >
                                     Close
@@ -360,10 +429,11 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                     <div
                                         className="bg-blue-500 h-2.5 rounded-full"
                                         style={{
-                                            width: `${(loadingProgress.loadedFiles /
+                                            width: `${
+                                                (loadingProgress.loadedFiles /
                                                     loadingProgress.totalFiles) *
                                                 100
-                                                }%`,
+                                            }%`
                                         }}
                                     ></div>
                                 </div>
