@@ -239,9 +239,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
 						<div className="flex flex-row h-14 px-2 pt-2 space-x-2 border-b border-gray-700">
 							<button
 								className={`flex-col h-12 w-1/3 py-2 ${
-									activePanel === "shapes"
-										? "bg-blue-600"
-										: "bg-gray-800"
+									activePanel === "shapes" ? "bg-blue-600" : "bg-gray-800"
 								}`}
 								onClick={() => setActivePanel("shapes")}
 							>
@@ -249,9 +247,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
 							</button>
 							<button
 								className={`flex-col h-12 w-1/3 py-2 ${
-									activePanel === "composition"
-										? "bg-blue-600"
-										: "bg-gray-800"
+									activePanel === "composition" ? "bg-blue-600" : "bg-gray-800"
 								}`}
 								onClick={() => setActivePanel("composition")}
 							>
@@ -259,9 +255,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
 							</button>
 							<button
 								className={`flex-col h-12 w-1/3 py-2 ${
-									activePanel === "settings"
-										? "bg-blue-600"
-										: "bg-gray-800"
+									activePanel === "settings" ? "bg-blue-600" : "bg-gray-800"
 								}`}
 								onClick={() => setActivePanel("settings")}
 							>
@@ -269,9 +263,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
 							</button>
 							<button
 								className={`flex-col h-12 w-1/3 py-2 ${
-									activePanel === "chat"
-										? "bg-blue-600"
-										: "bg-gray-800"
+									activePanel === "chat" ? "bg-blue-600" : "bg-gray-800"
 								}`}
 								onClick={() => setActivePanel("chat")}
 							>
@@ -321,9 +313,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
 									setFolderPath={setFolderPath}
 									onDownloadSVG={onDownloadSVG}
 									showAttachmentPoints={showAttachmentPoints}
-									setShowAttachmentPoints={
-										setShowAttachmentPoints
-									}
+									setShowAttachmentPoints={setShowAttachmentPoints}
 									onUpdateShapes={onUpdateSvgLibrary}
 									storageType={storageType}
 									onStorageTypeChange={onStorageTypeChange}
@@ -331,9 +321,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
 							)}
 							{activePanel === "chat" && (
 								<ChatPanel
-									handleLoadDiagramFromJSON={
-										handleLoadDiagramFromJSON
-									}
+									handleLoadDiagramFromJSON={handleLoadDiagramFromJSON}
 								/>
 							)}
 						</div>
@@ -357,33 +345,23 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
 							onGetBoundingBox={onGetBoundingBox}
 							canvasSize={canvasSize}
 							setSelectedPosition={handleSelectedPosition}
-							setSelectedAttachmentPoint={
-								handleSelectedAttachmentPoint
-							}
+							setSelectedAttachmentPoint={handleSelectedAttachmentPoint}
 						/>
 
 						{/* Attachment Options Panel - slides behind the heading */}
 						{!isReadModeEnabled && (
 							<div
 								className={`absolute top-0 left-0 right-0 transition-transform duration-300 ease-in-out transform ${
-									selected3DShape
-										? "translate-y-0"
-										: "-translate-y-full"
+									selected3DShape ? "translate-y-0" : "-translate-y-full"
 								}`}
 								style={{ top: "-1px" }} // Slight overlap to prevent gap
 							>
 								<AttachmentOptionsPanel
 									selectedPosition={selectedPosition}
 									setSelectedPosition={handleSelectedPosition}
-									selectedAttachmentPoint={
-										selectedAttachmentPoint
-									}
-									setSelectedAttachmentPoint={
-										handleSelectedAttachmentPoint
-									}
-									availableAttachmentPoints={
-										availableAttachmentPoints
-									}
+									selectedAttachmentPoint={selectedAttachmentPoint}
+									setSelectedAttachmentPoint={handleSelectedAttachmentPoint}
+									availableAttachmentPoints={availableAttachmentPoints}
 								/>
 							</div>
 						)}
@@ -401,17 +379,14 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
 								Loading Shapes from Google Drive
 							</DialogTitle>
 							<DialogDescription className="text-gray-300">
-								Please wait while we load the shapes from your
-								Google Drive.
+								Please wait while we load the shapes from your Google Drive.
 							</DialogDescription>
 						</DialogHeader>
 						{errorMessage && (
 							<div className="mt-4">
 								<p className="text-red-400">{errorMessage}</p>
 								<Button
-									onClick={() =>
-										setIsLoadingDialogOpen(false)
-									}
+									onClick={() => setIsLoadingDialogOpen(false)}
 									className="mt-2"
 								>
 									Close
