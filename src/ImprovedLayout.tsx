@@ -1,21 +1,21 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from "react";
 import {
     Dialog,
     DialogContent,
     DialogHeader,
     DialogTitle,
-    DialogDescription,
-} from './components/ui/Dialog';
-import { Button } from './components/ui/Button';
-import FlowSVGDisplay from './FlowSVGDIsplay';
-import ShapesPanel from './panels/ShapesPanel';
-import CompositionPanel from './panels/CompositionPanel';
-import SettingsPanel from './panels/SettingsPanel';
-import AttachmentOptionsPanel from './panels/AttachmentOptionsPanel';
-import { DiagramComponent, Shape } from './Types';
-import ChatPanel from './panels/ChatPanel';
-import { ChatProvider } from './hooks/useChatProvider';
-import { StorageType } from './lib/fileOperations';
+    DialogDescription
+} from "./components/ui/Dialog";
+import { Button } from "./components/ui/Button";
+import FlowSVGDisplay from "./FlowSVGDIsplay";
+import ShapesPanel from "./panels/ShapesPanel";
+import CompositionPanel from "./panels/CompositionPanel";
+import SettingsPanel from "./panels/SettingsPanel";
+import AttachmentOptionsPanel from "./panels/AttachmentOptionsPanel";
+import { DiagramComponent, Shape } from "./Types";
+import ChatPanel from "./panels/ChatPanel";
+import { ChatProvider } from "./hooks/useChatProvider";
+import { StorageType } from "./lib/fileOperations";
 
 interface ImprovedLayoutProps {
     svgLibrary: Shape[];
@@ -49,7 +49,7 @@ interface ImprovedLayoutProps {
             y: number;
             width: number;
             height: number;
-        } | null,
+        } | null
     ) => void;
     availableAttachmentPoints: string[];
     errorMessage: string | null;
@@ -65,7 +65,7 @@ interface ImprovedLayoutProps {
     onUpdateMetadata: (
         id: string,
         type: string | undefined,
-        metadata: any,
+        metadata: any
     ) => void;
     storageType: StorageType;
     onStorageTypeChange: (type: StorageType) => void;
@@ -111,14 +111,14 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     setShowAttachmentPoints,
     onUpdateMetadata,
     storageType,
-    onStorageTypeChange,
+    onStorageTypeChange
 }) => {
     const params = new URLSearchParams(window.location.search);
-    const isReadModeEnabled = params.get('mode') === 'read';
+    const isReadModeEnabled = params.get("mode") === "read";
 
     const [activePanel, setActivePanel] = useState<
-        'shapes' | 'composition' | 'settings' | 'chat'
-    >('shapes');
+        "shapes" | "composition" | "settings" | "chat"
+    >("shapes");
     const [isLoadingDialogOpen, setIsLoadingDialogOpen] = useState(false);
     const [isSaveLoadDialogOpen, setIsSaveLoadDialogOpen] = useState(false);
     const [loadingProgress, setLoadingProgress] = useState<{
@@ -132,20 +132,20 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
         const handleMessage = (event: MessageEvent) => {
             try {
                 //message origin later can be handled by array of origins which we can fetch from db
-                if (event.origin === 'https://assistant.accionbreeze.com') {
+                if (event.origin === "https://assistant.accionbreeze.com") {
                     const { diagramComponents = [] } = event.data;
                     handleLoadDiagramFromJSON(diagramComponents);
                 }
             } catch (error) {
-                console.error('Error processing message event: ', error);
+                console.error("Error processing message event: ", error);
             }
         };
         // Add event listener for message events
-        window.addEventListener('message', handleMessage);
+        window.addEventListener("message", handleMessage);
 
         // Clean up the event listener on component unmount
         return () => {
-            window.removeEventListener('message', handleMessage);
+            window.removeEventListener("message", handleMessage);
         };
     }, []);
 
@@ -154,7 +154,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
             console.log(`Improved Layout: selected 3D Shape ${id}`);
             onSelect3DShape(id);
         },
-        [onSelect3DShape],
+        [onSelect3DShape]
     );
 
     const handleSelectedPosition = useCallback(
@@ -164,46 +164,46 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                 onSelectedPosition(position);
             }
         },
-        [onSelectedPosition, selectedPosition],
+        [onSelectedPosition, selectedPosition]
     );
 
     const handleSelectedAttachmentPoint = useCallback(
         (point: string | null) => {
             onSelectedAttachmentPoint(point);
-            console.log('Improved Layout: attachment point', point);
+            console.log("Improved Layout: attachment point", point);
         },
-        [onSelectedAttachmentPoint],
+        [onSelectedAttachmentPoint]
     );
 
     const handleAdd3DShape = useCallback(
         (shapeName: string) => {
             onAdd3DShape(shapeName);
         },
-        [onAdd3DShape],
+        [onAdd3DShape]
     );
 
     const handleCopy3DShape = useCallback(
         (id: string) => {
             onCopy3DShape(id);
         },
-        [onCopy3DShape],
+        [onCopy3DShape]
     );
 
     const handlePaste3DShape = useCallback(
         (id: string) => {
             onPaste3DShape(id);
         },
-        [onPaste3DShape],
+        [onPaste3DShape]
     );
 
     const handleSaveDiagram = async () => {
         setIsSaveLoadDialogOpen(true);
-        setSaveLoadMessage('Saving diagram...');
+        setSaveLoadMessage("Saving diagram...");
         try {
             await onSaveDiagram();
-            setSaveLoadMessage('Diagram saved successfully!');
+            setSaveLoadMessage("Diagram saved successfully!");
         } catch (error) {
-            setSaveLoadMessage('Failed to save diagram. Please try again.');
+            setSaveLoadMessage("Failed to save diagram. Please try again.");
         } finally {
             setTimeout(() => setIsSaveLoadDialogOpen(false), 5000);
         }
@@ -212,21 +212,21 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     const handleLoadDiagram = useCallback(
         async (file?: File) => {
             setIsSaveLoadDialogOpen(true);
-            setSaveLoadMessage('Loading diagram...');
+            setSaveLoadMessage("Loading diagram...");
             try {
                 await onLoadDiagram(file);
-                setSaveLoadMessage('Diagram loaded successfully!');
+                setSaveLoadMessage("Diagram loaded successfully!");
             } catch (error) {
                 setSaveLoadMessage(
                     error instanceof Error
                         ? error.message
-                        : 'Failed to load diagram. Please check the file and try again.',
+                        : "Failed to load diagram. Please check the file and try again."
                 );
             } finally {
                 setTimeout(() => setIsSaveLoadDialogOpen(false), 5000);
             }
         },
-        [onLoadDiagram],
+        [onLoadDiagram]
     );
 
     return (
@@ -239,41 +239,41 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                         <div className="flex flex-row h-14 px-2 pt-2 space-x-2 border-b border-gray-700">
                             <button
                                 className={`flex-col h-12 w-1/3 py-2 ${
-                                    activePanel === 'shapes'
-                                        ? 'bg-blue-600'
-                                        : 'bg-gray-800'
+                                    activePanel === "shapes"
+                                        ? "bg-blue-600"
+                                        : "bg-gray-800"
                                 }`}
-                                onClick={() => setActivePanel('shapes')}
+                                onClick={() => setActivePanel("shapes")}
                             >
                                 Shapes
                             </button>
                             <button
                                 className={`flex-col h-12 w-1/3 py-2 ${
-                                    activePanel === 'composition'
-                                        ? 'bg-blue-600'
-                                        : 'bg-gray-800'
+                                    activePanel === "composition"
+                                        ? "bg-blue-600"
+                                        : "bg-gray-800"
                                 }`}
-                                onClick={() => setActivePanel('composition')}
+                                onClick={() => setActivePanel("composition")}
                             >
                                 Composition
                             </button>
                             <button
                                 className={`flex-col h-12 w-1/3 py-2 ${
-                                    activePanel === 'settings'
-                                        ? 'bg-blue-600'
-                                        : 'bg-gray-800'
+                                    activePanel === "settings"
+                                        ? "bg-blue-600"
+                                        : "bg-gray-800"
                                 }`}
-                                onClick={() => setActivePanel('settings')}
+                                onClick={() => setActivePanel("settings")}
                             >
                                 Settings
                             </button>
                             <button
                                 className={`flex-col h-12 w-1/3 py-2 ${
-                                    activePanel === 'chat'
-                                        ? 'bg-blue-600'
-                                        : 'bg-gray-800'
+                                    activePanel === "chat"
+                                        ? "bg-blue-600"
+                                        : "bg-gray-800"
                                 }`}
-                                onClick={() => setActivePanel('chat')}
+                                onClick={() => setActivePanel("chat")}
                             >
                                 AI Model
                             </button>
@@ -281,7 +281,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
 
                         {/* Panel content */}
                         <div className="flex-grow overflow-hidden">
-                            {activePanel === 'shapes' && (
+                            {activePanel === "shapes" && (
                                 <ShapesPanel
                                     svgLibrary={svgLibrary}
                                     activeLibrary={activeLibrary}
@@ -291,7 +291,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                     diagramComponents={diagramComponents}
                                 />
                             )}
-                            {activePanel === 'composition' && (
+                            {activePanel === "composition" && (
                                 <CompositionPanel
                                     diagramComponents={diagramComponents}
                                     isCopied={isCopied}
@@ -307,7 +307,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                     onUpdateMetadata={onUpdateMetadata}
                                 />
                             )}
-                            {activePanel === 'settings' && (
+                            {activePanel === "settings" && (
                                 <SettingsPanel
                                     canvasSize={canvasSize}
                                     onSetCanvasSize={onSetCanvasSize}
@@ -329,7 +329,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                     onStorageTypeChange={onStorageTypeChange}
                                 />
                             )}
-                            {activePanel === 'chat' && (
+                            {activePanel === "chat" && (
                                 <ChatPanel
                                     handleLoadDiagramFromJSON={
                                         handleLoadDiagramFromJSON
@@ -367,10 +367,10 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                             <div
                                 className={`absolute top-0 left-0 right-0 transition-transform duration-300 ease-in-out transform ${
                                     selected3DShape
-                                        ? 'translate-y-0'
-                                        : '-translate-y-full'
+                                        ? "translate-y-0"
+                                        : "-translate-y-full"
                                 }`}
-                                style={{ top: '-1px' }} // Slight overlap to prevent gap
+                                style={{ top: "-1px" }} // Slight overlap to prevent gap
                             >
                                 <AttachmentOptionsPanel
                                     selectedPosition={selectedPosition}
@@ -422,7 +422,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                             <div className="mt-4 text-white">
                                 <p>Loading: {loadingProgress.currentFile}</p>
                                 <p>
-                                    Progress: {loadingProgress.loadedFiles} /{' '}
+                                    Progress: {loadingProgress.loadedFiles} /{" "}
                                     {loadingProgress.totalFiles}
                                 </p>
                                 <div className="w-full bg-gray-700 rounded-full h-2.5 mt-2">
@@ -433,7 +433,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                                 (loadingProgress.loadedFiles /
                                                     loadingProgress.totalFiles) *
                                                 100
-                                            }%`,
+                                            }%`
                                         }}
                                     ></div>
                                 </div>
