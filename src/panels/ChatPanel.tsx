@@ -1,7 +1,6 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
 import { Button } from "../components/ui/Button";
-import { Input } from "../components/ui/Input";
 import { CodeBlock } from "./CodeBlockCard";
 import { DiagramComponent } from "@/Types";
 import { useChat } from "@/hooks/useChatProvider";
