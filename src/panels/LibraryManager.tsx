@@ -287,6 +287,14 @@ const LibraryManager: React.FC<LibraryManagerProps> = ({
     }
   }, [activeLibrary, onUpdateShapes]);
 
+  const handleDeleteLibrary = useCallback(async (
+    libraryId: string,
+  ) => {
+    SVGLibraryManager.deleteLibrary(libraryId);
+
+    setLibraries(SVGLibraryManager.getLibraries());
+  }, [activeLibrary, onUpdateShapes]);
+
   const handleSubmitLibrary = useCallback(async () => {
     try {
       setLoadingStatus(editingLibraryId ? 'Updating library...' : 'Creating new library...');
@@ -402,7 +410,7 @@ const LibraryManager: React.FC<LibraryManagerProps> = ({
           </Button>
           {library.id !== 'default' && (
             <Button
-              onClick={() => SVGLibraryManager.deleteLibrary(library.id)}
+              onClick={() => handleDeleteLibrary(library.id)}
               className="bg-red-600 hover:bg-red-700"
             >
               Delete
@@ -453,9 +461,9 @@ const LibraryManager: React.FC<LibraryManagerProps> = ({
               >
                 {activeLibrary === library.id ? 'Active' : 'Activate'}
               </Button>
-              {library.id !== 'default' && (
+              {library.id !== 'default' && activeLibrary !== library.id && (
                 <Button
-                  onClick={() => SVGLibraryManager.deleteLibrary(library.id)}
+                  onClick={() => handleDeleteLibrary(library.id)}
                   className="bg-red-600 hover:bg-red-700"
                 >
                   Delete

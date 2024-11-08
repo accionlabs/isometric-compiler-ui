@@ -54,14 +54,14 @@ const edgeTypes = {
 
 // Constants for metadata node positioning
 const METADATA_NODE_SPACING = 250; // Space between nodes
-const INITIAL_RADIUS = 400; // Initial distance from center
+const INITIAL_RADIUS = 200; // Initial distance from center
 const ANGLE_INCREMENT = Math.PI / 6; // 30 degrees in radians
 
 const calculateMetadataNodePosition = (index: number, totalNodes: number): XYPosition => {
     // Calculate position in a spiral pattern
     const angle = ANGLE_INCREMENT * index;
     const radius = INITIAL_RADIUS + (Math.floor(index / 12) * METADATA_NODE_SPACING);
-    
+
     return {
         x: Math.cos(angle) * radius,
         y: Math.sin(angle) * radius
@@ -112,7 +112,7 @@ const createInitialNodes = (
     // Create metadata nodes positioned around the main SVG
     const metadataNodes: Node[] = componentsWithMetadata.map((component, index) => {
         const position = calculateMetadataNodePosition(index, componentsWithMetadata.length);
-        
+
         return {
             id: `metadata-${component.id}`,
             type: 'metadata',
@@ -150,7 +150,7 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
     const store = useStoreApi();
     const { fitView } = useReactFlow();
 
-    const isInteractive = useStore((state) => 
+    const isInteractive = useStore((state) =>
         state.nodesDraggable && state.nodesConnectable && state.elementsSelectable
     );
 

@@ -9,8 +9,8 @@ export const defaultShapesLibrary: Shape[] = [
     svgContent: ""
   },
   {
-    name: "layer4x3-hd",
-    svgFile: "layer4x3-hd.svg",
+    name: "arrow-layer4x3-hd",
+    svgFile: "arrow-layer4x3.svg",
     type: "3D",
     attachTo: "",
     svgContent: ""
@@ -23,13 +23,6 @@ export const defaultShapesLibrary: Shape[] = [
     svgContent: ""
   },
   {
-    name: "service-hd",
-    svgFile: "service3D-hd.svg",
-    type: "3D",
-    attachTo: "",
-    svgContent: ""
-  },
-  {
     name: "database",
     svgFile: "database3D.svg",
     type: "3D",
@@ -37,8 +30,8 @@ export const defaultShapesLibrary: Shape[] = [
     svgContent: ""
   },
   {
-    name: "database-hd",
-    svgFile: "database3D-hd.svg",
+    name: "bus",
+    svgFile: "bus3D.svg",
     type: "3D",
     attachTo: "",
     svgContent: ""
@@ -128,8 +121,57 @@ export const defaultShapesLibrary: Shape[] = [
     svgContent: ""
   },
   {
+    name: "master data",
+    svgFile: "masterdata2D.svg",
+    type: "2D",
+    attachTo: "top",
+    svgContent: ""
+  },
+  {
+    name: "eventbus",
+    svgFile: "eventbus2D.svg",
+    type: "2D",
+    attachTo: "top",
+    svgContent: ""
+  },
+  {
     name: "jigsaw",
     svgFile: "jigsaw2D.svg",
+    type: "2D",
+    attachTo: "top",
+    svgContent: ""
+  },
+  {
+    name: "documents",
+    svgFile: "documents2D.svg",
+    type: "2D",
+    attachTo: "top",
+    svgContent: ""
+  },
+  {
+    name: "spreadsheets",
+    svgFile: "spreadsheets2D.svg",
+    type: "2D",
+    attachTo: "top",
+    svgContent: ""
+  },
+  {
+    name: "cloud-api",
+    svgFile: "cloud-api2D.svg",
+    type: "2D",
+    attachTo: "top",
+    svgContent: ""
+  },
+  {
+    name: "analytics",
+    svgFile: "analytics2D.svg",
+    type: "2D",
+    attachTo: "top",
+    svgContent: ""
+  },
+  {
+    name: "factory",
+    svgFile: "factory2D.svg",
     type: "2D",
     attachTo: "top",
     svgContent: ""

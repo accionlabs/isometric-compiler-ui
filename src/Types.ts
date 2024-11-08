@@ -95,6 +95,25 @@ export interface TransformationContext {
     scale: number;
 }
 
+export interface SVGLayout {
+    viewBox: {
+        x: number;
+        y: number;
+        width: number;
+        height: number;
+    };
+    scale: number;
+    offset: {
+        x: number;
+        y: number;
+    };
+}
+
+export interface SVGDimensions {
+    boundingBox: ViewBox;
+    scale: number;
+  }
+
 // New interfaces for component metadata
 export interface MetadataFieldOption {
     label: string;
