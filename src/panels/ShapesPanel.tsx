@@ -46,6 +46,11 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
         setOpenPanels(value);
     };
 
+    const handleDeleteComponent = (componentId: string) => {
+        // TODO: check if this component is inserted in diagramComponents and do not allow delete
+        onDeleteComponent(componentId);
+    }
+
     // Temporary function to show SVG preview content for a component
     const getComponentPreview = (component: Component): string => {
         if (!component.svgContent || component.svgContent === '') {
@@ -118,8 +123,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                                     <td className="text-gray-400">{component.description}</td>
                                     <td className="text-right">
                                         <Button
-                                            onClick={() => onDeleteComponent(component.id)}
-                                            disabled={shouldDisable3DShapeButtons()}
+                                            onClick={() => handleDeleteComponent(component.id)}
                                             className="mr-2"
                                         >
                                             Del
