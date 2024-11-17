@@ -1,5 +1,8 @@
-import { DiagramComponent, Point, AttachmentPoint, Shape, SerializedDiagramComponent, GlobalAttachmentPoint } from '../Types';
+import { DiagramComponent, Point, AttachmentPoint, Shape, SerializedDiagramComponent, GlobalAttachmentPoint, Component } from '../Types';
 import { toggleAttachmentPoints } from './svgUtils';
+import { v4 as uuidv4 } from 'uuid';
+import { componentLibraryManager } from './componentLib';
+import { render } from 'react-dom';
 
 declare global {
     interface Window {
@@ -206,6 +209,7 @@ export const add3DShape = (
         const newComponent: DiagramComponent = {
             id: newId,
             shape: shapeName,
+            source: "3D",
             position: (attachmentPoint || position) as DiagramComponent['position'],
             relativeToId: diagramComponents.length === 0 ? null : selected3DShape,
             attached2DShapes: [],
@@ -237,6 +241,52 @@ export const add3DShape = (
         return { updatedComponents: diagramComponents, newComponent: null };
     }
 };
+
+// function to add a component to the diagram components from component library instead of svgLibrary
+export function addComponentToScene(
+    diagramComponents: DiagramComponent[],
+    componentId: string,
+    position: string,
+    attachmentPoint: string | null,
+    selectedComponentId: string | null
+): {
+    newComponent: DiagramComponent | null;
+    updatedComponents: DiagramComponent[];
+} {
+    // Get the component from the library
+    const component = componentLibraryManager.getComponent(componentId);
+    if (!component) {
+        console.error(`Component ${componentId} not found in library`);
+        return {
+            newComponent: null,
+            updatedComponents: diagramComponents
+        };
+    }
+
+    if (attachmentPoint === 'none') {
+        attachmentPoint = null;
+    }
+
+    // Create a new diagram component entry
+    const newComponent: DiagramComponent = {
+        id: `shape-${uuidv4()}`,
+        shape: componentId,
+        source: 'component',
+        position: (attachmentPoint || position) as DiagramComponent['position'],
+        relativeToId: selectedComponentId,
+        attached2DShapes: [],
+        absolutePosition: { x: 0, y: 0 },
+        attachmentPoints: component.attachmentPoints
+    };
+
+    // Add to existing components
+    const updatedComponents = [...diagramComponents, newComponent];
+
+    return {
+        newComponent,
+        updatedComponents
+    };
+}
 
 export const add2DShape = (
     diagramComponents: DiagramComponent[],
@@ -622,6 +672,55 @@ export const areComponentArraysEqual = (arr1: DiagramComponent[], arr2: DiagramC
     return arr1.every((comp, index) => areComponentsEqual(comp, arr2[index]));
 };
 
+// render a diagramComponent by checking if it is a 3D shape or component
+export const renderComponent = (
+    component: DiagramComponent,
+    canvasSize: { width: number; height: number },
+    svgLibrary: Shape[],
+    showAttachmentPoints: boolean
+): { shape3DElement: SVGGElement, attachmentPoints: AttachmentPoint[] } | null => {
+
+    function createSvgGroup(svgContent:string) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(svgContent, "image/svg+xml");
+        const svgElement = doc.documentElement;
+    
+        const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    
+        while (svgElement.firstChild) {
+            group.appendChild(svgElement.firstChild);
+        }
+        group.setAttribute('id', component.id);
+        return group;
+    }
+
+    let shape3DElement = null;
+    let attachmentPoints = [];
+
+    if (component.source === 'component') {
+        // Get component from library
+        const componentData = componentLibraryManager.getComponent(component.shape);
+        if (!componentData) {
+            console.error(`Component ${component.shape} not found in library`);
+            return null;
+        }
+        const svgContent = componentData.svgContent || componentLibraryManager.renderComponent(componentData.id, canvasSize, svgLibrary);
+        shape3DElement = createSvgGroup(svgContent);
+        attachmentPoints = componentData.attachmentPoints;
+    } else {
+        const shape = svgLibrary.find(s => s.name === component.shape);
+        if (!shape) {
+            console.warn(`Shape ${component.shape} not found in library`);
+            return null;
+        }
+        shape3DElement = createSvgGroup(shape.svgContent);
+        attachmentPoints = extractAttachmentPoints(shape3DElement);
+    }
+
+    return {
+        shape3DElement, attachmentPoints
+    };
+}
 
 export const compileDiagram = (
     diagramComponents: DiagramComponent[],
@@ -641,16 +740,14 @@ export const compileDiagram = (
     const processedComponents: DiagramComponent[] = [];
 
     orderedComponents.forEach((component) => {
-        const shape3DElement = getSvgFromLibrary(component.shape, svgLibrary);
-        if (!shape3DElement) {
-            console.warn(`3D shape not found in library:`, component.shape);
+        const renderedComponent = renderComponent(component, canvasSize, svgLibrary, showAttachmentPoints);
+        if (!renderedComponent) {
             processedComponents.push(component);
             return;
         }
 
-        shape3DElement.setAttribute('id', component.id);
+        const { shape3DElement, attachmentPoints } = renderedComponent;
 
-        const attachmentPoints = extractAttachmentPoints(shape3DElement);
         component.attachmentPoints = attachmentPoints;
 
         const referenceComponent = component.relativeToId
@@ -790,7 +887,7 @@ export const extractGlobalAttachmentPoints = (
     diagramComponents: DiagramComponent[]
 ): GlobalAttachmentPoint[] => {
     const globalPoints: GlobalAttachmentPoint[] = [];
-
+    console.log('extract global points', diagramComponents);
     for (const component of diagramComponents) {
         // Skip if component has no absolute position (shouldn't happen after compilation)
         if (!component.absolutePosition) {
@@ -802,7 +899,7 @@ export const extractGlobalAttachmentPoints = (
             const componentPoints = component.attachmentPoints.map(point => {
                 // Convert the relative point coordinates to global coordinates by adding
                 // the component's absolute position
-                return component.absolutePosition !== undefined?
+                return component.absolutePosition !== undefined ?
                     {
                         ...point,
                         x: point.x + component.absolutePosition.x,

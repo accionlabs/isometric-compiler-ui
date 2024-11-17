@@ -255,6 +255,7 @@ const SVGNode = ({ id, data }: NodeProps<SVGNodeData>) => {
     useEffect(() => {
         if (!isReady || !svgRef.current || !containerRef.current) return;
 
+        console.log('SVGNode handles:',data.diagramComponents);
         const globalPoints = extractGlobalAttachmentPoints(data.diagramComponents);
         const newHandles: HandlePosition[] = [];
 

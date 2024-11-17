@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Shape, DiagramComponent } from "./Types";
+import { Shape, DiagramComponent, Component } from "./Types";
 import ImprovedLayout from "./ImprovedLayout";
 import { cleanupSVG, clipSVGToContents } from "./lib/svgUtils";
 import {
@@ -7,6 +7,7 @@ import {
     saveFileToDrive,
 } from "./lib/googleDriveLib";
 import * as diagramComponentsLib from "./lib/diagramComponentsLib";
+import { componentLibraryManager } from "./lib/componentLib";
 import { createKeyboardShortcuts } from "./KeyboardShortcuts";
 import { SVGLibraryManager } from "./lib/svgLibraryUtils";
 import { schemaLoader } from "./lib/componentSchemaLib";
@@ -51,6 +52,9 @@ const App: React.FC = () => {
     const [schemaUrl] = useState('/schemas/component-types.yaml'); // URL to your schema file
     const [storageType, setStorageType] = useState<StorageType>(StorageType.Local);
 
+    // Add state for component library
+    const [components, setComponents] = useState<Component[]>([]);
+
     // Update shapes when active library changes
     const handleLibraryChange = useCallback((libraryId: string) => {
         setActiveLibrary(libraryId);
@@ -59,6 +63,8 @@ const App: React.FC = () => {
         const library = SVGLibraryManager.getLibrary(libraryId);
         if (library) {
             setSvgLibrary(library.shapes);
+            // render all components, if any
+            componentLibraryManager.renderAllComponents(canvasSize,library.shapes);
         }
     }, []);
 
@@ -170,6 +176,28 @@ const App: React.FC = () => {
             selectedPosition,
             selectedAttachmentPoint,
         ]
+    );
+
+    const handleAddComponent = useCallback(
+        (componentId: string) => {
+            console.log(`App: add component ${componentId}`, selectedPosition, selectedAttachmentPoint);
+            const result = diagramComponentsLib.addComponentToScene(
+                diagramComponents,
+                componentId,
+                selectedPosition,
+                selectedAttachmentPoint,
+                selected3DShape
+            );
+
+            if (result.newComponent) {
+                console.log(`App: added component ${result.newComponent.id}`);
+                setDiagramComponents(result.updatedComponents);
+                updateSelected3DShape(result.newComponent);
+            } else {
+                console.error("Failed to add new component");
+            }
+        },
+        [diagramComponents, selectedPosition, selectedAttachmentPoint, selected3DShape]
     );
 
     const handleAdd2DShape = useCallback(
@@ -452,6 +480,58 @@ const App: React.FC = () => {
         selectedAttachmentPoint,
     ]);
 
+    // New handler to save current composition as a component
+    const handleSaveAsComponent = useCallback(
+        (name: string, description: string) => {
+            try {
+                // Pass true for overwrite since user has already confirmed in dialog
+                const newComponent = componentLibraryManager.createComponent(
+                    name,
+                    description,
+                    diagramComponents,
+                    true
+                );
+                
+                if (newComponent) {
+                    componentLibraryManager.renderComponent(newComponent.id, canvasSize, svgLibrary);
+                    setComponents(componentLibraryManager.getAllComponents());
+                    return newComponent;
+                }
+                return null;
+            } catch (error) {
+                console.error("Error saving component:", error);
+                setErrorMessage("Failed to save component. Please try again.");
+                return null;
+            }
+        },
+        [diagramComponents, canvasSize, svgLibrary]
+    );
+
+    // New handler to delete a component
+    const handleDeleteComponent = useCallback((componentId: string) => {
+        try {
+            componentLibraryManager.deleteComponent(componentId);
+            setComponents(componentLibraryManager.getAllComponents());
+        } catch (error) {
+            console.error("Error deleting component:", error);
+            setErrorMessage("Failed to delete component. Please try again.");
+        }
+    }, []);
+
+    // New handler to update a component
+    const handleUpdateComponent = useCallback((
+        componentId: string,
+        updates: Partial<Omit<Component, 'id' | 'created'>>
+    ) => {
+        try {
+            componentLibraryManager.updateComponent(componentId, updates);
+            setComponents(componentLibraryManager.getAllComponents());
+        } catch (error) {
+            console.error("Error updating component:", error);
+            setErrorMessage("Failed to update component. Please try again.");
+        }
+    }, []);
+
     // load the component metadata schema
     useEffect(() => {
         const loadComponentSchema = async () => {
@@ -466,8 +546,11 @@ const App: React.FC = () => {
         loadComponentSchema();
     }, [schemaUrl]);
 
-    // Initialize libraries - Modified to handle active library properly
+    // Load components and shapes library on mount
     useEffect(() => {
+        // load components on mount
+        setComponents(componentLibraryManager.getAllComponents());
+        // initiatlize libraries
         const initializeLibraries = async () => {
             console.log("Initializing libraries...");
             // First make sure default library exists and is loaded
@@ -484,6 +567,8 @@ const App: React.FC = () => {
                 console.log("Setting active library:", library.id);
                 setActiveLibrary(library.id);
                 setSvgLibrary(library.shapes);
+                // render all components if any
+                componentLibraryManager.renderAllComponents(canvasSize, library.shapes);
             } else {
                 // Fallback to default library if active library not found
                 console.log("Falling back to default library");
@@ -552,6 +637,7 @@ const App: React.FC = () => {
             activeLibrary={activeLibrary}
             onLibraryChange={handleLibraryChange}
             diagramComponents={diagramComponents}
+            components={components}
             isCopied={isCopied}
             selected3DShape={selected3DShape}
             composedSVG={composedSVG}
@@ -588,6 +674,9 @@ const App: React.FC = () => {
             onUpdateMetadata={handleUpdateMetadata}
             storageType={storageType}
             onStorageTypeChange={handleStorageTypeChange}
+            onSaveAsComponent={handleSaveAsComponent}
+            onAddComponent={handleAddComponent}
+            onDeleteComponent={handleDeleteComponent}
         />
     );
 };

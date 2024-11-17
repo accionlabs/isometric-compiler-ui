@@ -1,11 +1,17 @@
-import React, { useEffect, useRef, useMemo } from 'react';
-import { DiagramComponent, Shape } from '../Types';
+import React, { useEffect, useRef, useMemo, useState } from 'react';
+import { CanvasSize, DiagramComponent, Shape, Component } from '@/Types';
 import DiagramComponentCard from './DiagramComponentCard';
-import SVGPreview from '../components/ui/SVGPreview';
+import SVGPreview from '@/components/ui/SVGPreview';
+import { Button } from '@/components/ui/Button';
+import SaveComponentDialog from './SaveComponentDialog';
+import { componentLibraryManager } from "@/lib/componentLib";
+import { compileDiagram } from '@/lib/diagramComponentsLib';
+import { calculateSVGBoundingBox } from '@/lib/svgUtils';
 
 interface CompositionPanelProps {
     diagramComponents: DiagramComponent[];
-    isCopied:boolean;
+    canvasSize: CanvasSize;
+    isCopied: boolean;
     svgLibrary: Shape[];
     onRemove3DShape: (id: string) => void;
     onRemove2DShape: (parentId: string, shapeIndex: number) => void;
@@ -16,10 +22,12 @@ interface CompositionPanelProps {
     onPaste3DShape: (id: string) => void;
     selected3DShape: string | null;
     onUpdateMetadata: (id: string, type: string | undefined, metadata: any) => void;
+    onSaveAsComponent: (name: string, description: string) => void;
 }
 
 const CompositionPanel: React.FC<CompositionPanelProps> = ({
     diagramComponents,
+    canvasSize,
     isCopied,
     svgLibrary,
     onRemove3DShape,
@@ -31,8 +39,10 @@ const CompositionPanel: React.FC<CompositionPanelProps> = ({
     onPaste3DShape,
     selected3DShape,
     onUpdateMetadata,
+    onSaveAsComponent,
 }) => {
     const componentRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+    const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
 
     useEffect(() => {
         if (selected3DShape && componentRefs.current[selected3DShape]) {
@@ -65,9 +75,17 @@ const CompositionPanel: React.FC<CompositionPanelProps> = ({
         return component.relativeToId !== null ? componentIndexMap[component.relativeToId] : null;
     };
 
-    const getSVGContent = (shapeName: string): string => {
-        const shape = svgLibrary.find(s => s.name === shapeName);
-        return shape ? shape.svgContent : '';
+    const getSVGContent = (component: DiagramComponent): string => {
+        if (component.source === 'component') {
+            const componentData = componentLibraryManager.getComponent(component.shape);
+            if (componentData && componentData.svgContent) {
+                return componentData.svgContent;
+            }
+            return '';
+        } else {
+            const shape = svgLibrary.find(s => s.name === component.shape);
+            return shape ? shape.svgContent : '';
+        }
     };
 
     const nonCutComponents = diagramComponents.filter(component => !component.cut);
@@ -85,7 +103,16 @@ const CompositionPanel: React.FC<CompositionPanelProps> = ({
     return (
         <div className="flex flex-col h-full">
             <div className="flex-grow overflow-hidden flex flex-col">
-                <h2 className="text-xl font-semibold p-4">Composition</h2>
+                <div className="flex justify-between items-center p-4">
+                    <h2 className="text-xl font-semibold">Composition</h2>
+                    <Button
+                        onClick={() => setIsSaveDialogOpen(true)}
+                        disabled={diagramComponents.length === 0}
+                        className="bg-blue-600 hover:bg-blue-700"
+                    >
+                        Save as Component
+                    </Button>
+                </div>
                 <div className="flex-grow overflow-auto p-4">
                     <div className="space-y-4">
                         {nonCutComponents.map((component, ind) => (
@@ -106,7 +133,7 @@ const CompositionPanel: React.FC<CompositionPanelProps> = ({
                                     onPaste={onPaste3DShape}
                                     onRemove2DShape={onRemove2DShape}
                                     onScrollToParent={handleScrollToParent}
-                                    svgPreview={<SVGPreview svgContent={getSVGContent(component.shape)} className="w-12 h-12" />}
+                                    svgPreview={<SVGPreview svgContent={getSVGContent(component)} className="w-12 h-12" />}
                                     onUpdateMetadata={onUpdateMetadata}
                                 />
                             </div>
@@ -138,7 +165,7 @@ const CompositionPanel: React.FC<CompositionPanelProps> = ({
                                     onPaste={onPaste3DShape}
                                     onRemove2DShape={onRemove2DShape}
                                     onScrollToParent={handleScrollToParent}
-                                    svgPreview={<SVGPreview svgContent={getSVGContent(component.shape)} className="w-12 h-12" />}
+                                    svgPreview={<SVGPreview svgContent={getSVGContent(component)} className="w-12 h-12" />}
                                     onUpdateMetadata={onUpdateMetadata}
                                 />
                             ))}
@@ -146,7 +173,11 @@ const CompositionPanel: React.FC<CompositionPanelProps> = ({
                     </div>
                 </div>
             )}
-
+            <SaveComponentDialog
+                isOpen={isSaveDialogOpen}
+                onClose={() => setIsSaveDialogOpen(false)}
+                onSave={onSaveAsComponent}
+            />
         </div>
     );
 };

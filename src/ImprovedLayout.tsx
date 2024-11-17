@@ -12,7 +12,7 @@ import ShapesPanel from "./panels/ShapesPanel";
 import CompositionPanel from "./panels/CompositionPanel";
 import SettingsPanel from "./panels/SettingsPanel";
 import AttachmentOptionsPanel from "./panels/AttachmentOptionsPanel";
-import { DiagramComponent, Shape } from "./Types";
+import { DiagramComponent, Shape, Component } from "./Types";
 import ChatPanel from "./panels/ChatPanel";
 import { ChatProvider } from "./hooks/useChatProvider";
 import { StorageType } from "./lib/fileOperations";
@@ -21,12 +21,15 @@ interface ImprovedLayoutProps {
     svgLibrary: Shape[];
     activeLibrary: string;
     diagramComponents: DiagramComponent[];
+    components: Component[];
     isCopied: boolean;
     canvasSize: { width: number; height: number };
     onSetCanvasSize: (size: { width: number; height: number }) => void;
     composedSVG: string;
     onAdd3DShape: (shapeName: string) => void;
     onAdd2DShape: (shapeName: string, attachTo: string) => void;
+    onAddComponent: (componentId: string) => void;
+    onDeleteComponent: (componentId: string) => void;
     onRemove3DShape: (id: string) => void;
     onRemove2DShape: (parentId: string, shapeIndex: number) => void;
     selected3DShape: string | null;
@@ -69,6 +72,7 @@ interface ImprovedLayoutProps {
     ) => void;
     storageType: StorageType;
     onStorageTypeChange: (type: StorageType) => void;
+    onSaveAsComponent: (name: string, description: string) => void;
 }
 
 const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
@@ -76,10 +80,13 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     activeLibrary,
     onLibraryChange,
     diagramComponents,
+    components,
     selected3DShape,
     canvasSize,
     composedSVG,
     onAdd3DShape,
+    onAddComponent,
+    onDeleteComponent,
     onAdd2DShape,
     onRemove3DShape,
     onRemove2DShape,
@@ -111,7 +118,8 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     setShowAttachmentPoints,
     onUpdateMetadata,
     storageType,
-    onStorageTypeChange
+    onStorageTypeChange,
+    onSaveAsComponent,
 }) => {
     const params = new URLSearchParams(window.location.search);
     const isReadModeEnabled = params.get("mode") === "read";
@@ -284,16 +292,21 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                             {activePanel === "shapes" && (
                                 <ShapesPanel
                                     svgLibrary={svgLibrary}
+                                    canvasSize={canvasSize}
                                     activeLibrary={activeLibrary}
                                     onAdd3DShape={handleAdd3DShape}
+                                    onAddComponent={onAddComponent}
+                                    onDeleteComponent={onDeleteComponent}
                                     onAdd2DShape={onAdd2DShape}
                                     selected3DShape={selected3DShape}
                                     diagramComponents={diagramComponents}
+                                    components={components}
                                 />
                             )}
                             {activePanel === "composition" && (
                                 <CompositionPanel
                                     diagramComponents={diagramComponents}
+                                    canvasSize={canvasSize}
                                     isCopied={isCopied}
                                     svgLibrary={svgLibrary}
                                     onRemove3DShape={onRemove3DShape}
@@ -305,6 +318,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                     onCancelCut3DShape={onCancelCut3DShape}
                                     onPaste3DShape={handlePaste3DShape}
                                     onUpdateMetadata={onUpdateMetadata}
+                                    onSaveAsComponent={onSaveAsComponent}
                                 />
                             )}
                             {activePanel === "settings" && (

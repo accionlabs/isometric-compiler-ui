@@ -37,6 +37,7 @@ export interface Shape {
 export interface DiagramComponent {
     id: string;
     shape: string;
+    source?: "3D" | "component";  // Indicates if this is from SVG library or component library
     type?: string;     // References componentType from schema (optional)
     position: "center" | "top" | "front-right" | "front-left" | "back-right" | "back-left" | string;
     relativeToId: string | null;
@@ -49,10 +50,28 @@ export interface DiagramComponent {
     };
 }
 
+// New interfaces for Component Library
+export interface Component {
+    id: string;
+    name: string;
+    description: string;
+    diagramComponents: DiagramComponent[];
+    attachmentPoints: AttachmentPoint[]; 
+    svgContent?:string;
+    created: Date;
+    lastModified: Date;
+}
+
+export interface ComponentLibrary {
+    components: { [key: string]: Component };
+    lastModified: Date;
+}
+
 // Define a type for the serialized component structure
 export interface SerializedDiagramComponent {
     id: string;
     shape: string;
+    source?: "3D" | "component";
     position:
     | "center"
     | "top"
