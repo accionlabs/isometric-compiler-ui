@@ -1,4 +1,12 @@
-import { DiagramComponent, Point, AttachmentPoint, Shape, SerializedDiagramComponent, GlobalAttachmentPoint, Component } from '../Types';
+import { 
+    DiagramComponent, 
+    Point, 
+    AttachmentPoint, 
+    Shape, 
+    SerializedDiagramComponent, 
+    GlobalAttachmentPoint, 
+    AttachmentPointMap, 
+    Component } from '../Types';
 import { toggleAttachmentPoints } from './svgUtils';
 import { v4 as uuidv4 } from 'uuid';
 import { componentLibraryManager } from './componentLib';
@@ -764,14 +772,12 @@ export const compileDiagram = (
             const shape2DElement = getSvgFromLibrary(attached2DShape.name, svgLibrary);
             if (shape2DElement) {
                 shape2DElement.setAttribute("id", `${attached2DShape.attachedTo}-${attached2DShape.name}`);
-
-                const shape2DAttachPoint = shape2DElement.querySelector('#attach-point');
-                const shape3DAttachPoint = shape3DElement.querySelector(`#attach-${attached2DShape.attachedTo}`);
-
-                if (shape2DAttachPoint && shape3DAttachPoint) {
-                    const dx = parseFloat(shape3DAttachPoint.getAttribute("cx") || "0") - parseFloat(shape2DAttachPoint.getAttribute("cx") || "0");
-                    const dy = parseFloat(shape3DAttachPoint.getAttribute("cy") || "0") - parseFloat(shape2DAttachPoint.getAttribute("cy") || "0");
-
+                const attach2DPoints = extractAttachmentPoints(shape2DElement);
+                const attach3DPoint = getAttachmentPoint(component,`attach-${attached2DShape.attachedTo}`);
+                console.log('attach2D point', attach2DPoints, 'attach to', attached2DShape.attachedTo, 'attach3D point', attach3DPoint);
+                if (attach2DPoints.length>0 && attach3DPoint) {
+                    const dx = attach3DPoint.x - attach2DPoints[0].x;
+                    const dy = attach3DPoint.y - attach2DPoints[0].y;
                     const transform = `translate(${dx}, ${dy})`;
                     shape2DElement.setAttribute('transform', transform);
                     shape3DElement.appendChild(shape2DElement);
@@ -918,26 +924,27 @@ export const extractGlobalAttachmentPoints = (
     return globalPoints;
 };
 
-// Helper function to get a specific attachment point's global coordinates
-export const getGlobalAttachmentPointCoordinates = (
-    diagramComponents: DiagramComponent[],
-    componentId: string,
-    pointName: string
-): { x: number; y: number } | null => {
-    const component = diagramComponents.find(comp => comp.id === componentId);
+// Helper function to get a specific component's attachment points' global coordinates
+export const getGlobalAttachmentPoints = (
+    component: DiagramComponent
+): AttachmentPointMap => {
     if (!component || component.absolutePosition === undefined) {
-        return null;
+        return {};
     }
 
-    const point = component.attachmentPoints?.find(p => p.name === pointName);
-    if (!point) {
-        return null;
-    }
+    const globalPoints:AttachmentPointMap = {};
 
-    return {
-        x: component.absolutePosition.x + point.x,
-        y: component.absolutePosition.y + point.y
-    };
+    component.attachmentPoints?.forEach(point => {
+        if (component.absolutePosition) {
+            globalPoints[point.name] = {
+                name: point.name,
+                x: component.absolutePosition.x + point.x,
+                y: component.absolutePosition.y + point.y
+                };    
+        }
+    })
+
+    return globalPoints;
 };
 
 // Helper function to find the closest attachment point to a given coordinate

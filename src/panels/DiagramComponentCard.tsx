@@ -70,41 +70,39 @@ const DiagramComponentCard: React.FC<DiagramComponentCardProps> = ({
                 <div>
                     {isCut ? (
                         isFirst && (
-                            <>
-                                <Button onClick={(e) => handleWithStopPropagation(e, () => onCancelCut(component.id))} className="mr-2">
+                            <div className="flex space-x-2">
+                                <Button onClick={(e) => handleWithStopPropagation(e, () => onCancelCut(component.id))}>
                                     Cancel
                                 </Button>
-                                <Button onClick={(e) => handleWithStopPropagation(e, () => onPaste(component.id))} className="mr-2">
+                                <Button onClick={(e) => handleWithStopPropagation(e, () => onPaste(component.id))}>
                                     Paste
                                 </Button>
                                 <Button onClick={(e) => handleWithStopPropagation(e, () => onRemove(component.id))}>
                                     Remove
                                 </Button>
-                            </>
+                            </div>
                         )
                     ) : (
                         isCopied ? (
                             isFirst && (
-                                <>
-                                    <Button onClick={(e) => handleWithStopPropagation(e, () => onPaste(component.id))} className="mr-2">
+                                <div className="flex space-x-2">
+                                    <Button onClick={(e) => handleWithStopPropagation(e, () => onPaste(component.id))}>
                                         Paste
                                     </Button>
-                                    <Button onClick={(e) => handleWithStopPropagation(e, () => onCancelCut(component.id))} className="mr-2">
+                                    <Button onClick={(e) => handleWithStopPropagation(e, () => onCancelCut(component.id))}>
                                         Cancel
                                     </Button>
-                                </>
+                                </div>
                             )
                         ) : (
-                            <>
+                            <div className="flex space-x-2">
                                 <Button
                                     onClick={(e) => handleWithStopPropagation(e, () => onCopy(component.id))}
-                                    className="mr-2"
                                 >
                                     Copy
                                 </Button>
                                 <Button
                                     onClick={(e) => handleWithStopPropagation(e, () => onCut(component.id))}
-                                    className="mr-2"
                                     disabled={isFirst}
                                 >
                                     Cut
@@ -112,7 +110,7 @@ const DiagramComponentCard: React.FC<DiagramComponentCardProps> = ({
                                 <Button onClick={(e) => handleWithStopPropagation(e, () => onRemove(component.id))}>
                                     Remove
                                 </Button>
-                            </>
+                            </div>
                         ))}
                 </div>
             </div>
@@ -124,16 +122,15 @@ const DiagramComponentCard: React.FC<DiagramComponentCardProps> = ({
                             <span className="font-semibold">Position:</span> {component.position}
                         </div>
                         <div>
-                            <span className="font-semibold">Relative To:</span> {
-                                parentIndex !== null ? (
-                                    <button
-                                        className="text-blue-400 hover:underline"
-                                        onClick={(e) => handleWithStopPropagation(e, () => onScrollToParent(component.relativeToId!))}
-                                    >
-                                        3D-{parentIndex + 1}
-                                    </button>
-                                ) : 'None'
-                            }
+                            <span className="font-semibold">Relative To:</span>
+                            {parentIndex !== null ? (
+                                <button
+                                    className="text-blue-400 hover:underline ml-2"
+                                    onClick={(e) => handleWithStopPropagation(e, () => onScrollToParent(component.relativeToId!))}
+                                >
+                                    3D-{parentIndex + 1}
+                                </button>
+                            ) : ' None'}
                         </div>
                     </div>
 
@@ -154,11 +151,10 @@ const DiagramComponentCard: React.FC<DiagramComponentCardProps> = ({
                                 ))}
                             </ul>
                         ) : (
-                            <p className="text-gray-400">No 2D shapes attached</p>
+                            <div className="text-gray-400">No 2D shapes attached</div>
                         )}
                     </div>
 
-                    {/* Metadata Section */}
                     <div className="mt-4 border-t border-gray-700 pt-4">
                         <div className="flex items-center justify-between">
                             <div className="flex-1 mr-2">

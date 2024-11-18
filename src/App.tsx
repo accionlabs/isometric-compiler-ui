@@ -587,7 +587,6 @@ const App: React.FC = () => {
         const { handleKeyDown } = handleKeyboardShortcuts();
 
         const keyDownListener = (event: KeyboardEvent) => {
-            console.log("Key pressed:", event.key, "Ctrl:", event.ctrlKey);
             handleKeyDown(event);
         };
 

@@ -3,117 +3,58 @@ import * as AccordionPrimitive from "@radix-ui/react-accordion"
 import { ChevronDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 
-type BaseAccordionProps = {
-  className?: string;
-  children?: React.ReactNode;
-  containerRef?: React.RefObject<HTMLDivElement>;
-};
-
-type SingleAccordionProps = BaseAccordionProps & {
-  type: "single";
-  value?: string;
-  defaultValue?: string;
-  onValueChange?: (value: string) => void;
-};
-
-type MultipleAccordionProps = BaseAccordionProps & {
-  type: "multiple";
-  value?: string[];
-  defaultValue?: string[];
-  onValueChange?: (value: string[]) => void;
-};
-
-type AccordionProps = SingleAccordionProps | MultipleAccordionProps;
-
-const AccordionRoot = React.forwardRef<
+const Accordion = React.forwardRef<
   React.ElementRef<typeof AccordionPrimitive.Root>,
-  AccordionProps
+  AccordionPrimitive.AccordionMultipleProps | AccordionPrimitive.AccordionSingleProps
 >((props, ref) => {
-  const containerRef = React.useRef<HTMLDivElement>(null);
-  const [containerHeight, setContainerHeight] = React.useState(0);
-  const [openPanels, setOpenPanels] = React.useState<string[]>([]);
-
-  React.useEffect(() => {
-    const updateContainerHeight = () => {
-      if (containerRef.current) {
-        setContainerHeight(containerRef.current.offsetHeight);
-      }
-    };
-
-    updateContainerHeight();
-    window.addEventListener('resize', updateContainerHeight);
-    return () => window.removeEventListener('resize', updateContainerHeight);
-  }, []);
-
-  const handleValueChange = (value: string | string[]) => {
-    const valueArray = Array.isArray(value) ? value : [value];
-    setOpenPanels(valueArray);
-    
-    if (props.onValueChange) {
-      if (props.type === "multiple") {
-        (props.onValueChange as (value: string[]) => void)(valueArray);
-      } else {
-        (props.onValueChange as (value: string) => void)(valueArray[0] || "");
-      }
-    }
-  };
+  const { className, ...rootProps } = props;
 
   return (
-    <div ref={containerRef} className={props.className}>
-      <AccordionPrimitive.Root
-        {...props}
-        ref={ref}
-        onValueChange={handleValueChange}
-      >
-        {React.Children.map(props.children, (child, index) => {
-          if (!React.isValidElement(child)) return child;
-          
-          let dynamicHeight;
-          if (index === 0) {
-            const totalFixedHeight = openPanels.length * (child.props.fixedHeight || 0);
-            dynamicHeight = Math.max(containerHeight - totalFixedHeight, 0);
-          }
-
-          return React.cloneElement(child, {
-            ...child.props,
-            fixedHeight: index === 0 ? dynamicHeight : child.props.fixedHeight,
-            isFirstPanel: index === 0,
-            openPanels
-          });
-        })}
-      </AccordionPrimitive.Root>
-    </div>
+    <AccordionPrimitive.Root
+      ref={ref}
+      className={cn("flex flex-col gap-2", className)}
+      {...rootProps}
+    />
   );
 });
-AccordionRoot.displayName = "Accordion";
+Accordion.displayName = "Accordion";
 
-interface AccordionItemProps extends React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Item> {
-  fixedHeight?: string | number;
-  isFirstPanel?: boolean;
-  openPanels?: string[];
+interface AccordionItemProps extends Omit<
+  React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Item>,
+  'children'
+> {
+  children?: React.ReactNode;
+  fixedContentHeight?: string | number;
 }
 
 const AccordionItem = React.forwardRef<
   React.ElementRef<typeof AccordionPrimitive.Item>,
   AccordionItemProps
->(({ className, fixedHeight, isFirstPanel, openPanels, ...props }, ref) => (
-  <AccordionPrimitive.Item
-    ref={ref}
-    className={cn("border-b", className)}
-    {...props}
-  />
-));
+>(({ className, children, fixedContentHeight, ...props }, ref) => {
+  // Pass fixedContentHeight through data attribute
+  return (
+    <AccordionPrimitive.Item
+      ref={ref}
+      className={cn("bg-gray-800 rounded-md overflow-hidden", className)}
+      data-fixed-height={fixedContentHeight}
+      {...props}
+    >
+      {children}
+    </AccordionPrimitive.Item>
+  );
+});
 AccordionItem.displayName = "AccordionItem";
 
 const AccordionTrigger = React.forwardRef<
   React.ElementRef<typeof AccordionPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Trigger>
 >(({ className, children, ...props }, ref) => (
-  <AccordionPrimitive.Header className="flex">
+  <AccordionPrimitive.Header>
     <AccordionPrimitive.Trigger
       ref={ref}
       className={cn(
-        "flex flex-1 items-center justify-between py-4 font-medium transition-all hover:underline [&[data-state=open]>svg]:rotate-180",
+        "flex w-full items-center justify-between px-4 py-2 bg-gray-800 hover:bg-gray-700 transition-all",
+        "[&[data-state=open]>svg]:rotate-180",
         className
       )}
       {...props}
@@ -125,36 +66,58 @@ const AccordionTrigger = React.forwardRef<
 ));
 AccordionTrigger.displayName = AccordionPrimitive.Trigger.displayName;
 
-interface AccordionContentProps extends React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Content> {
-  fixedHeight?: string | number;
-  isFirstPanel?: boolean;
-  openPanels?: string[];
+interface AccordionContentProps extends Omit<
+  React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Content>,
+  'children'
+> {
+  children?: React.ReactNode;
 }
 
 const AccordionContent = React.forwardRef<
   React.ElementRef<typeof AccordionPrimitive.Content>,
   AccordionContentProps
->(({ className, children, fixedHeight, isFirstPanel, ...props }, ref) => (
-  <AccordionPrimitive.Content
-    ref={ref}
-    className={cn(
-      "overflow-hidden text-sm transition-all data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down",
-      className
-    )}
-    style={{
-      height: fixedHeight,
-      maxHeight: isFirstPanel ? 'none' : fixedHeight
-    }}
-    {...props}
-  >
-    <div className="h-full overflow-auto">{children}</div>
-  </AccordionPrimitive.Content>
-));
+>(({ className, children, style, ...props }, ref) => {
+  const contentRef = React.useRef<HTMLDivElement>(null);
+  const [height, setHeight] = React.useState<string | undefined>();
+
+  React.useEffect(() => {
+    if (contentRef.current) {
+      const item = contentRef.current.closest('[data-fixed-height]');
+      if (item instanceof HTMLElement) {
+        setHeight(item.dataset.fixedHeight || undefined);
+      }
+    }
+  }, []);
+
+  const contentStyle: React.CSSProperties = {
+    ...style,
+    ...(height ? { height } : {})
+  };
+
+  return (
+    <AccordionPrimitive.Content
+      ref={ref}
+      className={cn(
+        "overflow-hidden transition-all",
+        "data-[state=closed]:animate-accordion-up",
+        "data-[state=open]:animate-accordion-down",
+        className
+      )}
+      style={contentStyle}
+      {...props}
+    >
+      <div ref={contentRef} className="h-full overflow-auto">
+        {children}
+      </div>
+    </AccordionPrimitive.Content>
+  );
+});
 AccordionContent.displayName = AccordionPrimitive.Content.displayName;
 
 export {
-  AccordionRoot as Accordion,
+  Accordion,
   AccordionItem,
   AccordionTrigger,
-  AccordionContent
+  AccordionContent,
+  type AccordionItemProps,
 };

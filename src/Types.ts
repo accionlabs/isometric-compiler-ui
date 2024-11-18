@@ -19,6 +19,10 @@ export interface AttachmentPoint extends Point {
     name: string;
 }
 
+export interface AttachmentPointMap {
+    [key: string]: AttachmentPoint;
+}
+
 export interface GlobalAttachmentPoint extends Point {
     componentId: string;  // ID of the component this point belongs to
     attachmentPoints: AttachmentPoint[];
