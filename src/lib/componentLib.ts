@@ -52,12 +52,12 @@ class ComponentLibraryManager {
     private getGridPosition(component: DiagramComponent, basePosition: GridPosition): GridPosition {
         const position = component.position;
         
-        if (position === 'front-right') {
+        if (position === 'front-left') {
             return {
                 row: basePosition.row,
                 column: basePosition.column + 1
             };
-        } else if (position === 'front-left') {
+        } else if (position === 'front-right') {
             return {
                 row: this.getNextRow(basePosition.row),
                 column: basePosition.column
