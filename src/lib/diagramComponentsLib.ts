@@ -5,12 +5,12 @@ import {
     Shape,
     SerializedDiagramComponent,
     GlobalAttachmentPoint,
-    AttachmentPointMap
+    AttachmentPointMap,
+    Component
 } from "../Types";
 import { toggleAttachmentPoints } from "./svgUtils";
 import { v4 as uuidv4 } from "uuid";
 import { componentLibraryManager } from "./componentLib";
-import { render } from "react-dom";
 
 declare global {
     interface Window {
@@ -1175,46 +1175,85 @@ export const findClosestGlobalAttachmentPoint = (
 };
 
 // Functions to Save and Load a composition in Diagram Components
-
 export const serializeDiagramComponents = (
-    diagramComponents: DiagramComponent[]
+    diagramComponents: DiagramComponent[],
+    components: Component[]
 ): string => {
-    // Map each component to only include the necessary attributes
-    const serializedComponents = diagramComponents.map((component) => {
-        const serializedComponent: SerializedDiagramComponent = {
-            id: component.id,
-            shape: component.shape,
-            position: component.position,
-            source: component.source,
-            relativeToId: component.relativeToId,
-            attached2DShapes: component.attached2DShapes,
-            type: component.type, // Include type
-            metadata: component.metadata // Include metadata
-        };
-        return serializedComponent;
+    // Helper function to serialize a single diagram component
+    const serializeDiagramComponent = (
+        component: DiagramComponent,
+        withAttachmentPoints?: boolean
+    ): SerializedDiagramComponent => ({
+        id: component.id,
+        shape: component.shape,
+        position: component.position,
+        source: component.source,
+        relativeToId: component.relativeToId,
+        attached2DShapes: component.attached2DShapes,
+        type: component.type, // Include type
+        metadata: component.metadata, // Include metadata,
+        attachmentPoints: withAttachmentPoints
+            ? component.attachmentPoints ?? []
+            : []
     });
 
-    return JSON.stringify(serializedComponents, null, 2);
+    // Helper function to serialize a component with its diagram components
+    const serializeComponentWithDiagrams = (component: Component) => ({
+        id: component.id,
+        name: component.name,
+        description: component.description,
+        attachmentPoints: component.attachmentPoints,
+        created: component.created,
+        lastModified: component.lastModified,
+        diagramComponents: component.diagramComponents.map((component) =>
+            serializeDiagramComponent(component, true)
+        )
+    });
+
+    // Map over and serialize each diagram component
+    const serializedComponents = diagramComponents.map((component) =>
+        serializeDiagramComponent(component, false)
+    );
+
+    // Map over and serialize each component and its diagram components
+    const serializedComponentLibrary = components.map(
+        serializeComponentWithDiagrams
+    );
+    // Convert to JSON with formatted indentation
+    return JSON.stringify(
+        { serializedComponents, serializedComponentLibrary },
+        null,
+        2
+    );
 };
 
 export const deserializeDiagramComponents = (
     serializedData: string
-): DiagramComponent[] => {
+): {
+    serializedComponents: DiagramComponent[];
+    serializedComponentLibrary: Component[];
+} => {
     const parsedData = JSON.parse(serializedData);
-
-    if (!validateLoadedFile(parsedData)) {
+    if (!validateLoadedFile(parsedData.serializedComponents)) {
         throw new Error("Invalid diagram components structure");
     }
-
+    if (!validateComponentLibrary(parsedData.serializedComponentLibrary)) {
+        throw new Error("Invalid component library structure");
+    }
     // Reconstruct the full DiagramComponent structure
-    return parsedData.map((component: SerializedDiagramComponent) => ({
-        ...component,
-        attachmentPoints: [], // Will be computed by compileDiagram
-        absolutePosition: { x: 0, y: 0 }, // Will be computed by compileDiagram
-        cut: false, // Reset cut state on load
-        type: component.type, // Preserve type
-        metadata: component.metadata // Preserve metadata
-    }));
+    return {
+        serializedComponents: parsedData.serializedComponents.map(
+            (component: SerializedDiagramComponent) => ({
+                ...component,
+                attachmentPoints: component.attachmentPoints || [], // Will be computed by compileDiagram
+                absolutePosition: { x: 0, y: 0 }, // Will be computed by compileDiagram
+                cut: false, // Reset cut state on load
+                type: component.type, // Preserve type
+                metadata: component.metadata // Preserve metadata
+            })
+        ),
+        serializedComponentLibrary: parsedData.serializedComponentLibrary
+    };
 };
 
 // Update validation function to check metadata attributes
@@ -1244,6 +1283,52 @@ export const validateLoadedFile = (data: any): boolean => {
             typeof component.metadata !== "object"
         )
             return false;
+    }
+
+    return true;
+};
+
+export const validateComponentLibrary = (data: any): boolean => {
+    if (!Array.isArray(data)) return false;
+
+    for (const component of data) {
+        // Validate top-level required fields
+        if (
+            typeof component.id !== "string" ||
+            typeof component.name !== "string" ||
+            typeof component.description !== "string"
+        ) {
+            return false;
+        }
+
+        // Validate diagramComponents array
+        if (!Array.isArray(component.diagramComponents)) return false;
+
+        for (const diagramComponent of component.diagramComponents) {
+            // Check required fields in each diagramComponent
+            if (
+                typeof diagramComponent.id !== "string" ||
+                typeof diagramComponent.shape !== "string" ||
+                typeof diagramComponent.position !== "string" ||
+                typeof diagramComponent.source !== "string" ||
+                (diagramComponent.relativeToId !== null &&
+                    typeof diagramComponent.relativeToId !== "string")
+            ) {
+                return false;
+            }
+
+            // Validate attached2DShapes array within each diagramComponent
+            if (!Array.isArray(diagramComponent.attached2DShapes)) return false;
+
+            for (const shape of diagramComponent.attached2DShapes) {
+                if (
+                    typeof shape.name !== "string" ||
+                    typeof shape.attachedTo !== "string"
+                ) {
+                    return false;
+                }
+            }
+        }
     }
 
     return true;

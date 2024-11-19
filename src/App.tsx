@@ -2,10 +2,6 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Shape, DiagramComponent, Component } from "./Types";
 import ImprovedLayout from "./ImprovedLayout";
 import { cleanupSVG, clipSVGToContents } from "./lib/svgUtils";
-import {
-    loadFileFromDrive,
-    saveFileToDrive,
-} from "./lib/googleDriveLib";
 import * as diagramComponentsLib from "./lib/diagramComponentsLib";
 import { componentLibraryManager } from "./lib/componentLib";
 import { createKeyboardShortcuts } from "./KeyboardShortcuts";
@@ -49,8 +45,10 @@ const App: React.FC = () => {
         const stored = localStorage.getItem("activeLibrary");
         return stored || "default";
     });
-    const [schemaUrl] = useState('/schemas/component-types.yaml'); // URL to your schema file
-    const [storageType, setStorageType] = useState<StorageType>(StorageType.Local);
+    const [schemaUrl] = useState("/schemas/component-types.yaml"); // URL to your schema file
+    const [storageType, setStorageType] = useState<StorageType>(
+        StorageType.Local
+    );
 
     // Add state for component library
     const [components, setComponents] = useState<Component[]>([]);
@@ -64,29 +62,31 @@ const App: React.FC = () => {
         if (library) {
             setSvgLibrary(library.shapes);
             // render all components, if any
-            componentLibraryManager.renderAllComponents(canvasSize,library.shapes);
+            componentLibraryManager.renderAllComponents(
+                canvasSize,
+                library.shapes
+            );
         }
     }, []);
 
     // update diagram component metadata when added
-    const handleUpdateMetadata = useCallback((
-        id: string,
-        type: string | undefined,
-        metadata: any
-    ) => {
-        setDiagramComponents(prevComponents =>
-            prevComponents.map(component => {
-                if (component.id === id) {
-                    return {
-                        ...component,
-                        type,
-                        metadata: type ? metadata : undefined
-                    };
-                }
-                return component;
-            })
-        );
-    }, []);
+    const handleUpdateMetadata = useCallback(
+        (id: string, type: string | undefined, metadata: any) => {
+            setDiagramComponents((prevComponents) =>
+                prevComponents.map((component) => {
+                    if (component.id === id) {
+                        return {
+                            ...component,
+                            type,
+                            metadata: type ? metadata : undefined
+                        };
+                    }
+                    return component;
+                })
+            );
+        },
+        []
+    );
 
     // on selection of storage type for saving and loading the diagram
     const handleStorageTypeChange = useCallback((type: StorageType) => {
@@ -100,7 +100,9 @@ const App: React.FC = () => {
         if (selectedComponent && !selectedComponent.cut) {
             setSelected3DShape(selectedComponent.id);
             const updatedAttachmentPoints =
-                diagramComponentsLib.updateAvailableAttachmentPoints(selectedComponent);
+                diagramComponentsLib.updateAvailableAttachmentPoints(
+                    selectedComponent
+                );
             setAvailableAttachmentPoints(updatedAttachmentPoints);
             console.log(`App: set selected ${selectedComponent.id}`);
         } else {
@@ -174,13 +176,17 @@ const App: React.FC = () => {
             svgLibrary,
             selected3DShape,
             selectedPosition,
-            selectedAttachmentPoint,
+            selectedAttachmentPoint
         ]
     );
 
     const handleAddComponent = useCallback(
         (componentId: string) => {
-            console.log(`App: add component ${componentId}`, selectedPosition, selectedAttachmentPoint);
+            console.log(
+                `App: add component ${componentId}`,
+                selectedPosition,
+                selectedAttachmentPoint
+            );
             const result = diagramComponentsLib.addComponentToScene(
                 diagramComponents,
                 componentId,
@@ -188,7 +194,6 @@ const App: React.FC = () => {
                 selectedAttachmentPoint,
                 selected3DShape
             );
-
             if (result.newComponent) {
                 console.log(`App: added component ${result.newComponent.id}`);
                 setDiagramComponents(result.updatedComponents);
@@ -197,7 +202,12 @@ const App: React.FC = () => {
                 console.error("Failed to add new component");
             }
         },
-        [diagramComponents, selectedPosition, selectedAttachmentPoint, selected3DShape]
+        [
+            diagramComponents,
+            selectedPosition,
+            selectedAttachmentPoint,
+            selected3DShape
+        ]
     );
 
     const handleAdd2DShape = useCallback(
@@ -269,7 +279,9 @@ const App: React.FC = () => {
 
     const handleCancelCut3DShape = useCallback(
         (id: string | null) => {
-            setDiagramComponents((prev) => diagramComponentsLib.cancelCut(prev, id));
+            setDiagramComponents((prev) =>
+                diagramComponentsLib.cancelCut(prev, id)
+            );
             setIsCopied(false);
         },
         [isCopied]
@@ -297,7 +309,10 @@ const App: React.FC = () => {
                 // if any copied components, paste them
                 if (isCopied) {
                     const copiedShapes = diagramComponentsLib.cancelCut(
-                        diagramComponentsLib.copy3DShape(diagramComponents, null),
+                        diagramComponentsLib.copy3DShape(
+                            diagramComponents,
+                            null
+                        ),
                         null
                     );
                     result = diagramComponentsLib.pasteCopied3DShapes(
@@ -334,12 +349,20 @@ const App: React.FC = () => {
     const handleSetFolderPath = useCallback((newPath: string) => {
         setFolderPath(newPath);
     }, []);
-
     const handleSaveDiagram = useCallback(async () => {
         try {
             const jsonFileName = getJsonFileName(fileName);
-            const serializedData = diagramComponentsLib.serializeDiagramComponents(diagramComponents);
-            await saveFile(storageType, jsonFileName, serializedData, folderPath);
+            const serializedData =
+                diagramComponentsLib.serializeDiagramComponents(
+                    diagramComponents,
+                    components
+                );
+            await saveFile(
+                storageType,
+                jsonFileName,
+                serializedData,
+                folderPath
+            );
             setErrorMessage(null);
         } catch (error) {
             console.error("Error saving diagram:", error);
@@ -347,41 +370,60 @@ const App: React.FC = () => {
         }
     }, [diagramComponents, fileName, folderPath, storageType]);
 
-    const handleLoadDiagram = useCallback(async (fileOrPath?: File) => {
-        console.log('handleLoadDiagram called with:', fileOrPath); // Debug log
-        console.log('Current storage type:', storageType); // Debug log
+    const handleLoadDiagram = useCallback(
+        async (fileOrPath?: File) => {
+            console.log("handleLoadDiagram called with:", fileOrPath); // Debug log
+            console.log("Current storage type:", storageType); // Debug log
 
-        try {
-            let loadedData: string;
+            try {
+                let loadedData: string;
 
-            if (storageType === StorageType.Local) {
-                if (!fileOrPath) {
-                    throw new Error('No file selected for local storage');
+                if (storageType === StorageType.Local) {
+                    if (!fileOrPath) {
+                        throw new Error("No file selected for local storage");
+                    }
+                    loadedData = await loadFile(StorageType.Local, fileOrPath);
+                } else {
+                    const jsonFileName = getJsonFileName(fileName);
+                    loadedData = await loadFile(StorageType.GoogleDrive, {
+                        fileName: jsonFileName,
+                        folderPath
+                    });
                 }
-                loadedData = await loadFile(StorageType.Local, fileOrPath);
-            } else {
-                const jsonFileName = getJsonFileName(fileName);
-                loadedData = await loadFile(StorageType.GoogleDrive, {
-                    fileName: jsonFileName,
-                    folderPath
-                });
+                // Deserialize the loaded data to retrieve diagram components and library information
+                const loadedComponents =
+                    diagramComponentsLib.deserializeDiagramComponents(
+                        loadedData
+                    );
+                // Load each component from the serialized component library into the component manager
+                loadedComponents.serializedComponentLibrary.forEach(
+                    (component) => {
+                        componentLibraryManager.loadPremadeComponent(
+                            component,
+                            true
+                        );
+                    }
+                );
+
+                setComponents(componentLibraryManager.getAllComponents());
+                setDiagramComponents(loadedComponents.serializedComponents);
+                setErrorMessage(null);
+            } catch (error) {
+                console.error("Error loading diagram:", error);
+                setErrorMessage(
+                    error instanceof Error
+                        ? error.message
+                        : "Failed to load diagram. Please check the file and try again."
+                );
             }
+        },
+        [fileName, folderPath, storageType, svgLibrary]
+    );
 
-            const loadedComponents = diagramComponentsLib.deserializeDiagramComponents(loadedData);
-            handleLoadDiagramFromJSON(loadedComponents);
-            setErrorMessage(null);
-        } catch (error) {
-            console.error("Error loading diagram:", error);
-            setErrorMessage(
-                error instanceof Error
-                    ? error.message
-                    : "Failed to load diagram. Please check the file and try again."
-            );
-        }
-    }, [fileName, folderPath, storageType]);
-
-    const handleLoadDiagramFromJSON = (loadedComponents: DiagramComponent[]) => {
-        console.log('Load From JSON', loadedComponents);
+    const handleLoadDiagramFromJSON = (
+        loadedComponents: DiagramComponent[]
+    ) => {
+        console.log("Load From JSON", loadedComponents);
         const { svgContent, processedComponents } =
             diagramComponentsLib.compileDiagram(
                 loadedComponents,
@@ -477,23 +519,31 @@ const App: React.FC = () => {
         selected3DShape,
         diagramComponents,
         selectedPosition,
-        selectedAttachmentPoint,
+        selectedAttachmentPoint
     ]);
 
     // New handler to save current composition as a component
     const handleSaveAsComponent = useCallback(
-        (name: string, description: string) => {
+        (
+            name: string,
+            description: string,
+            components?: DiagramComponent[]
+        ) => {
             try {
                 // Pass true for overwrite since user has already confirmed in dialog
                 const newComponent = componentLibraryManager.createComponent(
                     name,
                     description,
-                    diagramComponents,
+                    components || diagramComponents,
                     true
                 );
-                
+
                 if (newComponent) {
-                    componentLibraryManager.renderComponent(newComponent.id, canvasSize, svgLibrary);
+                    componentLibraryManager.renderComponent(
+                        newComponent.id,
+                        canvasSize,
+                        svgLibrary
+                    );
                     setComponents(componentLibraryManager.getAllComponents());
                     return newComponent;
                 }
@@ -519,18 +569,23 @@ const App: React.FC = () => {
     }, []);
 
     // New handler to update a component
-    const handleUpdateComponent = useCallback((
-        componentId: string,
-        updates: Partial<Omit<Component, 'id' | 'created'>>
-    ) => {
-        try {
-            componentLibraryManager.updateComponent(componentId, updates);
-            setComponents(componentLibraryManager.getAllComponents());
-        } catch (error) {
-            console.error("Error updating component:", error);
-            setErrorMessage("Failed to update component. Please try again.");
-        }
-    }, []);
+    const handleUpdateComponent = useCallback(
+        (
+            componentId: string,
+            updates: Partial<Omit<Component, "id" | "created">>
+        ) => {
+            try {
+                componentLibraryManager.updateComponent(componentId, updates);
+                setComponents(componentLibraryManager.getAllComponents());
+            } catch (error) {
+                console.error("Error updating component:", error);
+                setErrorMessage(
+                    "Failed to update component. Please try again."
+                );
+            }
+        },
+        []
+    );
 
     // load the component metadata schema
     useEffect(() => {
@@ -538,8 +593,8 @@ const App: React.FC = () => {
             try {
                 await schemaLoader.loadSchema(schemaUrl);
             } catch (error) {
-                console.error('Failed to load component schema:', error);
-                setErrorMessage('Failed to load component schema');
+                console.error("Failed to load component schema:", error);
+                setErrorMessage("Failed to load component schema");
             }
         };
 
@@ -557,7 +612,8 @@ const App: React.FC = () => {
             await SVGLibraryManager.initializeDefaultLibrary();
 
             // Get the active library ID from localStorage or use default
-            const activeLibraryId = localStorage.getItem("activeLibrary") || "default";
+            const activeLibraryId =
+                localStorage.getItem("activeLibrary") || "default";
             console.log("Active library ID:", activeLibraryId);
 
             // Get the active library
@@ -568,7 +624,10 @@ const App: React.FC = () => {
                 setActiveLibrary(library.id);
                 setSvgLibrary(library.shapes);
                 // render all components if any
-                componentLibraryManager.renderAllComponents(canvasSize, library.shapes);
+                componentLibraryManager.renderAllComponents(
+                    canvasSize,
+                    library.shapes
+                );
             } else {
                 // Fallback to default library if active library not found
                 console.log("Falling back to default library");
@@ -598,15 +657,21 @@ const App: React.FC = () => {
     }, [handleKeyboardShortcuts]);
 
     useEffect(() => {
-        const { svgContent, processedComponents } = diagramComponentsLib.compileDiagram(
-            diagramComponents,
-            canvasSize,
-            svgLibrary,
-            showAttachmentPoints
-        );
+        const { svgContent, processedComponents } =
+            diagramComponentsLib.compileDiagram(
+                diagramComponents,
+                canvasSize,
+                svgLibrary,
+                showAttachmentPoints
+            );
         setComposedSVG(svgContent);
         // Only update if the processed components are different
-        if (!diagramComponentsLib.areComponentArraysEqual(processedComponents, diagramComponents)) {
+        if (
+            !diagramComponentsLib.areComponentArraysEqual(
+                processedComponents,
+                diagramComponents
+            )
+        ) {
             setDiagramComponents(processedComponents);
         }
     }, [diagramComponents, canvasSize, svgLibrary, showAttachmentPoints]);
@@ -681,3 +746,130 @@ const App: React.FC = () => {
 };
 
 export default App;
+
+const compooo: Component = {
+    id: "group-1",
+    name: "group-1",
+    description: "",
+    attachmentPoints: [
+        {
+            name: "attach-back-left",
+            x: 514.153503,
+            y: 517.309624
+        },
+        {
+            name: "attach-back-right",
+            x: 553.343536,
+            y: 517.316872
+        },
+        {
+            name: "attach-front-right",
+            x: 550.873039,
+            y: 538.170723
+        },
+        {
+            name: "attach-front-left",
+            x: 515.58271,
+            y: 538.845299
+        },
+        {
+            name: "attach-bottom",
+            x: 532.916672,
+            y: 542.742165
+        },
+        {
+            name: "attach-top",
+            x: 532.92057,
+            y: 495.981515
+        }
+    ],
+    created: new Date("2024-11-18T15:51:26.802Z"),
+    lastModified: new Date("2024-11-18T15:51:26.802Z"),
+    diagramComponents: [
+        {
+            id: "shape-1731945070002-1whwxao0m",
+            shape: "service",
+            position: "top",
+            source: "3D",
+            relativeToId: null,
+            attached2DShapes: [],
+            attachmentPoints: [
+                {
+                    name: "attach-back-left",
+                    x: 14.153503,
+                    y: 17.309624
+                },
+                {
+                    name: "attach-back-right",
+                    x: 53.343536,
+                    y: 17.316872
+                },
+                {
+                    name: "attach-front-right",
+                    x: 50.873039,
+                    y: 38.170723
+                },
+                {
+                    name: "attach-front-left",
+                    x: 15.58271,
+                    y: 38.845299
+                },
+                {
+                    name: "attach-bottom",
+                    x: 32.916672,
+                    y: 42.742165
+                },
+                {
+                    name: "attach-top",
+                    x: 32.918617,
+                    y: 19.361839
+                }
+            ]
+        },
+        {
+            id: "shape-1731945070337-s4tv1uni8",
+            shape: "database",
+            position: "top",
+            source: "3D",
+            relativeToId: "shape-1731945070002-1whwxao0m",
+            attached2DShapes: [
+                {
+                    name: "process",
+                    attachedTo: "top"
+                }
+            ],
+            attachmentPoints: [
+                {
+                    name: "attach-back-left",
+                    x: 5.7323637,
+                    y: 13.059323
+                },
+                {
+                    name: "attach-back-right",
+                    x: 44.922405,
+                    y: 13.066586
+                },
+                {
+                    name: "attach-front-right",
+                    x: 42.451908,
+                    y: 33.920422
+                },
+                {
+                    name: "attach-front-left",
+                    x: 7.1615705,
+                    y: 34.594997
+                },
+                {
+                    name: "attach-bottom",
+                    x: 24.495531,
+                    y: 38.491863
+                },
+                {
+                    name: "attach-top",
+                    x: 24.497484,
+                    y: 15.111539
+                }
+            ]
+        }
+    ]
+};
