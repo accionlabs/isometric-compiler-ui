@@ -93,7 +93,7 @@ export interface SerializedDiagramComponent {
         | "back-left"
         | string;
     relativeToId: string | null;
-    attachmentPoints: AttachmentPoint[];
+    attachmentPoints?: AttachmentPoint[];
 
     attached2DShapes: {
         name: string;

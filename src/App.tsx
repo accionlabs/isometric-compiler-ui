@@ -352,15 +352,23 @@ const App: React.FC = () => {
     const handleSaveDiagram = useCallback(async () => {
         try {
             const jsonFileName = getJsonFileName(fileName);
-            const serializedData =
+            const serializedDiagramComponents =
                 diagramComponentsLib.serializeDiagramComponents(
-                    diagramComponents,
-                    components
+                    diagramComponents
                 );
+            const serializedComponentLib =
+                componentLibraryManager.serializeComponentLib();
             await saveFile(
                 storageType,
                 jsonFileName,
-                serializedData,
+                JSON.stringify(
+                    {
+                        serializedDiagramComponents,
+                        serializedComponentLib
+                    },
+                    null,
+                    2
+                ),
                 folderPath
             );
             setErrorMessage(null);
@@ -390,23 +398,19 @@ const App: React.FC = () => {
                         folderPath
                     });
                 }
+                const parsedData = JSON.parse(loadedData);
                 // Deserialize the loaded data to retrieve diagram components and library information
-                const loadedComponents =
+                const deserializedComponents =
                     diagramComponentsLib.deserializeDiagramComponents(
-                        loadedData
+                        parsedData.serializedDiagramComponents
                     );
-                // Load each component from the serialized component library into the component manager
-                loadedComponents.serializedComponentLibrary.forEach(
-                    (component) => {
-                        componentLibraryManager.loadPremadeComponent(
-                            component,
-                            true
-                        );
-                    }
+
+                componentLibraryManager.deserializeComponentLib(
+                    parsedData.serializedComponentLib
                 );
 
                 setComponents(componentLibraryManager.getAllComponents());
-                setDiagramComponents(loadedComponents.serializedComponents);
+                setDiagramComponents(deserializedComponents);
                 setErrorMessage(null);
             } catch (error) {
                 console.error("Error loading diagram:", error);
@@ -746,130 +750,3 @@ const App: React.FC = () => {
 };
 
 export default App;
-
-const compooo: Component = {
-    id: "group-1",
-    name: "group-1",
-    description: "",
-    attachmentPoints: [
-        {
-            name: "attach-back-left",
-            x: 514.153503,
-            y: 517.309624
-        },
-        {
-            name: "attach-back-right",
-            x: 553.343536,
-            y: 517.316872
-        },
-        {
-            name: "attach-front-right",
-            x: 550.873039,
-            y: 538.170723
-        },
-        {
-            name: "attach-front-left",
-            x: 515.58271,
-            y: 538.845299
-        },
-        {
-            name: "attach-bottom",
-            x: 532.916672,
-            y: 542.742165
-        },
-        {
-            name: "attach-top",
-            x: 532.92057,
-            y: 495.981515
-        }
-    ],
-    created: new Date("2024-11-18T15:51:26.802Z"),
-    lastModified: new Date("2024-11-18T15:51:26.802Z"),
-    diagramComponents: [
-        {
-            id: "shape-1731945070002-1whwxao0m",
-            shape: "service",
-            position: "top",
-            source: "3D",
-            relativeToId: null,
-            attached2DShapes: [],
-            attachmentPoints: [
-                {
-                    name: "attach-back-left",
-                    x: 14.153503,
-                    y: 17.309624
-                },
-                {
-                    name: "attach-back-right",
-                    x: 53.343536,
-                    y: 17.316872
-                },
-                {
-                    name: "attach-front-right",
-                    x: 50.873039,
-                    y: 38.170723
-                },
-                {
-                    name: "attach-front-left",
-                    x: 15.58271,
-                    y: 38.845299
-                },
-                {
-                    name: "attach-bottom",
-                    x: 32.916672,
-                    y: 42.742165
-                },
-                {
-                    name: "attach-top",
-                    x: 32.918617,
-                    y: 19.361839
-                }
-            ]
-        },
-        {
-            id: "shape-1731945070337-s4tv1uni8",
-            shape: "database",
-            position: "top",
-            source: "3D",
-            relativeToId: "shape-1731945070002-1whwxao0m",
-            attached2DShapes: [
-                {
-                    name: "process",
-                    attachedTo: "top"
-                }
-            ],
-            attachmentPoints: [
-                {
-                    name: "attach-back-left",
-                    x: 5.7323637,
-                    y: 13.059323
-                },
-                {
-                    name: "attach-back-right",
-                    x: 44.922405,
-                    y: 13.066586
-                },
-                {
-                    name: "attach-front-right",
-                    x: 42.451908,
-                    y: 33.920422
-                },
-                {
-                    name: "attach-front-left",
-                    x: 7.1615705,
-                    y: 34.594997
-                },
-                {
-                    name: "attach-bottom",
-                    x: 24.495531,
-                    y: 38.491863
-                },
-                {
-                    name: "attach-top",
-                    x: 24.497484,
-                    y: 15.111539
-                }
-            ]
-        }
-    ]
-};

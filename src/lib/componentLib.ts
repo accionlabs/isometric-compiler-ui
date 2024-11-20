@@ -178,6 +178,69 @@ class ComponentLibraryManager {
         return globalPoints[0].attachmentPoints;
     }
 
+    private validateComponentLibrary = (data: any): boolean => {
+        // Check if data is an array
+        if (!Array.isArray(data)) return false;
+
+        // Loop through each component in the array
+        for (const component of data) {
+            // Validate top-level required fields for each component
+            if (
+                typeof component.id !== "string" ||
+                typeof component.name !== "string" ||
+                typeof component.description !== "string"
+            ) {
+                return false;
+            }
+
+            // Validate diagramComponents array
+            if (!Array.isArray(component.diagramComponents)) return false;
+
+            // Loop through each diagramComponent inside the component
+            for (const diagramComponent of component.diagramComponents) {
+                // Check required fields in each diagramComponent
+                if (
+                    typeof diagramComponent.id !== "string" ||
+                    typeof diagramComponent.shape !== "string" ||
+                    typeof diagramComponent.position !== "string"
+                ) {
+                    return false;
+                }
+
+                if (!Array.isArray(diagramComponent.attached2DShapes))
+                    return false;
+
+                // Validate attached2DShapes
+                for (const shape of diagramComponent.attached2DShapes) {
+                    if (
+                        typeof shape.name !== "string" ||
+                        typeof shape.attachedTo !== "string"
+                    ) {
+                        return false;
+                    }
+                }
+
+                // Validate optional metadata fields in diagramComponent
+                if (
+                    diagramComponent.type !== undefined &&
+                    typeof diagramComponent.type !== "string"
+                ) {
+                    return false;
+                }
+
+                if (
+                    diagramComponent.metadata !== undefined &&
+                    typeof diagramComponent.metadata !== "object"
+                ) {
+                    return false;
+                }
+            }
+        }
+
+        // If all components and their nested structure are valid, return true
+        return true;
+    };
+
     public hasComponent(name: string): boolean {
         return Object.values(this.library.components).some(
             (component) => component.name === name
@@ -216,20 +279,49 @@ class ComponentLibraryManager {
         return component;
     }
 
-    public loadPremadeComponent(
-        component: Component,
+    public serializeComponentLib = (): string => {
+        const components = this.getAllComponents();
 
-        overwrite: boolean = false
-    ): Component | null {
-        if (this.hasComponent(component.name) && !overwrite) {
-            return null;
+        const serializeDiagramComponent = (component: DiagramComponent) => ({
+            id: component.id,
+            shape: component.shape,
+            position: component.position,
+            source: component.source,
+            relativeToId: component.relativeToId,
+            attached2DShapes: component.attached2DShapes,
+            type: component.type, // Include type
+            metadata: component.metadata, // Include metadata,
+            attachmentPoints: component.attachmentPoints || []
+        });
+
+        const serializeComponentWithDiagrams = (component: Component) => ({
+            id: component.id,
+            name: component.name,
+            description: component.description,
+            attachmentPoints: component.attachmentPoints,
+            created: component.created,
+            lastModified: component.lastModified,
+            diagramComponents: component.diagramComponents.map((component) =>
+                serializeDiagramComponent(component)
+            )
+        });
+        const serializedComponentLibrary = components.map(
+            serializeComponentWithDiagrams
+        );
+        return JSON.stringify(serializedComponentLibrary, null, 2);
+    };
+
+    public deserializeComponentLib = (components: Component[]) => {
+        if (!this.validateComponentLibrary(components)) {
+            throw new Error("Invalid component library structure");
         }
-        const now = new Date();
-        this.library.components[component.name] = component;
-        this.library.lastModified = now;
-        this.saveLibrary();
-        return component;
-    }
+        components.forEach((component) => {
+            const now = new Date();
+            this.library.components[component.name] = component;
+            this.library.lastModified = now;
+            this.saveLibrary();
+        });
+    };
 
     public renderComponent(
         id: string,
