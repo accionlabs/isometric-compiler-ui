@@ -8,7 +8,10 @@ import {
     AttachmentPointMap
 } from "../Types";
 import { v4 as uuidv4 } from "uuid";
-import { compileDiagram } from "./diagramComponentsLib";
+import {
+    compileDiagram,
+    serializeDiagramComponents
+} from "./diagramComponentsLib";
 import { calculateSVGBoundingBox } from "./svgUtils";
 import {
     extractGlobalAttachmentPoints,
@@ -279,20 +282,8 @@ class ComponentLibraryManager {
         return component;
     }
 
-    public serializeComponentLib = (): string => {
+    public serializeComponentLib = (): Component[] => {
         const components = this.getAllComponents();
-
-        const serializeDiagramComponent = (component: DiagramComponent) => ({
-            id: component.id,
-            shape: component.shape,
-            position: component.position,
-            source: component.source,
-            relativeToId: component.relativeToId,
-            attached2DShapes: component.attached2DShapes,
-            type: component.type, // Include type
-            metadata: component.metadata, // Include metadata,
-            attachmentPoints: component.attachmentPoints || []
-        });
 
         const serializeComponentWithDiagrams = (component: Component) => ({
             id: component.id,
@@ -301,14 +292,12 @@ class ComponentLibraryManager {
             attachmentPoints: component.attachmentPoints,
             created: component.created,
             lastModified: component.lastModified,
-            diagramComponents: component.diagramComponents.map((component) =>
-                serializeDiagramComponent(component)
+            diagramComponents: serializeDiagramComponents(
+                component.diagramComponents,
+                true
             )
         });
-        const serializedComponentLibrary = components.map(
-            serializeComponentWithDiagrams
-        );
-        return JSON.stringify(serializedComponentLibrary, null, 2);
+        return components.map(serializeComponentWithDiagrams);
     };
 
     public deserializeComponentLib = (components: Component[]) => {
