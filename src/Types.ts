@@ -24,7 +24,7 @@ export interface AttachmentPointMap {
 }
 
 export interface GlobalAttachmentPoint extends Point {
-    componentId: string;  // ID of the component this point belongs to
+    componentId: string; // ID of the component this point belongs to
     attachmentPoints: AttachmentPoint[];
 }
 
@@ -41,15 +41,23 @@ export interface Shape {
 export interface DiagramComponent {
     id: string;
     shape: string;
-    source?: "3D" | "component";  // Indicates if this is from SVG library or component library
-    type?: string;     // References componentType from schema (optional)
-    position: "center" | "top" | "front-right" | "front-left" | "back-right" | "back-left" | string;
+    source?: "3D" | "component"; // Indicates if this is from SVG library or component library
+    type?: string; // References componentType from schema (optional)
+    position:
+        | "center"
+        | "top"
+        | "front-right"
+        | "front-left"
+        | "back-right"
+        | "back-left"
+        | string;
     relativeToId: string | null;
     attached2DShapes: Attached2DShape[];
     attachmentPoints?: AttachmentPoint[];
     absolutePosition?: Point;
     cut?: boolean;
-    metadata?: {      // Optional metadata based on component type schema
+    metadata?: {
+        // Optional metadata based on component type schema
         [key: string]: any;
     };
 }
@@ -60,8 +68,8 @@ export interface Component {
     name: string;
     description: string;
     diagramComponents: DiagramComponent[];
-    attachmentPoints: AttachmentPoint[]; 
-    svgContent?:string;
+    attachmentPoints: AttachmentPoint[];
+    svgContent?: string;
     created: Date;
     lastModified: Date;
 }
@@ -77,14 +85,16 @@ export interface SerializedDiagramComponent {
     shape: string;
     source?: "3D" | "component";
     position:
-    | "center"
-    | "top"
-    | "front-right"
-    | "front-left"
-    | "back-right"
-    | "back-left"
-    | string;
+        | "center"
+        | "top"
+        | "front-right"
+        | "front-left"
+        | "back-right"
+        | "back-left"
+        | string;
     relativeToId: string | null;
+    attachmentPoints?: AttachmentPoint[];
+
     attached2DShapes: {
         name: string;
         attachedTo: string;
@@ -114,7 +124,7 @@ export interface ViewBox {
 export interface TransformationContext {
     viewBox: ViewBox;
     canvasSize: CanvasSize;
-    margin: number,
+    margin: number;
     scale: number;
 }
 
@@ -135,7 +145,7 @@ export interface SVGLayout {
 export interface SVGDimensions {
     boundingBox: ViewBox;
     scale: number;
-  }
+}
 
 // New interfaces for component metadata
 export interface MetadataFieldOption {

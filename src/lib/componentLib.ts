@@ -1,13 +1,24 @@
-import { CanvasSize, Shape, Component, ComponentLibrary, DiagramComponent, AttachmentPoint, AttachmentPointMap } from '../Types';
-import { v4 as uuidv4 } from 'uuid';
-import { compileDiagram } from './diagramComponentsLib';
-import { calculateSVGBoundingBox } from './svgUtils';
-import { extractGlobalAttachmentPoints, getGlobalAttachmentPoints } from './diagramComponentsLib';
+import {
+    CanvasSize,
+    Shape,
+    Component,
+    ComponentLibrary,
+    DiagramComponent,
+    AttachmentPoint,
+    AttachmentPointMap
+} from "../Types";
+import { v4 as uuidv4 } from "uuid";
+import { compileDiagram } from "./diagramComponentsLib";
+import { calculateSVGBoundingBox } from "./svgUtils";
+import {
+    extractGlobalAttachmentPoints,
+    getGlobalAttachmentPoints
+} from "./diagramComponentsLib";
 
 // Helper interfaces for attachment point calculation
 
 interface GridPosition {
-    row: string;  // 'A', 'B', 'C', etc.
+    row: string; // 'A', 'B', 'C', etc.
     column: number;
 }
 
@@ -27,7 +38,7 @@ class ComponentLibraryManager {
     }
 
     private loadLibrary(): ComponentLibrary {
-        const savedLibrary = localStorage.getItem('componentLibrary');
+        const savedLibrary = localStorage.getItem("componentLibrary");
         if (savedLibrary) {
             const parsed = JSON.parse(savedLibrary);
             return {
@@ -42,28 +53,31 @@ class ComponentLibraryManager {
     }
 
     private saveLibrary(): void {
-        localStorage.setItem('componentLibrary', JSON.stringify(this.library));
+        localStorage.setItem("componentLibrary", JSON.stringify(this.library));
     }
 
     private getNextRow(currentRow: string): string {
         return String.fromCharCode(currentRow.charCodeAt(0) + 1);
     }
 
-    private getGridPosition(component: DiagramComponent, basePosition: GridPosition): GridPosition {
+    private getGridPosition(
+        component: DiagramComponent,
+        basePosition: GridPosition
+    ): GridPosition {
         const position = component.position;
-        
-        if (position === 'front-left') {
+
+        if (position === "front-left") {
             return {
                 row: basePosition.row,
                 column: basePosition.column + 1
             };
-        } else if (position === 'front-right') {
+        } else if (position === "front-right") {
             return {
                 row: this.getNextRow(basePosition.row),
                 column: basePosition.column
             };
         }
-        
+
         return basePosition;
     }
 
@@ -74,16 +88,17 @@ class ComponentLibraryManager {
         components: DiagramComponent[]
     ): void {
         // Get this component's attachment points
-        const componentPoints:AttachmentPointMap = getGlobalAttachmentPoints(component) || [];
-        
-        // Process based on position
-        if (['top','front-left','front-right'].includes(component.position)) {
+        const componentPoints: AttachmentPointMap =
+            getGlobalAttachmentPoints(component) || [];
 
+        // Process based on position
+        if (["top", "front-left", "front-right"].includes(component.position)) {
             // update the respective attachment point
-            attachmentPoints[`attach-${component.position}`] = componentPoints[`attach-${component.position}`];
+            attachmentPoints[`attach-${component.position}`] =
+                componentPoints[`attach-${component.position}`];
 
             // create or update grid-based attachment points
-            const topPoint = componentPoints['attach-top'];
+            const topPoint = componentPoints["attach-top"];
             if (topPoint) {
                 const pointName = `attach-top-${gridPosition.row}${gridPosition.column}`;
                 attachmentPoints[pointName] = { ...topPoint, name: pointName };
@@ -91,15 +106,23 @@ class ComponentLibraryManager {
         }
 
         // Process child components recursively
-        const childComponents = components.filter(c => c.relativeToId === component.id);
-        childComponents.forEach(child => {
+        const childComponents = components.filter(
+            (c) => c.relativeToId === component.id
+        );
+        childComponents.forEach((child) => {
             const childGridPosition = this.getGridPosition(child, gridPosition);
-            this.processComponentAttachmentPoints(child, attachmentPoints, childGridPosition, components);
+            this.processComponentAttachmentPoints(
+                child,
+                attachmentPoints,
+                childGridPosition,
+                components
+            );
         });
     }
 
-    private getAttachmentPoints(components: DiagramComponent[]): AttachmentPoint[] {
-        console.log('component points 1:', components);
+    private getAttachmentPoints(
+        components: DiagramComponent[]
+    ): AttachmentPoint[] {
         if (!components.length) return [];
 
         // Get the first 3D shape (root component)
@@ -107,49 +130,128 @@ class ComponentLibraryManager {
         if (!rootComponent.attachmentPoints) return [];
 
         // Initialize attachment points map with root component's points
-        const attachmentPointsMap: AttachmentPointMap = getGlobalAttachmentPoints(rootComponent);
+        const attachmentPointsMap: AttachmentPointMap =
+            getGlobalAttachmentPoints(rootComponent);
 
         // Start processing from the root with initial grid position
-        const initialGridPosition: GridPosition = { row: 'a', column: 1 };
-
+        const initialGridPosition: GridPosition = { row: "a", column: 1 };
         // add the first grid attachment point
-        attachmentPointsMap['attach-top-a1'] = { ...attachmentPointsMap['attach-top'], name: 'attach-top-a1' };
+        attachmentPointsMap["attach-top-a1"] = {
+            ...(attachmentPointsMap["attach-top"] || {}),
+            name: "attach-top-a1"
+        };
 
         // remember how many points are there
         const numPoints = Object.keys(attachmentPointsMap).length;
-        
+
         // Process children of root component
-        const childComponents = components.filter(c => c.relativeToId === rootComponent.id);
-        childComponents.forEach(child => {
-            const childGridPosition = this.getGridPosition(child, initialGridPosition);
-            this.processComponentAttachmentPoints(child, attachmentPointsMap, childGridPosition, components);
+        const childComponents = components.filter(
+            (c) => c.relativeToId === rootComponent.id
+        );
+        childComponents.forEach((child) => {
+            const childGridPosition = this.getGridPosition(
+                child,
+                initialGridPosition
+            );
+            this.processComponentAttachmentPoints(
+                child,
+                attachmentPointsMap,
+                childGridPosition,
+                components
+            );
         });
 
         // if no new grid attachment points got added, remove the first grid point
         if (Object.keys(attachmentPointsMap).length === numPoints) {
-            delete attachmentPointsMap['attach-top-a1'];
+            delete attachmentPointsMap["attach-top-a1"];
         }
 
-        console.log('component points:',attachmentPointsMap);
         // Convert map back to array
         return Object.values(attachmentPointsMap);
     }
 
-    private getAttachmentPointsOld(components: DiagramComponent[]): AttachmentPoint[] {
+    private getAttachmentPointsOld(
+        components: DiagramComponent[]
+    ): AttachmentPoint[] {
         const globalPoints = extractGlobalAttachmentPoints(components);
         // for now, let us only take the attachment points of the first 3D shape... we can modify this later
         return globalPoints[0].attachmentPoints;
     }
 
+    private validateComponentLibrary = (data: any): boolean => {
+        // Check if data is an array
+        if (!Array.isArray(data)) return false;
+
+        // Loop through each component in the array
+        for (const component of data) {
+            // Validate top-level required fields for each component
+            if (
+                typeof component.id !== "string" ||
+                typeof component.name !== "string" ||
+                typeof component.description !== "string"
+            ) {
+                return false;
+            }
+
+            // Validate diagramComponents array
+            if (!Array.isArray(component.diagramComponents)) return false;
+
+            // Loop through each diagramComponent inside the component
+            for (const diagramComponent of component.diagramComponents) {
+                // Check required fields in each diagramComponent
+                if (
+                    typeof diagramComponent.id !== "string" ||
+                    typeof diagramComponent.shape !== "string" ||
+                    typeof diagramComponent.position !== "string"
+                ) {
+                    return false;
+                }
+
+                if (!Array.isArray(diagramComponent.attached2DShapes))
+                    return false;
+
+                // Validate attached2DShapes
+                for (const shape of diagramComponent.attached2DShapes) {
+                    if (
+                        typeof shape.name !== "string" ||
+                        typeof shape.attachedTo !== "string"
+                    ) {
+                        return false;
+                    }
+                }
+
+                // Validate optional metadata fields in diagramComponent
+                if (
+                    diagramComponent.type !== undefined &&
+                    typeof diagramComponent.type !== "string"
+                ) {
+                    return false;
+                }
+
+                if (
+                    diagramComponent.metadata !== undefined &&
+                    typeof diagramComponent.metadata !== "object"
+                ) {
+                    return false;
+                }
+            }
+        }
+
+        // If all components and their nested structure are valid, return true
+        return true;
+    };
+
     public hasComponent(name: string): boolean {
-        return Object.values(this.library.components).some(component => component.name === name);
+        return Object.values(this.library.components).some(
+            (component) => component.name === name
+        );
     }
 
     public createComponent(
         name: string,
         description: string,
         diagramComponents: DiagramComponent[],
-        overwrite:boolean = false
+        overwrite: boolean = false
     ): Component | null {
         if (this.hasComponent(name) && !overwrite) {
             return null;
@@ -159,7 +261,7 @@ class ComponentLibraryManager {
 
         // Create deep copy of diagram components to avoid reference issues
         const componentsCopy = JSON.parse(JSON.stringify(diagramComponents));
-        
+
         const component: Component = {
             id: name,
             name,
@@ -177,6 +279,50 @@ class ComponentLibraryManager {
         return component;
     }
 
+    public serializeComponentLib = (): string => {
+        const components = this.getAllComponents();
+
+        const serializeDiagramComponent = (component: DiagramComponent) => ({
+            id: component.id,
+            shape: component.shape,
+            position: component.position,
+            source: component.source,
+            relativeToId: component.relativeToId,
+            attached2DShapes: component.attached2DShapes,
+            type: component.type, // Include type
+            metadata: component.metadata, // Include metadata,
+            attachmentPoints: component.attachmentPoints || []
+        });
+
+        const serializeComponentWithDiagrams = (component: Component) => ({
+            id: component.id,
+            name: component.name,
+            description: component.description,
+            attachmentPoints: component.attachmentPoints,
+            created: component.created,
+            lastModified: component.lastModified,
+            diagramComponents: component.diagramComponents.map((component) =>
+                serializeDiagramComponent(component)
+            )
+        });
+        const serializedComponentLibrary = components.map(
+            serializeComponentWithDiagrams
+        );
+        return JSON.stringify(serializedComponentLibrary, null, 2);
+    };
+
+    public deserializeComponentLib = (components: Component[]) => {
+        if (!this.validateComponentLibrary(components)) {
+            throw new Error("Invalid component library structure");
+        }
+        components.forEach((component) => {
+            const now = new Date();
+            this.library.components[component.name] = component;
+            this.library.lastModified = now;
+            this.saveLibrary();
+        });
+    };
+
     public renderComponent(
         id: string,
         canvasSize: CanvasSize,
@@ -186,48 +332,60 @@ class ComponentLibraryManager {
         if (!component) {
             throw new Error(`Component with id ${id} not found`);
         }
-        const { svgContent:svgRender } = compileDiagram(component.diagramComponents, canvasSize, svgLibrary, false);
-        const boundingBox = calculateSVGBoundingBox(svgRender, canvasSize) || {x:0,y:0,width:'100%',height:'100%'};
-        const wrappedSvg:string = `
+        const { svgContent: svgRender } = compileDiagram(
+            component.diagramComponents,
+            canvasSize,
+            svgLibrary,
+            false
+        );
+
+        const boundingBox = calculateSVGBoundingBox(svgRender, canvasSize) || {
+            x: 0,
+            y: 0,
+            width: "100%",
+            height: "100%"
+        };
+
+        const wrappedSvg: string = `
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="${boundingBox.x} ${boundingBox.y} ${boundingBox.width} ${boundingBox.height}" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
                 ${svgRender}
             </svg>
         `;
         // TODO: We need to remove all attachment points in the svgContent of the individual shapes and add only the component's attachment points
         // this is required to allow proper selection of the component and attachment points from the SVGNode
-    
+
         // Create a temporary container to parse and modify the SVG
         const parser = new DOMParser();
         // Wrap the content in an SVG tag for proper parsing
-        const doc = parser.parseFromString(wrappedSvg, 'image/svg+xml');
+        const doc = parser.parseFromString(wrappedSvg, "image/svg+xml");
         const svg = doc.documentElement;
-    
+
         // Remove all existing attachment points
         const existingPoints = svg.querySelectorAll('circle[id^="attach-"]');
-        existingPoints.forEach(point => point.remove());
-    
+        existingPoints.forEach((point) => point.remove());
+
         // Remove all shape IDs from internal elements
         const shapesWithIds = svg.querySelectorAll('g[id^="shape-"]');
-        shapesWithIds.forEach(shape => shape.removeAttribute('id'));
-    
+        shapesWithIds.forEach((shape) => shape.removeAttribute("id"));
+
         // Create SVG namespace element for creating new elements
         const svgNS = "http://www.w3.org/2000/svg";
-    
+
         // Add new attachment points based on component's attachment points
-        component.attachmentPoints.forEach(point => {
-            const circle = document.createElementNS(svgNS, 'circle');
-            circle.setAttribute('id', point.name);
-            circle.setAttribute('cx', point.x.toString());
-            circle.setAttribute('cy', point.y.toString());
-            circle.setAttribute('r', '1');
-            circle.setAttribute('fill', 'red');
+        component.attachmentPoints.forEach((point) => {
+            const circle = document.createElementNS(svgNS, "circle");
+            circle.setAttribute("id", point.name);
+            circle.setAttribute("cx", point.x.toString());
+            circle.setAttribute("cy", point.y.toString());
+            circle.setAttribute("r", "1");
+            circle.setAttribute("fill", "red");
             //circle.setAttribute('style', 'display: none;'); // Hidden by default
             svg.appendChild(circle);
         });
-    
+
         const serializer = new XMLSerializer();
         const svgContent = serializer.serializeToString(svg);
-    
+
         // Update the component with the new SVG content
         this.updateComponent(id, { svgContent });
         return svgContent;
@@ -237,36 +395,43 @@ class ComponentLibraryManager {
         id: string,
         canvasSize: CanvasSize,
         svgLibrary: Shape[]
-    ) : string {
+    ): string {
         const component = this.library.components[id];
         if (!component) {
             throw new Error(`Component with id ${id} not found`);
         }
-        const { svgContent:svgRender } = compileDiagram(component.diagramComponents, canvasSize, svgLibrary, false);
-        const boundingBox = calculateSVGBoundingBox(svgRender, canvasSize) || {x:0,y:0,width:'100%',height:'100%'};
-        const svgContent:string = `
+        const { svgContent: svgRender } = compileDiagram(
+            component.diagramComponents,
+            canvasSize,
+            svgLibrary,
+            false
+        );
+        const boundingBox = calculateSVGBoundingBox(svgRender, canvasSize) || {
+            x: 0,
+            y: 0,
+            width: "100%",
+            height: "100%"
+        };
+        const svgContent: string = `
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="${boundingBox.x} ${boundingBox.y} ${boundingBox.width} ${boundingBox.height}" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
                 ${svgRender}
             </svg>
         `;
         // TODO: We need to remove all attachment points in the svgContent of the individual shapes and add only the component's attachment points
         // this is required to allow proper selection of the component and attachment points from the SVGNode
-        this.updateComponent(id,{svgContent});
+        this.updateComponent(id, { svgContent });
         return svgContent;
     }
 
-    public renderAllComponents(
-        canvasSize: CanvasSize,
-        svgLibrary: Shape[]
-    ) {
-        this.getAllComponents().forEach(component => {
+    public renderAllComponents(canvasSize: CanvasSize, svgLibrary: Shape[]) {
+        this.getAllComponents().forEach((component) => {
             this.renderComponent(component.id, canvasSize, svgLibrary);
         });
     }
 
     public updateComponent(
         id: string,
-        updates: Partial<Omit<Component, 'id' | 'created'>>
+        updates: Partial<Omit<Component, "id" | "created">>
     ): Component {
         const component = this.library.components[id];
         if (!component) {
@@ -323,7 +488,7 @@ class ComponentLibraryManager {
 
         return {
             id: uuidv4(),
-            shape: componentId,  // Store the component ID in shape field
+            shape: componentId, // Store the component ID in shape field
             source: "component",
             position,
             relativeToId,
