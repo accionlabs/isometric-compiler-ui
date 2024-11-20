@@ -334,7 +334,9 @@ export function addComponentToScene(
     if (attachmentPoint === "none") {
         attachmentPoint = null;
     }
-
+    if (diagramComponents.length === 0) {
+        selectedComponentId = null;
+    }
     // Create a new diagram component entry
     const newComponent: DiagramComponent = {
         id: `shape-${uuidv4()}`,
@@ -1175,23 +1177,26 @@ export const findClosestGlobalAttachmentPoint = (
 };
 
 export const serializeDiagramComponents = (
-    diagramComponents: DiagramComponent[]
-): string => {
+    diagramComponents: DiagramComponent[],
+    addAttachmentPoints: boolean = false
+): SerializedDiagramComponent[] => {
     // Map each component to only include the necessary attributes
-    const serializedComponents = diagramComponents.map((component) => {
+    return diagramComponents.map((component) => {
         const serializedComponent: SerializedDiagramComponent = {
             id: component.id,
             shape: component.shape,
             position: component.position,
+            source: component.source,
             relativeToId: component.relativeToId,
             attached2DShapes: component.attached2DShapes,
             type: component.type, // Include type
-            metadata: component.metadata // Include metadata
+            metadata: component.metadata, // Include metadata
+            attachmentPoints: addAttachmentPoints
+                ? component.attachmentPoints || []
+                : []
         };
         return serializedComponent;
     });
-
-    return JSON.stringify(serializedComponents, null, 2);
 };
 export const deserializeDiagramComponents = (
     serializedData: SerializedDiagramComponent[]

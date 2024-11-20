@@ -528,17 +528,13 @@ const App: React.FC = () => {
 
     // New handler to save current composition as a component
     const handleSaveAsComponent = useCallback(
-        (
-            name: string,
-            description: string,
-            components?: DiagramComponent[]
-        ) => {
+        (name: string, description: string) => {
             try {
                 // Pass true for overwrite since user has already confirmed in dialog
                 const newComponent = componentLibraryManager.createComponent(
                     name,
                     description,
-                    components || diagramComponents,
+                    diagramComponents,
                     true
                 );
 
