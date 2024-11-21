@@ -272,7 +272,7 @@ export const add3DShape = (
         const newComponent: DiagramComponent = {
             id: newId,
             shape: shapeName,
-            source: "3D",
+            source: "shape",
             position: (attachmentPoint ||
                 position) as DiagramComponent["position"],
             relativeToId:
