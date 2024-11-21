@@ -36,11 +36,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
     components,
     activeLibrary
 }) => {
-    const [openPanels, setOpenPanels] = useState<string[]>([
-        "3d-shapes",
-        "components",
-        "2d-shapes"
-    ]);
+    const [openPanels, setOpenPanels] = useState<string>("3d-shapes");
 
     // Get active library details
     const activeLibraryData = useMemo(() => {
@@ -51,7 +47,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
         return diagramComponents.length > 0 && selected3DShape === null;
     };
 
-    const handleAccordionChange = (value: string[]) => {
+    const handleAccordionChange = (value: string) => {
         setOpenPanels(value);
     };
 
@@ -219,54 +215,43 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
         </div>
     );
 
+    const accordionItems = [
+        {
+            name: "3D Shapes",
+            value: "3d-shapes",
+            render: render3DShapesContent
+        },
+        {
+            name: "components",
+            value: "components",
+            render: renderComponentsContent
+        },
+        { name: "2D Shapes", value: "2d-shapes", render: render2DShapesContent }
+    ];
     return (
         <div className="flex flex-col h-full">
             <Accordion
-                type="multiple"
+                type="single"
+                collapsible
                 value={openPanels}
                 onValueChange={handleAccordionChange}
                 className="flex flex-col h-full"
             >
                 <div className="flex flex-col h-full">
-                    <AccordionItem
-                        value="3d-shapes"
-                        className="flex flex-col min-h-0 border-b border-gray-700"
-                    >
-                        <AccordionTrigger className="p-2 text-xl font-semibold">
-                            3D Shapes
-                        </AccordionTrigger>
-                        <AccordionContent className="flex-grow overflow-auto">
-                            <div className="p-2">{render3DShapesContent()}</div>
-                        </AccordionContent>
-                    </AccordionItem>
-
-                    <AccordionItem
-                        value="components"
-                        className="flex flex-col min-h-0 border-b border-gray-700"
-                        fixedContentHeight="calc(35vh - 2rem)"
-                    >
-                        <AccordionTrigger className="p-2 text-xl font-semibold">
-                            Components
-                        </AccordionTrigger>
-                        <AccordionContent className="flex-grow overflow-auto">
-                            <div className="p-2">
-                                {renderComponentsContent()}
-                            </div>
-                        </AccordionContent>
-                    </AccordionItem>
-
-                    <AccordionItem
-                        value="2d-shapes"
-                        className="flex flex-col min-h-0 border-b border-gray-700"
-                        fixedContentHeight="calc(35vh - 2rem)"
-                    >
-                        <AccordionTrigger className="p-2 text-xl font-semibold">
-                            2D Shapes
-                        </AccordionTrigger>
-                        <AccordionContent className="flex-grow overflow-auto">
-                            <div className="p-2">{render2DShapesContent()}</div>
-                        </AccordionContent>
-                    </AccordionItem>
+                    {accordionItems.map((item) => (
+                        <AccordionItem
+                            key={item.value}
+                            value={item.value}
+                            className="flex flex-col min-h-0 border-b border-gray-700"
+                        >
+                            <AccordionTrigger className="p-2 text-xl font-semibold">
+                                {item.name}
+                            </AccordionTrigger>
+                            <AccordionContent className="flex-grow overflow-auto">
+                                <div className="p-2">{item.render()}</div>
+                            </AccordionContent>
+                        </AccordionItem>
+                    ))}
                 </div>
             </Accordion>
         </div>
