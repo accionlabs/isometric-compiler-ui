@@ -222,7 +222,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
             render: render3DShapesContent
         },
         {
-            name: "components",
+            name: "Components",
             value: "components",
             render: renderComponentsContent
         },
@@ -242,7 +242,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                         <AccordionItem
                             key={item.value}
                             value={item.value}
-                            className="flex flex-col min-h-0 border-b border-gray-700"
+                            className="flex flex-col min-h-12 border-b border-gray-500"
                         >
                             <AccordionTrigger className="p-2 text-xl font-semibold">
                                 {item.name}
