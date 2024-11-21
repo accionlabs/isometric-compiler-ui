@@ -41,7 +41,7 @@ export interface Shape {
 export interface DiagramComponent {
     id: string;
     shape: string;
-    source?: "3D" | "component"; // Indicates if this is from SVG library or component library
+    source?: "shape" | "component"; // Indicates if this is from SVG library or component library
     type?: string; // References componentType from schema (optional)
     position:
         | "center"
@@ -83,7 +83,7 @@ export interface ComponentLibrary {
 export interface SerializedDiagramComponent {
     id: string;
     shape: string;
-    source?: "3D" | "component";
+    source?: "shape" | "component";
     position:
         | "center"
         | "top"

@@ -4,7 +4,7 @@ import React, {
     useEffect,
     MouseEvent as ReactMouseEvent,
     useMemo
-} from 'react';
+} from "react";
 import ReactFlow, {
     ReactFlowProvider,
     Node,
@@ -21,14 +21,14 @@ import ReactFlow, {
     ReactFlowState,
     useStore,
     XYPosition
-} from 'reactflow';
-import 'reactflow/dist/style.css';
+} from "reactflow";
+import "reactflow/dist/style.css";
 
-import { DiagramComponent, CanvasSize } from '@/Types';
-import SVGNode from '@/components/ui/SVGNode';
-import LabelNode from '@/components/ui/LabelNode';
-import CustomEdge from '@/components/ui/CustomEdge';
-import MetadataNode from '@/components/ui/MetadataNode';
+import { DiagramComponent, CanvasSize } from "@/Types";
+import SVGNode from "@/components/ui/SVGNode";
+import LabelNode from "@/components/ui/LabelNode";
+import CustomEdge from "@/components/ui/CustomEdge";
+import MetadataNode from "@/components/ui/MetadataNode";
 
 interface FlowSVGDisplayProps {
     svgContent: string;
@@ -36,7 +36,6 @@ interface FlowSVGDisplayProps {
     diagramComponents: DiagramComponent[];
     isCopied: boolean;
     onSelect3DShape: (id: string | null) => void;
-    onGetBoundingBox: (boundingBox: { x: number, y: number, width: number, height: number } | null) => void;
     canvasSize: { width: number; height: number };
     setSelectedPosition: (position: string) => void;
     setSelectedAttachmentPoint: (point: string) => void;
@@ -57,10 +56,14 @@ const METADATA_NODE_SPACING = 250; // Space between nodes
 const INITIAL_RADIUS = 200; // Initial distance from center
 const ANGLE_INCREMENT = Math.PI / 6; // 30 degrees in radians
 
-const calculateMetadataNodePosition = (index: number, totalNodes: number): XYPosition => {
+const calculateMetadataNodePosition = (
+    index: number,
+    totalNodes: number
+): XYPosition => {
     // Calculate position in a spiral pattern
     const angle = ANGLE_INCREMENT * index;
-    const radius = INITIAL_RADIUS + (Math.floor(index / 12) * METADATA_NODE_SPACING);
+    const radius =
+        INITIAL_RADIUS + Math.floor(index / 12) * METADATA_NODE_SPACING;
 
     return {
         x: Math.cos(angle) * radius,
@@ -83,8 +86,8 @@ const createInitialNodes = (
 ): Node[] => {
     // Create main SVG node at the center
     const mainNode: Node = {
-        id: 'svg-main',
-        type: 'svgNode',
+        id: "svg-main",
+        type: "svgNode",
         position: { x: 0, y: 0 },
         data: {
             canvasSize,
@@ -106,28 +109,33 @@ const createInitialNodes = (
 
     // Filter components with metadata
     const componentsWithMetadata = diagramComponents.filter(
-        component => component.type && component.metadata
+        (component) => component.type && component.metadata
     );
 
     // Create metadata nodes positioned around the main SVG
-    const metadataNodes: Node[] = componentsWithMetadata.map((component, index) => {
-        const position = calculateMetadataNodePosition(index, componentsWithMetadata.length);
+    const metadataNodes: Node[] = componentsWithMetadata.map(
+        (component, index) => {
+            const position = calculateMetadataNodePosition(
+                index,
+                componentsWithMetadata.length
+            );
 
-        return {
-            id: `metadata-${component.id}`,
-            type: 'metadata',
-            position: position,
-            data: {
-                componentId: component.id,
-                type: component.type,
-                metadata: component.metadata,
-                isInteractive,
-                isConnecting
-            },
-            draggable: isInteractive,
-            style: { zIndex: 4 }
-        };
-    });
+            return {
+                id: `metadata-${component.id}`,
+                type: "metadata",
+                position: position,
+                data: {
+                    componentId: component.id,
+                    type: component.type,
+                    metadata: component.metadata,
+                    isInteractive,
+                    isConnecting
+                },
+                draggable: isInteractive,
+                style: { zIndex: 4 }
+            };
+        }
+    );
 
     return [mainNode, ...metadataNodes];
 };
@@ -139,10 +147,9 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
     diagramComponents,
     isCopied,
     onSelect3DShape,
-    onGetBoundingBox,
     canvasSize,
     setSelectedPosition,
-    setSelectedAttachmentPoint,
+    setSelectedAttachmentPoint
 }) => {
     const [nodes, setNodes, onNodesChange] = useNodesState<Node[]>([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState<Edge[]>([]);
@@ -150,8 +157,11 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
     const store = useStoreApi();
     const { fitView } = useReactFlow();
 
-    const isInteractive = useStore((state) =>
-        state.nodesDraggable && state.nodesConnectable && state.elementsSelectable
+    const isInteractive = useStore(
+        (state) =>
+            state.nodesDraggable &&
+            state.nodesConnectable &&
+            state.elementsSelectable
     );
 
     // Update nodes when content or components change
@@ -162,7 +172,7 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
             return;
         }
 
-        setNodes(prevNodes => {
+        setNodes((prevNodes) => {
             const newNodes = createInitialNodes(
                 canvasSize,
                 svgContent,
@@ -177,9 +187,9 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
             );
 
             // Preserve positions of existing nodes when possible
-            return newNodes.map(node => {
-                const existingNode = prevNodes.find(n => n.id === node.id);
-                if (existingNode && (node.type === 'metadata')) {
+            return newNodes.map((node) => {
+                const existingNode = prevNodes.find((n) => n.id === node.id);
+                if (existingNode && node.type === "metadata") {
                     return {
                         ...node,
                         position: existingNode.position,
@@ -218,25 +228,36 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
     }, [nodes.length, fitView]);
 
     // Connection handler
-    const onConnect = useCallback((connection: Connection) => {
-        if (!isInteractive) return;
-        if (!connection.source || !connection.target) return;
-        setEdges((eds) => addEdge(connection, eds));
-    }, [setEdges, isInteractive]);
+    const onConnect = useCallback(
+        (connection: Connection) => {
+            if (!isInteractive) return;
+            if (!connection.source || !connection.target) return;
+            setEdges((eds) => addEdge(connection, eds));
+        },
+        [setEdges, isInteractive]
+    );
 
     // Handle pane click for deselection
-    const onPaneClick = useCallback((event: ReactMouseEvent<Element, MouseEvent>) => {
-        if (!isInteractive) return;
+    const onPaneClick = useCallback(
+        (event: ReactMouseEvent<Element, MouseEvent>) => {
+            if (!isInteractive) return;
 
-        const target = event.target as HTMLElement;
-        const isNodeClick = target.closest('.svg-wrapper');
+            const target = event.target as HTMLElement;
+            const isNodeClick = target.closest(".svg-wrapper");
 
-        if (!isNodeClick) {
-            onSelect3DShape(null);
-            setSelectedPosition('top');
-            setSelectedAttachmentPoint('none');
-        }
-    }, [isInteractive, onSelect3DShape, setSelectedPosition, setSelectedAttachmentPoint]);
+            if (!isNodeClick) {
+                onSelect3DShape(null);
+                setSelectedPosition("top");
+                setSelectedAttachmentPoint("none");
+            }
+        },
+        [
+            isInteractive,
+            onSelect3DShape,
+            setSelectedPosition,
+            setSelectedAttachmentPoint
+        ]
+    );
 
     return (
         <ReactFlow

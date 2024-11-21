@@ -1,7 +1,11 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Shape, DiagramComponent, Component } from "./Types";
 import ImprovedLayout from "./ImprovedLayout";
-import { cleanupSVG, clipSVGToContents } from "./lib/svgUtils";
+import {
+    calculateSVGBoundingBox,
+    cleanupSVG,
+    clipSVGToContents
+} from "./lib/svgUtils";
 import * as diagramComponentsLib from "./lib/diagramComponentsLib";
 import { componentLibraryManager } from "./lib/componentLib";
 import { createKeyboardShortcuts } from "./KeyboardShortcuts";
@@ -25,12 +29,7 @@ const App: React.FC = () => {
         string[]
     >([]);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
-    const [boundingBox, setBoundingBox] = useState<{
-        x: number;
-        y: number;
-        width: number;
-        height: number;
-    } | null>(null);
+
     const [isCopied, setIsCopied] = useState<boolean>(false);
     const [fileName, setFileName] = useState(() => {
         return localStorage.getItem("fileName") || "diagram.svg";
@@ -456,29 +455,22 @@ const App: React.FC = () => {
         localStorage.setItem("fileName", newFileName);
     }, []);
 
-    // get the bounding box for clipping the SVG to the content
-    const handleGetBoundingBox = useCallback(
-        (
-            newBoundingBox: {
-                x: number;
-                y: number;
-                width: number;
-                height: number;
-            } | null
-        ) => {
-            setBoundingBox(newBoundingBox);
-        },
-        []
-    );
-
     const handleDownloadSVG = useCallback(() => {
-        let svgToDownload: string;
-        if (boundingBox) {
-            svgToDownload = clipSVGToContents(composedSVG, boundingBox);
-        } else {
-            svgToDownload = cleanupSVG(composedSVG);
-            svgToDownload = `<svg xmlns="http://www.w3.org/2000/svg">${svgToDownload}</svg>`;
-        }
+        const boundingBox = calculateSVGBoundingBox(
+            composedSVG,
+            canvasSize
+        ) || {
+            x: 0,
+            y: 0,
+            width: "100%",
+            height: "100%"
+        };
+
+        const svgToDownload: string = `
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="${boundingBox.x} ${boundingBox.y} ${boundingBox.width} ${boundingBox.height}" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+                ${composedSVG}
+            </svg>
+        `;
 
         const blob = new Blob([svgToDownload], { type: "image/svg+xml" });
         const url = URL.createObjectURL(blob);
@@ -496,7 +488,7 @@ const App: React.FC = () => {
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
-    }, [composedSVG, fileName, boundingBox]);
+    }, [composedSVG, fileName]);
 
     const handleSetShowAttachmentPoints = useCallback((show: boolean) => {
         setShowAttachmentPoints(show);
@@ -724,7 +716,6 @@ const App: React.FC = () => {
             onDownloadSVG={handleDownloadSVG}
             fileName={fileName}
             setFileName={handleSetFileName}
-            onGetBoundingBox={handleGetBoundingBox}
             availableAttachmentPoints={availableAttachmentPoints}
             errorMessage={errorMessage}
             setErrorMessage={setErrorMessage}

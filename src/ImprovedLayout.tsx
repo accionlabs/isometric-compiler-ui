@@ -46,14 +46,7 @@ interface ImprovedLayoutProps {
     onDownloadSVG: () => void;
     fileName: string;
     setFileName: (name: string) => void;
-    onGetBoundingBox: (
-        boundingBox: {
-            x: number;
-            y: number;
-            width: number;
-            height: number;
-        } | null
-    ) => void;
+
     availableAttachmentPoints: string[];
     errorMessage: string | null;
     setErrorMessage: (message: string | null) => void;
@@ -105,7 +98,6 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     onDownloadSVG,
     fileName,
     setFileName,
-    onGetBoundingBox,
     availableAttachmentPoints,
     errorMessage,
     setErrorMessage,
@@ -119,7 +111,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     onUpdateMetadata,
     storageType,
     onStorageTypeChange,
-    onSaveAsComponent,
+    onSaveAsComponent
 }) => {
     const params = new URLSearchParams(window.location.search);
     const isReadModeEnabled = params.get("mode") === "read";
@@ -368,7 +360,6 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                             diagramComponents={diagramComponents}
                             isCopied={isCopied}
                             onSelect3DShape={handleSelect3DShape}
-                            onGetBoundingBox={onGetBoundingBox}
                             canvasSize={canvasSize}
                             setSelectedPosition={handleSelectedPosition}
                             setSelectedAttachmentPoint={
