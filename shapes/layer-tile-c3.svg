@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="117.92272mm"
+   height="69.754333mm"
+   viewBox="0 0 117.92272 69.754333"
+   version="1.1"
+   id="svg1"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1" />
+  <path
+     id="path103"
+     style="display:inline;fill:#f3bd5b;fill-opacity:1;stroke:none;stroke-width:0.79375;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+     d="m 1.677489,29.76615 v 7.9375 l 52.70066,30.42656 c 2.83589,1.63741 6.32995,1.63741 9.16585,0 L 110.51684,41.01042 v -7.9375 L 63.543999,60.19271 a 9.1654344,9.1654344 0 0 1 -9.16585,0 z" />
+  <path
+     id="path104"
+     style="color:#000000;display:inline;fill:#000000;-inkscape-stroke:none"
+     d="m 1.677489,29.30726 v 0.91622 l 52.50222,30.31236 c 2.95815,1.70798 6.60407,1.70798 9.56221,0 L 110.51684,33.53026 V 32.61455 L 63.346079,59.84803 c -2.71365,1.56682 -6.05585,1.56682 -8.76949,0 z m 0,7.93802 v 0.9157 l 52.50222,30.31236 c 2.95814,1.70799 6.60407,1.70799 9.56221,0 L 110.51684,41.46776 V 40.55205 L 63.345559,67.78553 c -2.71365,1.56682 -6.05586,1.56682 -8.76949,0 z" />
+  <path
+     id="path142"
+     style="display:inline;fill:#000000;stroke:#000000;stroke-width:0.79375;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+     d="M 110.51684,33.07292 65.835329,58.8698 v 7.93749 L 110.51684,41.01042 Z" />
+  <path
+     id="path100"
+     style="display:inline;fill:#fae36f;fill-opacity:1;stroke:none;stroke-width:0.79375;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+     d="m 53.232999,0 -51.55551,29.76563 52.70118,30.42708 a 9.1654344,9.1654344 0 0 0 9.16533,0 L 110.51684,33.07292 Z" />
+  <path
+     id="path101"
+     style="color:#000000;display:inline;fill:#000000;-inkscape-stroke:none"
+     d="m 2.073849,29.5367 -0.79323,0.45786 52.89909,30.54128 c 2.95804,1.70782 6.60417,1.70782 9.56221,0 L 110.91371,33.30185 110.11996,32.84348 63.345559,59.84855 c -2.71355,1.56667 -6.05594,1.56667 -8.76949,0 z" />
+  <circle
+     style="display:inline;fill:#ff0000;stroke:none;stroke-width:0.264583;stroke-linecap:round;stroke-miterlimit:4.1"
+     id="attach-top"
+     cx="58.961384"
+     cy="23.151043"
+     r="1.6773911" />
+  <circle
+     style="display:inline;fill:#ff0000;stroke:none;stroke-width:0.264583;stroke-linecap:round;stroke-miterlimit:4.1"
+     id="attach-back-right"
+     cx="76.146545"
+     cy="13.229182"
+     r="1.6773911" />
+  <circle
+     style="display:inline;fill:#ff0000;stroke:none;stroke-width:0.264583;stroke-linecap:round;stroke-miterlimit:4.1"
+     id="attach-front-left"
+     cx="24.590981"
+     cy="42.994808"
+     r="1.6773911" />
+  <circle
+     style="display:inline;fill:#ff0000;stroke:none;stroke-width:0.264583;stroke-linecap:round;stroke-miterlimit:4.1"
+     id="parent-attach-front-left"
+     cx="1.6773908"
+     cy="56.223965"
+     r="1.6773911" />
+  <circle
+     style="display:inline;fill:#ff0000;stroke:none;stroke-width:0.264583;stroke-linecap:round;stroke-miterlimit:4.1"
+     id="attach-back-left"
+     cx="36.047775"
+     cy="9.9218931"
+     r="1.6773911" />
+  <circle
+     style="display:inline;fill:#ff0000;stroke:none;stroke-width:0.264583;stroke-linecap:round;stroke-miterlimit:4.1"
+     id="attach-front-right"
+     cx="93.331749"
+     cy="42.994808"
+     r="1.6773911" />
+  <circle
+     style="display:inline;fill:#ff0000;stroke:none;stroke-width:0.264583;stroke-linecap:round;stroke-miterlimit:4.1"
+     id="parent-attach-front-right"
+     cx="116.24532"
+     cy="56.223965"
+     r="1.6773911" />
+  <circle
+     style="display:inline;fill:#ff0000;stroke:none;stroke-width:0.264583;stroke-linecap:round;stroke-miterlimit:4.1"
+     id="attach-bottom"
+     cx="58.961369"
+     cy="29.765636"
+     r="1.6773911" />
+  <circle
+     style="display:inline;fill:#ff0000;stroke:none;stroke-width:0.264583;stroke-linecap:round;stroke-miterlimit:4.1"
+     id="parent-attach-top"
+     cx="58.961384"
+     cy="-19.182287"
+     r="1.6773911" />
+  <circle
+     style="display:inline;fill:#ff0000;stroke:none;stroke-width:0.264583;stroke-linecap:round;stroke-miterlimit:4.1"
+     id="parent-attach-bottom"
+     cx="58.961369"
+     cy="72.099007"
+     r="1.6773911" />
+</svg>
