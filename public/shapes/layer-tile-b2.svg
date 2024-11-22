@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="80.197678mm"
+   height="47.318035mm"
+   viewBox="0 0 80.197678 47.318035"
+   version="1.1"
+   id="svg1"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1" />
+  <path
+     id="path75"
+     style="display:inline;fill:#fae36f;fill-opacity:1;stroke:none;stroke-width:0.79375;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+     d="M 34.370511,0 0,19.84375 45.827173,46.30208 80.19768,26.45833 Z" />
+  <circle
+     style="display:inline;fill:#ff0000;stroke:none;stroke-width:0.264583;stroke-linecap:round;stroke-miterlimit:4.1"
+     id="attach-top"
+     cx="40.098751"
+     cy="23.027365"
+     r="1.6773911" />
+  <circle
+     style="display:inline;fill:#ff0000;stroke:none;stroke-width:0.264583;stroke-linecap:round;stroke-miterlimit:4.1"
+     id="attach-back-right"
+     cx="57.283932"
+     cy="13.229177"
+     r="1.6773911" />
+  <circle
+     style="display:inline;fill:#ff0000;stroke:none;stroke-width:0.264583;stroke-linecap:round;stroke-miterlimit:4.1"
+     id="attach-front-left"
+     cx="22.913548"
+     cy="33.072926"
+     r="1.6773911" />
+  <circle
+     style="display:inline;fill:#ff0000;stroke:none;stroke-width:0.264583;stroke-linecap:round;stroke-miterlimit:4.1"
+     id="attach-back-left"
+     cx="17.185154"
+     cy="9.9218798"
+     r="1.6773911" />
+  <circle
+     style="display:inline;fill:#ff0000;stroke:none;stroke-width:0.264583;stroke-linecap:round;stroke-miterlimit:4.1"
+     id="attach-front-right"
+     cx="63.012333"
+     cy="36.380222"
+     r="1.6773911" />
+  <circle
+     style="display:inline;fill:#ff0000;stroke:none;stroke-width:0.264583;stroke-linecap:round;stroke-miterlimit:4.1"
+     id="attach-bottom"
+     cx="40.098743"
+     cy="29.765631"
+     r="1.6773911" />
+  <circle
+     style="display:inline;fill:#ff0000;stroke:none;stroke-width:0.264583;stroke-linecap:round;stroke-miterlimit:4.1"
+     id="parent-attach-top"
+     cx="40.098751"
+     cy="-19.305965"
+     r="1.6773911" />
+  <circle
+     style="display:inline;fill:#ff0000;stroke:none;stroke-width:0.264583;stroke-linecap:round;stroke-miterlimit:4.1"
+     id="parent-attach-bottom"
+     cx="40.098743"
+     cy="72.098999"
+     r="1.6773911" />
+</svg>

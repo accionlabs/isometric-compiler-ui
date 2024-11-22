@@ -9,6 +9,69 @@ export const defaultShapesLibrary: Shape[] = [
     svgContent: ""
   },
   {
+    name: "layer-tile-a1",
+    svgFile: "layer-tile-a1.svg",
+    type: "3D",
+    attachTo: "",
+    svgContent: ""
+  },
+  {
+    name: "layer-tile-a2",
+    svgFile: "layer-tile-a2.svg",
+    type: "3D",
+    attachTo: "",
+    svgContent: ""
+  },
+  {
+    name: "layer-tile-a3",
+    svgFile: "layer-tile-a3.svg",
+    type: "3D",
+    attachTo: "",
+    svgContent: ""
+  },
+  {
+    name: "layer-tile-b1",
+    svgFile: "layer-tile-b1.svg",
+    type: "3D",
+    attachTo: "",
+    svgContent: ""
+  },
+  {
+    name: "layer-tile-b2",
+    svgFile: "layer-tile-b2.svg",
+    type: "3D",
+    attachTo: "",
+    svgContent: ""
+  },
+  {
+    name: "layer-tile-b3",
+    svgFile: "layer-tile-b3.svg",
+    type: "3D",
+    attachTo: "",
+    svgContent: ""
+  },
+  {
+    name: "layer-tile-c1",
+    svgFile: "layer-tile-c1.svg",
+    type: "3D",
+    attachTo: "",
+    svgContent: ""
+  },
+  {
+    name: "layer-tile-c2",
+    svgFile: "layer-tile-c2.svg",
+    type: "3D",
+    attachTo: "",
+    svgContent: ""
+  },
+  {
+    name: "layer-tile-c3",
+    svgFile: "layer-tile-c3.svg",
+    type: "3D",
+    attachTo: "",
+    svgContent: ""
+  },
+  {
     name: "arrow-layer4x3-hd",
     svgFile: "arrow-layer4x3.svg",
     type: "3D",

@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="106.20108mm"
+   height="76.21862mm"
+   viewBox="0 0 106.20108 76.21862"
+   version="1.1"
+   id="svg1"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1" />
+  <path
+     id="path61"
+     style="display:inline;fill:#fae36f;fill-opacity:1;stroke:none;stroke-width:0.79375;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+     d="M 48.913617,4.9831212 1.9438748,32.104463 a 3.0553291,3.0553291 0 0 0 0,5.291667 L 54.64505,67.823209 106.20108,38.057588 Z" />
+  <path
+     id="path60"
+     style="color:#000000;display:inline;fill:#000000;-inkscape-stroke:none"
+     d="M 48.517258,4.7536782 1.7454368,31.760298 c -2.28478496,1.319287 -2.28485496,4.660831 0,5.979997 L 54.248175,68.052659 55.041925,67.594289 2.1417948,37.052998 c -1.78877496,-1.032753 -1.78871996,-3.572557 0,-4.605404 L 49.310491,5.2120482 Z" />
+  <path
+     id="path63"
+     style="display:inline;fill:#f3bd5b;fill-opacity:1;stroke:none;stroke-width:0.79375;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+     d="m 0.42303684,34.549275 -0.0248,8.157641 c -0.0326,1.048119 0.67669196,2.039724 1.54564196,2.626713 l 52.7016912,30.4276 v -7.9375 L 1.9438748,37.39613 A 3.0553291,3.0553291 0 0 1 0.60028684,34.570462 Z" />
+  <path
+     id="path62"
+     style="color:#000000;display:inline;fill:#000000;-inkscape-stroke:none"
+     d="m 0.02874584,34.101757 0.454753,0.746208 -0.01344,0.01344 -0.259933,-0.321945 z m 0,0 -0.0021,0.445451 -0.02532,8.146272 c -0.0384,1.234683 0.762574,2.321847 1.72030796,2.968811 l 0.01189,0.0078 52.9120142,30.548528 v -0.91519 L 2.1650498,45.00445 C 1.3848858,44.477438 0.76727684,43.580355 0.79407384,42.718802 l 0.0021,-0.0057 0.01757,-6.040975 c 0.25171896,0.391304 0.51015396,0.787331 0.91002196,1.054716 l 0.0098,0.0057 52.9120142,30.548526 v -0.91519 L 2.1650498,37.066951 C 1.3528618,36.523853 0.90368784,35.580422 0.99509484,34.607669 l 0.03721,-0.384472 z" />
+  <circle
+     style="display:inline;fill:#ff0000;stroke:none;stroke-width:0.264583;stroke-linecap:round;stroke-miterlimit:4.1"
+     id="attach-top"
+     cx="66.102257"
+     cy="34.750294"
+     r="1.6773911" />
+  <circle
+     style="display:inline;fill:#ff0000;stroke:none;stroke-width:0.264583;stroke-linecap:round;stroke-miterlimit:4.1"
+     id="attach-back-right"
+     cx="83.287453"
+     cy="24.828434"
+     r="1.6773911" />
+  <circle
+     style="display:inline;fill:#ff0000;stroke:none;stroke-width:0.264583;stroke-linecap:round;stroke-miterlimit:4.1"
+     id="attach-front-left"
+     cx="31.731876"
+     cy="54.594059"
+     r="1.6773911" />
+  <circle
+     style="display:inline;fill:#ff0000;stroke:none;stroke-width:0.264583;stroke-linecap:round;stroke-miterlimit:4.1"
+     id="parent-attach-front-left"
+     cx="8.8182878"
+     cy="67.823219"
+     r="1.6773911" />
+  <circle
+     style="display:inline;fill:#ff0000;stroke:none;stroke-width:0.264583;stroke-linecap:round;stroke-miterlimit:4.1"
+     id="attach-back-left"
+     cx="31.731876"
+     cy="14.906559"
+     r="1.6773911" />
+  <circle
+     style="display:inline;fill:#ff0000;stroke:none;stroke-width:0.264583;stroke-linecap:round;stroke-miterlimit:4.1"
+     id="parent-attach-back-left"
+     cx="8.8182878"
+     cy="1.6773911"
+     r="1.6773911" />
+  <circle
+     style="display:inline;fill:#ff0000;stroke:none;stroke-width:0.264583;stroke-linecap:round;stroke-miterlimit:4.1"
+     id="attach-bottom"
+     cx="66.102257"
+     cy="41.364887"
+     r="1.6773911" />
+  <circle
+     style="display:inline;fill:#ff0000;stroke:none;stroke-width:0.264583;stroke-linecap:round;stroke-miterlimit:4.1"
+     id="attach-front-right"
+     cx="89.015846"
+     cy="47.979473"
+     r="1.6773911" />
+  <circle
+     style="display:inline;fill:#ff0000;stroke:none;stroke-width:0.264583;stroke-linecap:round;stroke-miterlimit:4.1"
+     id="parent-attach-top"
+     cx="66.102257"
+     cy="-7.5830522"
+     r="1.6773911" />
+  <circle
+     style="display:inline;fill:#ff0000;stroke:none;stroke-width:0.264583;stroke-linecap:round;stroke-miterlimit:4.1"
+     id="parent-attach-bottom"
+     cx="66.102257"
+     cy="83.698257"
+     r="1.6773911" />
+</svg>

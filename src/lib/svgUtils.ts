@@ -276,6 +276,12 @@ export const toggleAttachmentPoints = (element: SVGElement, visible: boolean): v
             point.style.display = visible ? 'block' : 'none';
         }
     });
+    const parentAttachmentPoints = element.querySelectorAll('circle[id^="parent-attach-"]');
+    parentAttachmentPoints.forEach(point => {
+        if (point instanceof SVGElement) {
+            point.style.display = visible ? 'block' : 'none';
+        }
+    });
 };
 
 // Apply SVG transformations to a point

@@ -23,6 +23,10 @@ export interface AttachmentPointMap {
     [key: string]: AttachmentPoint;
 }
 
+export interface ParentAttachmentPointMap {
+    [key: string]: AttachmentPoint[];
+}
+
 export interface GlobalAttachmentPoint extends Point {
     componentId: string; // ID of the component this point belongs to
     attachmentPoints: AttachmentPoint[];
@@ -54,6 +58,7 @@ export interface DiagramComponent {
     relativeToId: string | null;
     attached2DShapes: Attached2DShape[];
     attachmentPoints?: AttachmentPoint[];
+    parentAttachmentPoints?: AttachmentPoint[];
     absolutePosition?: Point;
     cut?: boolean;
     metadata?: {

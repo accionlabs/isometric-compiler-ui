@@ -96,6 +96,29 @@ export const extractAttachmentPoints = (
     return attachmentPoints;
 };
 
+export const extractParentAttachmentPoints = (
+    svgElement: SVGElement
+): AttachmentPoint[] => {
+    const attachmentPoints: AttachmentPoint[] = [];
+    const circles = svgElement.querySelectorAll('circle[id^="parent-attach-"]');
+
+    circles.forEach((circle) => {
+        const id = circle.getAttribute("id")?.replace("parent-","");
+        const cx = circle.getAttribute("cx");
+        const cy = circle.getAttribute("cy");
+
+        if (id && cx && cy) {
+            attachmentPoints.push({
+                name: id,
+                x: parseFloat(cx),
+                y: parseFloat(cy)
+            });
+        }
+    });
+
+    return attachmentPoints;
+};
+
 export const getAvailableAttachmentPoints = (
     diagramComponents: DiagramComponent[],
     selected3DShape: string | null
@@ -804,7 +827,7 @@ export const areComponentArraysEqual = (
 };
 
 // render a diagramComponent by checking if it is a 3D shape or component
-export const renderComponent = (
+const renderComponent = (
     component: DiagramComponent,
     canvasSize: { width: number; height: number },
     svgLibrary: Shape[],
@@ -812,6 +835,7 @@ export const renderComponent = (
 ): {
     shape3DElement: SVGGElement;
     attachmentPoints: AttachmentPoint[];
+    parentAttachmentPoints: AttachmentPoint[];
 } | null => {
     function createSvgGroup(svgContent: string) {
         const parser = new DOMParser();
@@ -831,7 +855,8 @@ export const renderComponent = (
     }
 
     let shape3DElement = null;
-    let attachmentPoints = [];
+    let attachmentPoints:AttachmentPoint[] = [];
+    let parentAttachmentPoints:AttachmentPoint[] = [];
 
     if (component.source === "component") {
         // Get component from library
@@ -859,11 +884,13 @@ export const renderComponent = (
         }
         shape3DElement = createSvgGroup(shape.svgContent);
         attachmentPoints = extractAttachmentPoints(shape3DElement);
+        parentAttachmentPoints = extractParentAttachmentPoints(shape3DElement);
     }
 
     return {
         shape3DElement,
-        attachmentPoints
+        attachmentPoints,
+        parentAttachmentPoints
     };
 };
 
@@ -896,9 +923,10 @@ export const compileDiagram = (
             return;
         }
 
-        const { shape3DElement, attachmentPoints } = renderedComponent;
+        const { shape3DElement, attachmentPoints, parentAttachmentPoints } = renderedComponent;
 
         component.attachmentPoints = attachmentPoints;
+        component.parentAttachmentPoints = parentAttachmentPoints;
 
         const referenceComponent = component.relativeToId
             ? processedComponents.find(
@@ -1108,17 +1136,20 @@ export const extractGlobalAttachmentPoints = (
     return globalPoints;
 };
 
+
 // Helper function to get a specific component's attachment points' global coordinates
-export const getGlobalAttachmentPoints = (
-    component: DiagramComponent
+const getSpecifiedGlobalAttachmentPoints = (
+    component: DiagramComponent,
+    attachType: "attachmentPoints" | "parentAttachmentPoints"
 ): AttachmentPointMap => {
     if (!component || component.absolutePosition === undefined) {
         return {};
     }
 
     const globalPoints: AttachmentPointMap = {};
+    const attachPoints = component[attachType];
 
-    component.attachmentPoints?.forEach((point) => {
+    attachPoints?.forEach((point) => {
         if (component.absolutePosition) {
             globalPoints[point.name] = {
                 name: point.name,
@@ -1129,6 +1160,26 @@ export const getGlobalAttachmentPoints = (
     });
 
     return globalPoints;
+};
+
+export const getGlobalAttachmentPoints = (
+    component: DiagramComponent
+): AttachmentPointMap => {
+    if (!component || component.absolutePosition === undefined) {
+        return {};
+    }
+
+    return getSpecifiedGlobalAttachmentPoints(component,'attachmentPoints');
+};
+
+export const getGlobalParentAttachmentPoints = (
+    component: DiagramComponent
+): AttachmentPointMap => {
+    if (!component || component.absolutePosition === undefined) {
+        return {};
+    }
+
+    return getSpecifiedGlobalAttachmentPoints(component,'parentAttachmentPoints');
 };
 
 // Helper function to find the closest attachment point to a given coordinate
