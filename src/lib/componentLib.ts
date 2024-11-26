@@ -7,11 +7,14 @@ import {
     DiagramComponent,
     AttachmentPoint,
     AttachmentPointMap,
-    ParentAttachmentPointMap
+    ComponentAttachmentPointMap,
+    GlobalAttachmentPoint
 } from "../Types";
 import { v4 as uuidv4 } from "uuid";
 import {
     compileDiagram,
+    findBottomMostComponents,
+    getExtremeAttachmentPoints,
     serializeDiagramComponents
 } from "./diagramComponentsLib";
 import { calculateSVGBoundingBox } from "./svgUtils";
@@ -19,6 +22,8 @@ import {
     getGlobalAttachmentPoints,
     getGlobalParentAttachmentPoints
 } from "./diagramComponentsLib";
+import { findCenterPoint, getNormalizeAttachmentPoints } from "./pointUtils";
+import { getAttachmentPoint } from "./diagramComponentsLib";
 
 // Helper interfaces for attachment point calculation
 
@@ -86,13 +91,13 @@ class ComponentLibraryManager {
         return basePosition;
     }
 
-    private addParentAttachmentPoints(
+    private addComponentAttachmentPoints(
         attachmentPointsMap: AttachmentPointMap,
-        parentAttachmentPoints: ParentAttachmentPointMap
-    ): ParentAttachmentPointMap {
+        parentAttachmentPoints: ComponentAttachmentPointMap
+    ): ComponentAttachmentPointMap {
         Object.keys(attachmentPointsMap).forEach((name) => {
             if (!parentAttachmentPoints[name]) {
-                parentAttachmentPoints[name]=[];
+                parentAttachmentPoints[name] = [];
             }
             parentAttachmentPoints[name].push(attachmentPointsMap[name]);
         });
@@ -102,15 +107,11 @@ class ComponentLibraryManager {
     private processComponentAttachmentPoints(
         component: DiagramComponent,
         attachmentPoints: AttachmentPointMap,
-        parentAttachmentPoints: ParentAttachmentPointMap,
+        parentAttachmentPoints: ComponentAttachmentPointMap,
+        allAttachmentPoints: ComponentAttachmentPointMap,
         gridPosition: GridPosition,
         components: DiagramComponent[]
     ): void {
-        // Add this component's parent attachment points
-        this.addParentAttachmentPoints(
-            getGlobalParentAttachmentPoints(component),
-            parentAttachmentPoints
-        );
 
         // Get this component's attachment points
         const componentPoints: AttachmentPointMap =
@@ -140,6 +141,7 @@ class ComponentLibraryManager {
                 child,
                 attachmentPoints,
                 parentAttachmentPoints,
+                allAttachmentPoints,
                 childGridPosition,
                 components
             );
@@ -147,25 +149,18 @@ class ComponentLibraryManager {
     }
 
     private getNormalizedParentAttachmentPoints(
-        parentAttachmentPoints: ParentAttachmentPointMap,
+        parentAttachmentPoints: ComponentAttachmentPointMap,
         attachmentPoints: AttachmentPointMap
     ): AttachmentPointMap {
-        console.log('parent points',parentAttachmentPoints);
         Object.keys(parentAttachmentPoints).forEach((name) => {
-            if (parentAttachmentPoints[name].length>0) {
-                const normalizedPoint:Point = {x:0, y:0};
-                parentAttachmentPoints[name].forEach((point) => {
-                    normalizedPoint.x += Math.round(point.x);
-                    normalizedPoint.y += Math.round(point.y);
-                });
-                console.log('p:',name,'x:',normalizedPoint.x,'y:',normalizedPoint.y);
-                normalizedPoint.x = normalizedPoint.x / parentAttachmentPoints[name].length;
-                normalizedPoint.y = normalizedPoint.y / parentAttachmentPoints[name].length;
-                console.log('np:',name,'x:',normalizedPoint.x,'y:',normalizedPoint.y);
+            const centerPoint: Point | null = findCenterPoint(
+                parentAttachmentPoints[name]
+            );
+            if (centerPoint) {
                 attachmentPoints[name] = {
                     name,
-                    ...normalizedPoint
-                }
+                    ...centerPoint
+                };
             }
         });
         return attachmentPoints;
@@ -183,11 +178,25 @@ class ComponentLibraryManager {
         // Initialize attachment points map with root component's points
         const attachmentPointsMap: AttachmentPointMap =
             getGlobalAttachmentPoints(rootComponent);
-        const parentAttachmentPointsMap: ParentAttachmentPointMap =
-            this.addParentAttachmentPoints(
-                getGlobalParentAttachmentPoints(rootComponent),
-                {}
+
+        const parentAttachmentPointsMap: ComponentAttachmentPointMap = {};
+        const allAttachmentPoints: ComponentAttachmentPointMap = {};
+        const bottomLayer = findBottomMostComponents(components);
+        bottomLayer.forEach((component) => {
+            this.addComponentAttachmentPoints(
+                getGlobalParentAttachmentPoints(component),
+                parentAttachmentPointsMap
             );
+            this.addComponentAttachmentPoints(
+                getGlobalAttachmentPoints(component),
+                allAttachmentPoints
+            )
+        });
+
+        // For top and bottom attachment points, get topmost and bottom most attachment points only
+        const {topPoints, bottomPoints} = getExtremeAttachmentPoints(components);
+        allAttachmentPoints["attach-top"] = topPoints;
+        allAttachmentPoints["attach-bottom"] = bottomPoints;
 
         // Start processing from the root with initial grid position
         const initialGridPosition: GridPosition = { row: "a", column: 1 };
@@ -213,6 +222,7 @@ class ComponentLibraryManager {
                 child,
                 attachmentPointsMap,
                 parentAttachmentPointsMap,
+                allAttachmentPoints,
                 childGridPosition,
                 components
             );
@@ -223,11 +233,15 @@ class ComponentLibraryManager {
             delete attachmentPointsMap["attach-top-a1"];
         }
 
-        // overwrite attachment points with normalized parent attahment points, if any
+        // New: Use getNormalizedPoints from pointUtils
+        getNormalizeAttachmentPoints(allAttachmentPoints, attachmentPointsMap);
+
+        // overwrite attachment points with normalized parent attachment points, if any
         this.getNormalizedParentAttachmentPoints(
-            parentAttachmentPointsMap, 
+            parentAttachmentPointsMap,
             attachmentPointsMap
         );
+
         // Convert map back to array
         return Object.values(attachmentPointsMap);
     }
@@ -391,8 +405,6 @@ class ComponentLibraryManager {
                 ${svgRender}
             </svg>
         `;
-        // TODO: We need to remove all attachment points in the svgContent of the individual shapes and add only the component's attachment points
-        // this is required to allow proper selection of the component and attachment points from the SVGNode
 
         // Create a temporary container to parse and modify the SVG
         const parser = new DOMParser();
@@ -405,7 +417,9 @@ class ComponentLibraryManager {
         existingPoints.forEach((point) => point.remove());
 
         // Remove all existing parent attachment points
-        const existingParentPoints = svg.querySelectorAll('circle[id^="parent-attach-"]');
+        const existingParentPoints = svg.querySelectorAll(
+            'circle[id^="parent-attach-"]'
+        );
         existingParentPoints.forEach((point) => point.remove());
 
         // Remove all shape IDs from internal elements
