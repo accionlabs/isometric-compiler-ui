@@ -8,12 +8,14 @@ import {
     AttachmentPoint,
     AttachmentPointMap,
     ComponentAttachmentPointMap,
-    GlobalAttachmentPoint
+    GlobalAttachmentPoint,
+    Direction
 } from "../Types";
 import { v4 as uuidv4 } from "uuid";
 import {
     compileDiagram,
     findBottomMostComponents,
+    findTopMostComponents,
     getExtremeAttachmentPoints,
     serializeDiagramComponents
 } from "./diagramComponentsLib";
@@ -22,7 +24,11 @@ import {
     getGlobalAttachmentPoints,
     getGlobalParentAttachmentPoints
 } from "./diagramComponentsLib";
-import { findCenterPoint, getNormalizeAttachmentPoints } from "./pointUtils";
+import {
+    findCenterPoint,
+    getNormalizeAttachmentPoints,
+    createGridPoints
+} from "./pointUtils";
 import { getAttachmentPoint } from "./diagramComponentsLib";
 
 // Helper interfaces for attachment point calculation
@@ -104,50 +110,6 @@ class ComponentLibraryManager {
         return parentAttachmentPoints;
     }
 
-    private processComponentAttachmentPoints(
-        component: DiagramComponent,
-        attachmentPoints: AttachmentPointMap,
-        parentAttachmentPoints: ComponentAttachmentPointMap,
-        allAttachmentPoints: ComponentAttachmentPointMap,
-        gridPosition: GridPosition,
-        components: DiagramComponent[]
-    ): void {
-
-        // Get this component's attachment points
-        const componentPoints: AttachmentPointMap =
-            getGlobalAttachmentPoints(component) || [];
-
-        // Process attachment points based on position
-        if (["top", "front-left", "front-right"].includes(component.position)) {
-            // update the respective attachment point
-            attachmentPoints[`attach-${component.position}`] =
-                componentPoints[`attach-${component.position}`];
-
-            // create or update grid-based attachment points
-            const topPoint = componentPoints["attach-top"];
-            if (topPoint) {
-                const pointName = `attach-top-${gridPosition.row}${gridPosition.column}`;
-                attachmentPoints[pointName] = { ...topPoint, name: pointName };
-            }
-        }
-
-        // Process child components recursively
-        const childComponents = components.filter(
-            (c) => c.relativeToId === component.id
-        );
-        childComponents.forEach((child) => {
-            const childGridPosition = this.getGridPosition(child, gridPosition);
-            this.processComponentAttachmentPoints(
-                child,
-                attachmentPoints,
-                parentAttachmentPoints,
-                allAttachmentPoints,
-                childGridPosition,
-                components
-            );
-        });
-    }
-
     private getNormalizedParentAttachmentPoints(
         parentAttachmentPoints: ComponentAttachmentPointMap,
         attachmentPoints: AttachmentPointMap
@@ -179,9 +141,11 @@ class ComponentLibraryManager {
         const attachmentPointsMap: AttachmentPointMap =
             getGlobalAttachmentPoints(rootComponent);
 
+
+        // Get attachment points and parent attachment points of only the bottom layer of shapes
+        const bottomLayer = findBottomMostComponents(components);
         const parentAttachmentPointsMap: ComponentAttachmentPointMap = {};
         const allAttachmentPoints: ComponentAttachmentPointMap = {};
-        const bottomLayer = findBottomMostComponents(components);
         bottomLayer.forEach((component) => {
             this.addComponentAttachmentPoints(
                 getGlobalParentAttachmentPoints(component),
@@ -190,51 +154,29 @@ class ComponentLibraryManager {
             this.addComponentAttachmentPoints(
                 getGlobalAttachmentPoints(component),
                 allAttachmentPoints
-            )
+            );
         });
 
-        // For top and bottom attachment points, get topmost and bottom most attachment points only
-        const {topPoints, bottomPoints} = getExtremeAttachmentPoints(components);
+        // For top attachment points, get attachment points of the top most layer
+        const topLayer = findTopMostComponents(components);
+        const topPoints = topLayer.map((component) =>{
+            const points = getGlobalAttachmentPoints(component);
+            return points["attach-top"];
+        });
         allAttachmentPoints["attach-top"] = topPoints;
-        allAttachmentPoints["attach-bottom"] = bottomPoints;
 
-        // Start processing from the root with initial grid position
-        const initialGridPosition: GridPosition = { row: "a", column: 1 };
-        // add the first grid attachment point
-        attachmentPointsMap["attach-top-a1"] = {
-            ...(attachmentPointsMap["attach-top"] || {}),
-            name: "attach-top-a1"
-        };
-
-        // remember how many points are there
-        const numPoints = Object.keys(attachmentPointsMap).length;
-
-        // Process children of root component
-        const childComponents = components.filter(
-            (c) => c.relativeToId === rootComponent.id
-        );
-        childComponents.forEach((child) => {
-            const childGridPosition = this.getGridPosition(
-                child,
-                initialGridPosition
-            );
-            this.processComponentAttachmentPoints(
-                child,
-                attachmentPointsMap,
-                parentAttachmentPointsMap,
-                allAttachmentPoints,
-                childGridPosition,
-                components
-            );
-        });
-
-        // if no new grid attachment points got added, remove the first grid point
-        if (Object.keys(attachmentPointsMap).length === numPoints) {
-            delete attachmentPointsMap["attach-top-a1"];
-        }
-
-        // New: Use getNormalizedPoints from pointUtils
+        // Combine all attachment points into normalized attachment points for the component
         getNormalizeAttachmentPoints(allAttachmentPoints, attachmentPointsMap);
+
+        // Create a grid of top attachment points using only the topmost components
+        const gridPoints = createGridPoints(
+            topPoints,
+            Direction.N,
+            Direction.W
+        );
+        gridPoints.forEach((point) => {
+            attachmentPointsMap[point.name] = point;
+        });
 
         // overwrite attachment points with normalized parent attachment points, if any
         this.getNormalizedParentAttachmentPoints(

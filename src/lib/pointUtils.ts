@@ -102,17 +102,17 @@ function getHullSegment<P extends Point>(
         hull: P[]
     ): number => {
         const primaryComparators = {
-            N: (p: P) => p.y, // min y
-            S: (p: P) => -p.y, // max y
-            E: (p: P) => -p.x, // max x
-            W: (p: P) => p.x // min x
+            N: (p: P) => Math.round(p.y), // min y
+            S: (p: P) => Math.round(-p.y), // max y
+            E: (p: P) => Math.round(-p.x), // max x
+            W: (p: P) => Math.round(p.x) // min x
         };
 
         const secondaryComparators = {
-            N: (p: P) => p.x, // min x
-            S: (p: P) => p.x, // min x
-            E: (p: P) => p.y, // min y
-            W: (p: P) => p.y // min y
+            N: (p: P) => Math.round(p.x), // min x
+            S: (p: P) => Math.round(p.x), // min x
+            E: (p: P) => Math.round(p.y), // min y
+            W: (p: P) => Math.round(p.y) // min y
         };
 
         const getPrimary = primaryComparators[direction];
@@ -163,6 +163,59 @@ function getHullSegment<P extends Point>(
     return getPointsBetween(startIdx, endIdx, workingHull);
 }
 
+function getNextRowLabel(current: string): string {
+    return String.fromCharCode(current.charCodeAt(0) + 1);
+}
+
+export function createGridPoints(
+    points: AttachmentPoint[],
+    direction1: Direction,
+    direction2: Direction
+): AttachmentPoint[] {
+    if (points.length === 0) return [];
+
+    const gridPoints: AttachmentPoint[] = [];
+    let remainingPoints = [...points];
+    let currentRow = "a";
+
+    while (remainingPoints.length > 0) {
+        // Get the concave hull for current set of points
+        const hull = findConcaveHull(remainingPoints);
+
+        // Get the segment based on directions
+        const segment = getHullSegment(hull, direction1, direction2);
+
+        if (segment.length === 0) break;
+
+        // Create grid points for current row
+        segment.forEach((point, index) => {
+            const gridPoint: AttachmentPoint = {
+                name: `${point.name}-${currentRow}${index + 1}`,
+                x: point.x,
+                y: point.y
+            };
+            gridPoints.push(gridPoint);
+        });
+
+        // Remove used points from remaining points
+        remainingPoints = remainingPoints.filter(
+            (point) =>
+                !segment.some(
+                    (segPoint) =>
+                        segPoint.x === point.x && segPoint.y === point.y
+                )
+        );
+
+        // Move to next row
+        currentRow = getNextRowLabel(currentRow);
+
+        // Safety check to prevent infinite loops
+        if (currentRow > "z") break;
+    }
+
+    return gridPoints;
+}
+
 interface DirectionMap {
     [key: string]: Direction[];
 }
@@ -199,7 +252,5 @@ export function getNormalizeAttachmentPoints(
     attachmentPointsMap["attach-top"] =
         findCenterPoint(componentPointsMap["attach-top"]) ||
         componentPointsMap["attach-top"][0];
-    // TODO: Create a grid for top points
-
     return attachmentPointsMap;
 }
