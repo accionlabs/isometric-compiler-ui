@@ -11,8 +11,9 @@ The SVG Isometric Shapes Compiler is a web application that allows users to crea
 - Point and click interface for easy shape placement
 - Library of pre-defined 3D and 2D SVG shapes
 - Ability to combine shapes to create complex isometric diagrams
+- Ability to create reusable components
 - Google Drive integration for loading custom shape libraries
-- Save and load diagram compositions to Google Drive
+- Save and load diagram compositions as JSON
 - Export diagrams as SVG files
 - Customizable canvas size
 - Zoom and pan functionality for detailed viewing
