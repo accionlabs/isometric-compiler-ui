@@ -30,6 +30,7 @@
     "@reactflow/core": "^11.11.4",
     "@reactflow/node-resizer": "^2.2.14",
     "@xmldom/xmldom": "^0.9.5",
+    "@xyflow/react": "^12.3.5",
     "clsx": "^2.1.1",
     "dotenv": "^16.4.5",
     "html-to-image": "^1.11.11",
@@ -37,7 +38,6 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-syntax-highlighter": "^15.6.1",
-    "reactflow": "^11.11.4",
     "tailwind-merge": "^2.5.3",
     "uuid": "^11.0.3",
     "yaml": "^2.6.0"

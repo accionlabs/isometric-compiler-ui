@@ -5,7 +5,8 @@ import React, {
     MouseEvent as ReactMouseEvent,
     useMemo
 } from "react";
-import ReactFlow, {
+import {
+    ReactFlow, 
     ReactFlowProvider,
     Node,
     Edge,
@@ -21,8 +22,8 @@ import ReactFlow, {
     ReactFlowState,
     useStore,
     XYPosition
-} from "reactflow";
-import "reactflow/dist/style.css";
+} from "@xyflow/react";
+import '@xyflow/react/dist/style.css';
 
 import { DiagramComponent, CanvasSize } from "@/Types";
 import SVGNode from "@/components/ui/SVGNode";
@@ -151,8 +152,8 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
     setSelectedPosition,
     setSelectedAttachmentPoint
 }) => {
-    const [nodes, setNodes, onNodesChange] = useNodesState<Node[]>([]);
-    const [edges, setEdges, onEdgesChange] = useEdgesState<Edge[]>([]);
+    const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
+    const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
     const [isConnecting, setIsConnecting] = useState(false);
     const store = useStoreApi();
     const { fitView } = useReactFlow();
@@ -215,7 +216,7 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
     // Track connection state
     useEffect(() => {
         const subscription = store.subscribe((state: ReactFlowState) => {
-            setIsConnecting(state.connectionStartHandle !== null);
+            setIsConnecting(state.connectionClickStartHandle !== null);
         });
         return () => subscription();
     }, [store]);
@@ -289,7 +290,7 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
 // Main component wrapper with ReactFlow provider
 const FlowSVGDisplay: React.FC<FlowSVGDisplayProps> = (props) => {
     return (
-        <div className="w-full h-full bg-white relative">
+        <div className="w-full h-full relative">
             <ReactFlowProvider>
                 <FlowContent {...props} />
             </ReactFlowProvider>

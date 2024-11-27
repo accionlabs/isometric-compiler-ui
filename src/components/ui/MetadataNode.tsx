@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
-import { Handle, Position, NodeProps, useStore } from 'reactflow';
+import { Node, Handle, Position, NodeProps, useStore } from '@xyflow/react';
 import { schemaLoader } from '@/lib/componentSchemaLib';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/Dialog';
 
-interface MetadataNodeData {
+interface MetadataNodeData extends Record<string, unknown> {
   componentId: string;
   type: string;
   metadata: Record<string, any>;
   isInteractive?: boolean;
 }
 
-const MetadataNode: React.FC<NodeProps<MetadataNodeData>> = ({ 
+type MetadataNodeType = Node<MetadataNodeData>;
+
+
+const MetadataNode: React.FC<NodeProps<MetadataNodeType>> = ({ 
   data, 
   id,
   isConnectable = true

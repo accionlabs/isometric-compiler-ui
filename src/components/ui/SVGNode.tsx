@@ -1,5 +1,6 @@
 import React, { useRef, useCallback, useEffect, useState } from 'react';
 import {
+    Node,
     Handle,
     Position,
     NodeProps,
@@ -7,12 +8,12 @@ import {
     ReactFlowState,
     HandleType,
     useUpdateNodeInternals
-} from 'reactflow';
+} from '@xyflow/react';
 import { CanvasSize, DiagramComponent, Point } from '@/Types';
 import { getClosestAttachmentPoint, extractGlobalAttachmentPoints } from '@/lib/diagramComponentsLib';
 import { calculateSVGBoundingBox, calculateViewBox, DEFAULT_MARGIN } from '@/lib/svgUtils';
 
-interface SVGNodeData {
+type SVGNodeData = Node<{
     canvasSize: CanvasSize;
     svgContent: string;
     diagramComponents: DiagramComponent[];
@@ -23,7 +24,7 @@ interface SVGNodeData {
     isCopied: boolean;
     isConnecting: boolean;
     isInteractive: boolean;
-}
+}>
 
 interface HandlePosition {
     id: string;
