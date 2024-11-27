@@ -72,31 +72,6 @@ class ComponentLibraryManager {
         localStorage.setItem("componentLibrary", JSON.stringify(this.library));
     }
 
-    private getNextRow(currentRow: string): string {
-        return String.fromCharCode(currentRow.charCodeAt(0) + 1);
-    }
-
-    private getGridPosition(
-        component: DiagramComponent,
-        basePosition: GridPosition
-    ): GridPosition {
-        const position = component.position;
-
-        if (position === "front-left") {
-            return {
-                row: basePosition.row,
-                column: basePosition.column + 1
-            };
-        } else if (position === "front-right") {
-            return {
-                row: this.getNextRow(basePosition.row),
-                column: basePosition.column
-            };
-        }
-
-        return basePosition;
-    }
-
     private addComponentAttachmentPoints(
         attachmentPointsMap: AttachmentPointMap,
         parentAttachmentPoints: ComponentAttachmentPointMap
