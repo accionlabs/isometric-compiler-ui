@@ -13,6 +13,8 @@ The utilities described here solve several geometric problems related to point m
 
 ## Function Descriptions
 
+![Illustration of the functions](./images/pointUtils.svg)
+
 ### 1. findCenterPoint
 
 **Purpose:** Calculates the centroid (geometric center) of a set of points.
