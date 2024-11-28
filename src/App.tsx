@@ -12,9 +12,11 @@ import { createKeyboardShortcuts } from "./KeyboardShortcuts";
 import { SVGLibraryManager } from "./lib/svgLibraryUtils";
 import { schemaLoader } from "./lib/componentSchemaLib";
 import { StorageType, loadFile, saveFile } from "./lib/fileOperations";
+import { QueryKey, useQuery } from "@tanstack/react-query";
+import { getShapes } from "./services/library";
 
 const App: React.FC = () => {
-    const [svgLibrary, setSvgLibrary] = useState<Shape[]>([]);
+    // const [svgLibrary, setSvgLibrary] = useState<Shape[]>([]);
     const [diagramComponents, setDiagramComponents] = useState<
         DiagramComponent[]
     >([]);
@@ -40,10 +42,10 @@ const App: React.FC = () => {
     const [showAttachmentPoints, setShowAttachmentPoints] = useState(() => {
         return localStorage.getItem("showAttachmentPoints") === "true";
     });
-    const [activeLibrary, setActiveLibrary] = useState<string>(() => {
-        const stored = localStorage.getItem("activeLibrary");
-        return stored || "default";
-    });
+    // const [activeLibrary, setActiveLibrary] = useState<string>(() => {
+    //     const stored = localStorage.getItem("activeLibrary");
+    //     return stored || "default";
+    // });
     const [schemaUrl] = useState("/schemas/component-types.yaml"); // URL to your schema file
     const [storageType, setStorageType] = useState<StorageType>(
         StorageType.Local
@@ -52,20 +54,29 @@ const App: React.FC = () => {
     // Add state for component library
     const [components, setComponents] = useState<Component[]>([]);
 
+    const [currentLibraryId, setCurrentLibary] = useState('')
+
+    const { data: svgShapes = [] } = useQuery({
+        queryKey: ['shapes', currentLibraryId],
+        queryFn: () => getShapes(currentLibraryId),
+      })
+
     // Update shapes when active library changes
     const handleLibraryChange = useCallback((libraryId: string) => {
-        setActiveLibrary(libraryId);
-        localStorage.setItem("activeLibrary", libraryId);
+        // setActiveLibrary(libraryId);
+        // localStorage.setItem("activeLibrary", libraryId);
 
-        const library = SVGLibraryManager.getLibrary(libraryId);
-        if (library) {
-            setSvgLibrary(library.shapes);
-            // render all components, if any
-            componentLibraryManager.renderAllComponents(
-                canvasSize,
-                library.shapes
-            );
-        }
+        // const library = SVGLibraryManager.getLibrary(libraryId);
+        // if (library) {
+        //     setSvgLibrary(library.shapes);
+        //     // render all components, if any
+        //     componentLibraryManager.renderAllComponents(
+        //         canvasSize,
+        //         library.shapes
+        //     );
+        // }
+
+        setCurrentLibary(libraryId)
     }, []);
 
     // update diagram component metadata when added
@@ -155,7 +166,7 @@ const App: React.FC = () => {
             );
             const result = diagramComponentsLib.add3DShape(
                 diagramComponents,
-                svgLibrary,
+                svgShapes,
                 shapeName,
                 selectedPosition,
                 selectedAttachmentPoint,
@@ -172,7 +183,7 @@ const App: React.FC = () => {
         },
         [
             diagramComponents,
-            svgLibrary,
+            svgShapes,
             selected3DShape,
             selectedPosition,
             selectedAttachmentPoint
@@ -420,7 +431,7 @@ const App: React.FC = () => {
                 );
             }
         },
-        [fileName, folderPath, storageType, svgLibrary]
+        [fileName, folderPath, storageType, svgShapes]
     );
 
     const handleLoadDiagramFromJSON = (
@@ -431,7 +442,7 @@ const App: React.FC = () => {
             diagramComponentsLib.compileDiagram(
                 loadedComponents,
                 canvasSize,
-                svgLibrary,
+                svgShapes,
                 showAttachmentPoints
             );
         setDiagramComponents(processedComponents);
@@ -534,7 +545,7 @@ const App: React.FC = () => {
                     componentLibraryManager.renderComponent(
                         newComponent.id,
                         canvasSize,
-                        svgLibrary
+                        svgShapes
                     );
                     setComponents(componentLibraryManager.getAllComponents());
                     return newComponent;
@@ -546,7 +557,7 @@ const App: React.FC = () => {
                 return null;
             }
         },
-        [diagramComponents, canvasSize, svgLibrary]
+        [diagramComponents, canvasSize, svgShapes]
     );
 
     // New handler to delete a component
@@ -598,40 +609,40 @@ const App: React.FC = () => {
         // load components on mount
         setComponents(componentLibraryManager.getAllComponents());
         // initiatlize libraries
-        const initializeLibraries = async () => {
-            console.log("Initializing libraries...");
-            // First make sure default library exists and is loaded
-            await SVGLibraryManager.initializeDefaultLibrary();
+        // const initializeLibraries = async () => {
+        //     console.log("Initializing libraries...");
+        //     // First make sure default library exists and is loaded
+        //     await SVGLibraryManager.initializeDefaultLibrary();
 
-            // Get the active library ID from localStorage or use default
-            const activeLibraryId =
-                localStorage.getItem("activeLibrary") || "default";
-            console.log("Active library ID:", activeLibraryId);
+        //     // Get the active library ID from localStorage or use default
+        //     const activeLibraryId =
+        //         localStorage.getItem("activeLibrary") || "default";
+        //     console.log("Active library ID:", activeLibraryId);
 
-            // Get the active library
-            const library = SVGLibraryManager.getLibrary(activeLibraryId);
+        //     // Get the active library
+        //     const library = SVGLibraryManager.getLibrary(activeLibraryId);
 
-            if (library) {
-                console.log("Setting active library:", library.id);
-                setActiveLibrary(library.id);
-                setSvgLibrary(library.shapes);
-                // render all components if any
-                componentLibraryManager.renderAllComponents(
-                    canvasSize,
-                    library.shapes
-                );
-            } else {
-                // Fallback to default library if active library not found
-                console.log("Falling back to default library");
-                const defaultLibrary = SVGLibraryManager.getLibrary("default");
-                if (defaultLibrary) {
-                    setActiveLibrary("default");
-                    setSvgLibrary(defaultLibrary.shapes);
-                }
-            }
-        };
+        //     if (library) {
+        //         console.log("Setting active library:", library.id);
+        //         setActiveLibrary(library.id);
+        //         setSvgLibrary(library.shapes);
+        //         // render all components if any
+        //         componentLibraryManager.renderAllComponents(
+        //             canvasSize,
+        //             library.shapes
+        //         );
+        //     } else {
+        //         // Fallback to default library if active library not found
+        //         console.log("Falling back to default library");
+        //         const defaultLibrary = SVGLibraryManager.getLibrary("default");
+        //         if (defaultLibrary) {
+        //             setActiveLibrary("default");
+        //             setSvgLibrary(defaultLibrary.shapes);
+        //         }
+        //     }
+        // };
 
-        initializeLibraries();
+        // initializeLibraries();
     }, []); // Empty dependency array - only run once on mount
 
     useEffect(() => {
@@ -653,7 +664,7 @@ const App: React.FC = () => {
             diagramComponentsLib.compileDiagram(
                 diagramComponents,
                 canvasSize,
-                svgLibrary,
+                svgShapes,
                 showAttachmentPoints
             );
         setComposedSVG(svgContent);
@@ -666,7 +677,7 @@ const App: React.FC = () => {
         ) {
             setDiagramComponents(processedComponents);
         }
-    }, [diagramComponents, canvasSize, svgLibrary, showAttachmentPoints]);
+    }, [diagramComponents, canvasSize, svgShapes, showAttachmentPoints]);
 
     useEffect(() => {
         localStorage.setItem("canvasSize", JSON.stringify(canvasSize));
@@ -689,8 +700,8 @@ const App: React.FC = () => {
 
     return (
         <ImprovedLayout
-            svgLibrary={svgLibrary}
-            activeLibrary={activeLibrary}
+            svgLibrary={svgShapes}
+            activeLibrary={currentLibraryId}
             onLibraryChange={handleLibraryChange}
             diagramComponents={diagramComponents}
             components={components}
@@ -712,7 +723,7 @@ const App: React.FC = () => {
             onPaste3DShape={handlePaste3DShape}
             canvasSize={canvasSize}
             onSetCanvasSize={handleSetCanvasSize}
-            onUpdateSvgLibrary={setSvgLibrary}
+            onUpdateSvgLibrary={() => {}}
             onDownloadSVG={handleDownloadSVG}
             fileName={fileName}
             setFileName={handleSetFileName}

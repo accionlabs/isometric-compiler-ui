@@ -11,5 +11,6 @@ const getGoogleKeys = () => {
 }
 
 export const config = {
-    googleKeys: getGoogleKeys()
+    googleKeys: getGoogleKeys(),
+    gatewayApiUrl: import.meta.env.VITE_GATEWAY_API_URL
 };
