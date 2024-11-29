@@ -14,6 +14,7 @@ import { schemaLoader } from "./lib/componentSchemaLib";
 import { StorageType, loadFile, saveFile } from "./lib/fileOperations";
 import { QueryKey, useQuery } from "@tanstack/react-query";
 import { getShapes } from "./services/library";
+import { config } from "./config";
 
 const App: React.FC = () => {
     // const [svgLibrary, setSvgLibrary] = useState<Shape[]>([]);
@@ -54,11 +55,11 @@ const App: React.FC = () => {
     // Add state for component library
     const [components, setComponents] = useState<Component[]>([]);
 
-    const [currentLibraryId, setCurrentLibary] = useState('')
+    const [currentLibraryId, setCurrentLibary] = useState(config.defaultLibraryId)
 
     const { data: svgShapes = [] } = useQuery({
         queryKey: ['shapes', currentLibraryId],
-        queryFn: () => getShapes(currentLibraryId),
+        queryFn: () => getShapes([currentLibraryId]),
       })
 
     // Update shapes when active library changes

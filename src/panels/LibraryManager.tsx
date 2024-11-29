@@ -6,6 +6,8 @@ import { SVGLibraryManager, ExtendedLibraryData } from '../lib/svgLibraryUtils';
 import { Shape, LibraryData } from '../Types';
 import { loadShapesFromGoogleDrive } from '../lib/googleDriveLib';
 import { ToggleGroup } from '../components/ui/ToggleGroup';
+import { useQuery } from '@tanstack/react-query';
+import { getLibraries } from '@/services/library';
 
 interface LibraryFormData {
   name: string;
@@ -45,7 +47,7 @@ const LibraryManager: React.FC<LibraryManagerProps> = ({
   onLibraryChange,
   onUpdateShapes
 }) => {
-  const [libraries, setLibraries] = useState<LibraryData[]>([]);
+  // const [libraries, setLibraries] = useState<LibraryData[]>([]);
   const [loadingStatus, setLoadingStatus] = useState<string | null>(null);
   const [loadingProgress, setLoadingProgress] = useState<LoadingProgress | null>(null);
   const [isLoadingDialogOpen, setIsLoadingDialogOpen] = useState(false);
@@ -62,16 +64,21 @@ const LibraryManager: React.FC<LibraryManagerProps> = ({
     updateMode: 'replace'
   });
 
-  // Initialize libraries
-  useEffect(() => {
-    const initializeLibraries = async () => {
-      await SVGLibraryManager.initializeDefaultLibrary();
-      const loadedLibraries = SVGLibraryManager.getLibraries();
-      setLibraries(loadedLibraries);
+  const { data: libraries = [] } = useQuery({
+    queryKey: ['libraries'],
+    queryFn: () => getLibraries(),
+  })
 
-    };
-    initializeLibraries();
-  }, []);
+  // Initialize libraries
+  // useEffect(() => {
+  //   const initializeLibraries = async () => {
+  //     await SVGLibraryManager.initializeDefaultLibrary();
+  //     const loadedLibraries = SVGLibraryManager.getLibraries();
+  //     setLibraries(loadedLibraries);
+
+  //   };
+  //   initializeLibraries();
+  // }, []);
 
   const resetForm = () => {
     setLibraryForm({
@@ -88,15 +95,16 @@ const LibraryManager: React.FC<LibraryManagerProps> = ({
   };
 
   const handleEditLibrary = (libraryId: string) => {
-    const library = SVGLibraryManager.getLibrary(libraryId);
+    // const library = SVGLibraryManager.getLibrary(libraryId);
+    const library = libraries.find(lib => lib.id === libraryId)
     if (!library) return;
 
     setLibraryForm({
       name: library.name,
       description: library.description,
-      source: library.source?.type || 'local',
-      spreadsheetUrl: library.source?.googleDrive?.spreadsheetUrl || '',
-      folderUrl: library.source?.googleDrive?.folderUrl || '',
+      source:  'local',
+      spreadsheetUrl: '',
+      folderUrl: '',
       indexFile: null,
       svgFiles: [],
       updateMode: 'replace'
@@ -125,7 +133,7 @@ const LibraryManager: React.FC<LibraryManagerProps> = ({
       );
 
       SVGLibraryManager.addShapesToLibrary(libraryId, shapes);
-      setLibraries(SVGLibraryManager.getLibraries());
+      // setLibraries(SVGLibraryManager.getLibraries());
       return shapes;
     } catch (error) {
       console.error('Error loading shapes:', error);
@@ -281,7 +289,7 @@ const LibraryManager: React.FC<LibraryManagerProps> = ({
       lastUpdated: new Date()
     });
 
-    setLibraries(SVGLibraryManager.getLibraries());
+    // setLibraries(SVGLibraryManager.getLibraries());
     if (libraryId === activeLibrary) {
       onUpdateShapes(shapes);
     }
@@ -292,7 +300,7 @@ const LibraryManager: React.FC<LibraryManagerProps> = ({
   ) => {
     SVGLibraryManager.deleteLibrary(libraryId);
 
-    setLibraries(SVGLibraryManager.getLibraries());
+    // setLibraries(SVGLibraryManager.getLibraries());
   }, [activeLibrary, onUpdateShapes]);
 
   const handleSubmitLibrary = useCallback(async () => {
