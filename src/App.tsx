@@ -215,11 +215,13 @@ const App: React.FC = () => {
                 diagramComponents,
                 selected3DShape,
                 shapeName,
-                attachTo
+                attachTo,
+                selectedPosition,
+                selectedAttachmentPoint
             );
             setDiagramComponents(updatedComponents);
         },
-        [diagramComponents, selected3DShape]
+        [diagramComponents, selected3DShape, selectedPosition, selectedAttachmentPoint]
     );
 
     const handleRemove3DShape = useCallback(

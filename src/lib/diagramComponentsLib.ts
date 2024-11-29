@@ -143,6 +143,18 @@ export const getAttachmentPoint = (
     return null;
 };
 
+export const getMatchingAttachmentPoints = (
+    component: DiagramComponent,
+    pointPattern: string
+): AttachmentPoint[] | null => {
+    if (component && component.attachmentPoints) {
+        return component.attachmentPoints.filter(
+            (p) => p.name.match(pointPattern)
+        );
+    }
+    return null;
+};
+
 export const calculateAbsolutePosition = (
     component: DiagramComponent,
     referenceComponent: DiagramComponent | null,
@@ -385,7 +397,9 @@ export const add2DShape = (
     diagramComponents: DiagramComponent[],
     selected3DShape: string | null,
     shapeName: string,
-    attachTo: string
+    attachTo: string,
+    position?: string,
+    attachmentPoint?: string | null
 ): DiagramComponent[] => {
     if (selected3DShape !== null) {
         return diagramComponents.map((component) => {
@@ -394,7 +408,10 @@ export const add2DShape = (
                     ...component,
                     attached2DShapes: [
                         ...component.attached2DShapes,
-                        { name: shapeName, attachedTo: attachTo }
+                        { 
+                            name: shapeName, 
+                            attachedTo: (position && attachmentPoint && position === attachTo)? attachmentPoint : attachTo 
+                        }
                     ]
                 };
             }
@@ -1299,8 +1316,6 @@ export const getExtremeAttachmentPoints = (
             }
         }
     });
-    console.log('top points:',topPoints);
-    console.log('bottom points:',bottomPoints);
 
     return { topPoints, bottomPoints };
 };

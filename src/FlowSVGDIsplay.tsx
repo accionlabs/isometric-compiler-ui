@@ -26,10 +26,10 @@ import {
 import '@xyflow/react/dist/style.css';
 
 import { DiagramComponent, CanvasSize } from "@/Types";
-import SVGNode from "@/components/ui/SVGNode";
-import LabelNode from "@/components/ui/LabelNode";
-import CustomEdge from "@/components/ui/CustomEdge";
-import MetadataNode from "@/components/ui/MetadataNode";
+import SVGNode from "@/components/flow/SVGNode";
+import LabelNode from "@/components/flow/LabelNode";
+import CustomEdge from "@/components/flow/CustomEdge";
+import MetadataNode from "@/components/flow/MetadataNode";
 
 interface FlowSVGDisplayProps {
     svgContent: string;
@@ -262,6 +262,7 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
 
     return (
         <ReactFlow
+            colorMode="light"
             nodes={nodes}
             edges={edges}
             nodeTypes={nodeTypes}
@@ -290,12 +291,18 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
 // Main component wrapper with ReactFlow provider
 const FlowSVGDisplay: React.FC<FlowSVGDisplayProps> = (props) => {
     return (
-        <div className="w-full h-full relative">
+        <div className="w-full h-full bg-white relative">
             <ReactFlowProvider>
                 <FlowContent {...props} />
             </ReactFlowProvider>
             <style>
                 {`
+                    .react-flow__controls-button {
+                        background-color:#555;
+                    }
+                    .react-flow__controls-button:hover {
+                        background-color:#777;
+                    }
                     .react-flow__node {
                         max-width: none;
                         max-height: none;
