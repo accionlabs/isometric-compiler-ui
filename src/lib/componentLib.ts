@@ -30,6 +30,7 @@ import {
     createGridPoints
 } from "./pointUtils";
 import { getAttachmentPoint } from "./diagramComponentsLib";
+import { Underline } from "lucide-react";
 
 // Helper interfaces for attachment point calculation
 
@@ -112,15 +113,13 @@ class ComponentLibraryManager {
         const rootComponent = components[0];
         if (!rootComponent.attachmentPoints) return [];
 
-        // Initialize attachment points map with root component's points
-        const attachmentPointsMap: AttachmentPointMap =
-            getGlobalAttachmentPoints(rootComponent);
-
-
-        // Get attachment points and parent attachment points of only the bottom layer of shapes
-        const bottomLayer = findBottomMostComponents(components);
+        // Initialize attachment points map, parent attachment points map and final attachment points for component
+        const attachmentPointsMap: AttachmentPointMap = {};
         const parentAttachmentPointsMap: ComponentAttachmentPointMap = {};
         const allAttachmentPoints: ComponentAttachmentPointMap = {};
+
+        // for all standard attachment points, only choose the bottom layer
+        const bottomLayer = findBottomMostComponents(components);
         bottomLayer.forEach((component) => {
             this.addComponentAttachmentPoints(
                 getGlobalParentAttachmentPoints(component),
@@ -132,26 +131,67 @@ class ComponentLibraryManager {
             );
         });
 
+        // check for all non-standard attachment points and create a grid for them
+        const nonStandardPoints: ComponentAttachmentPointMap = {};
+        components.forEach((component) => {
+            const points = getGlobalAttachmentPoints(component);
+            Object.keys(points).forEach((p) => {
+                if (
+                    ![
+                        "attach-top",
+                        "attach-bottom",
+                        "attach-front-left",
+                        "attach-front-right",
+                        "attach-back-left",
+                        "attach-back-right"
+                    ].includes(p)
+                ) {
+                    (nonStandardPoints[p] = nonStandardPoints[p] || []).push(points[p]);
+                }
+            });
+        });
+        if (Object.keys(nonStandardPoints).length > 0) {
+            console.log('non std points:', nonStandardPoints);
+            Object.keys(nonStandardPoints).forEach((p) => {
+                const gridPoints = createGridPoints(
+                    nonStandardPoints[p],
+                    Direction.N,
+                    Direction.W
+                );
+                gridPoints.forEach((point) => {
+                    attachmentPointsMap[point.name] = point;
+                });
+    
+            })
+        }
+
         // For top attachment points, get attachment points of the top most layer
         const topLayer = findTopMostComponents(components);
-        const topPoints = topLayer.map((component) =>{
+        const topPoints:AttachmentPoint[] = [];
+        topLayer.forEach((component) => {
             const points = getGlobalAttachmentPoints(component);
-            return points["attach-top"];
+            if (points["attach-top"]) {
+                topPoints.push(points["attach-top"]);
+            }
         });
-        allAttachmentPoints["attach-top"] = topPoints;
-
+        console.log("topPoints:", topPoints);
+        if (topPoints.length > 0 && topPoints[0] != undefined) {
+            allAttachmentPoints["attach-top"] = topPoints;
+            const gridPoints = createGridPoints(
+                topPoints,
+                Direction.N,
+                Direction.W
+            );
+            gridPoints.forEach((point) => {
+                attachmentPointsMap[point.name] = point;
+            });
+        }
         // Combine all attachment points into normalized attachment points for the component
         getNormalizeAttachmentPoints(allAttachmentPoints, attachmentPointsMap);
 
         // Create a grid of top attachment points using only the topmost components
-        const gridPoints = createGridPoints(
-            topPoints,
-            Direction.N,
-            Direction.W
-        );
-        gridPoints.forEach((point) => {
-            attachmentPointsMap[point.name] = point;
-        });
+        if (topPoints.length > 1) {
+        }
 
         // overwrite attachment points with normalized parent attachment points, if any
         this.getNormalizedParentAttachmentPoints(

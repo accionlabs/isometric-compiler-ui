@@ -15,13 +15,19 @@ export function findCenterPoint<P extends Point>(points: P[]): P | null {
         centerPoint.x += Math.round(point.x);
         centerPoint.y += Math.round(point.y);
     });
-    centerPoint.x = centerPoint.x / points.length;
-    centerPoint.y = centerPoint.y / points.length;
+    centerPoint.x = Math.round(centerPoint.x / points.length);
+    centerPoint.y = Math.round(centerPoint.y / points.length);
     return centerPoint;
 }
 
 export function findConcaveHull<P extends Point>(points: P[]): P[] {
     if (points.length < 3) return points;
+    
+    // round off all point coordinates
+    points.forEach((p) => {
+        p.x = Math.round(p.x);
+        p.y = Math.round(p.y);
+    })
 
     // Helper function to calculate distance between two points
     const distance = (p1: P, p2: P): number => {
@@ -173,6 +179,7 @@ export function createGridPoints(
     direction2: Direction
 ): AttachmentPoint[] {
     if (points.length === 0) return [];
+    if (points.length === 1) return points;
 
     const gridPoints: AttachmentPoint[] = [];
     let remainingPoints = [...points];
@@ -232,6 +239,7 @@ export function getNormalizeAttachmentPoints(
     };
     Object.keys(componentPointsMap).forEach((point) => {
         if (point in directionMap) {
+            console.log('points:',componentPointsMap[point]);
             const hull = findConcaveHull(componentPointsMap[point]);
             const segment = getHullSegment(
                 hull,

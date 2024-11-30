@@ -410,7 +410,7 @@ export const add2DShape = (
                         ...component.attached2DShapes,
                         { 
                             name: shapeName, 
-                            attachedTo: (position && attachmentPoint && position === attachTo)? attachmentPoint : attachTo 
+                            attachedTo: (position && attachmentPoint && position === attachTo && attachmentPoint!== 'none')? attachmentPoint : attachTo 
                         }
                     ]
                 };
