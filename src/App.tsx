@@ -524,11 +524,21 @@ const App: React.FC = () => {
     const handleSaveAsComponent = useCallback(
         (name: string, description: string) => {
             try {
+                let selectedShapes = diagramComponents;
+                // if a shape is selected, then get only those shapes that are selected for saving as component
+                if (selected3DShape) {
+                    selectedShapes = diagramComponentsLib.copy3DShape(diagramComponents,selected3DShape);
+                    selectedShapes[0].relativeToId=null;
+                    selectedShapes[0].absolutePosition = {
+                        x:canvasSize.width/2,
+                        y:canvasSize.height/2
+                    }
+                }
                 // Pass true for overwrite since user has already confirmed in dialog
                 const newComponent = componentLibraryManager.createComponent(
                     name,
                     description,
-                    diagramComponents,
+                    selectedShapes,
                     true
                 );
 
@@ -548,7 +558,7 @@ const App: React.FC = () => {
                 return null;
             }
         },
-        [diagramComponents, canvasSize, svgLibrary]
+        [diagramComponents, selected3DShape, canvasSize, svgLibrary]
     );
 
     // New handler to delete a component
