@@ -146,12 +146,14 @@ class ComponentLibraryManager {
                         "attach-back-right"
                     ].includes(p)
                 ) {
-                    (nonStandardPoints[p] = nonStandardPoints[p] || []).push(points[p]);
+                    (nonStandardPoints[p] = nonStandardPoints[p] || []).push(
+                        points[p]
+                    );
                 }
             });
         });
         if (Object.keys(nonStandardPoints).length > 0) {
-            console.log('non std points:', nonStandardPoints);
+            console.log("non std points:", nonStandardPoints);
             Object.keys(nonStandardPoints).forEach((p) => {
                 const gridPoints = createGridPoints(
                     nonStandardPoints[p],
@@ -161,13 +163,12 @@ class ComponentLibraryManager {
                 gridPoints.forEach((point) => {
                     attachmentPointsMap[point.name] = point;
                 });
-    
-            })
+            });
         }
 
         // For top attachment points, get attachment points of the top most layer
         const topLayer = findTopMostComponents(components);
-        const topPoints:AttachmentPoint[] = [];
+        const topPoints: AttachmentPoint[] = [];
         topLayer.forEach((component) => {
             const points = getGlobalAttachmentPoints(component);
             if (points["attach-top"]) {
@@ -276,6 +277,8 @@ class ComponentLibraryManager {
         name: string,
         description: string,
         diagramComponents: DiagramComponent[],
+        canvasSize:CanvasSize,
+        svgLibrary: Shape[],
         overwrite: boolean = false
     ): Component | null {
         if (this.hasComponent(name) && !overwrite) {
@@ -286,13 +289,27 @@ class ComponentLibraryManager {
 
         // Create deep copy of diagram components to avoid reference issues
         const componentsCopy = JSON.parse(JSON.stringify(diagramComponents));
+        // detach the root from its parent and move it to the center
+        componentsCopy[0].relativeToId = null;
+        componentsCopy[0].absolutePosition = {
+            x: canvasSize.width / 2,
+            y: canvasSize.height / 2
+        };
+        // compile the shapes, so that all the internal shapes' absolute positions are updated
+        const { svgContent, processedComponents } =
+            compileDiagram(
+                componentsCopy,
+                canvasSize,
+                svgLibrary,
+                false
+            );
 
         const component: Component = {
             id: name,
             name,
             description,
-            diagramComponents: componentsCopy,
-            attachmentPoints: this.getAttachmentPoints(diagramComponents),
+            diagramComponents: processedComponents,
+            attachmentPoints: this.getAttachmentPoints(processedComponents),
             created: now,
             lastModified: now
         };

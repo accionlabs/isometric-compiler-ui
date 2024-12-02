@@ -30,8 +30,8 @@ const MetadataNode: React.FC<NodeProps<MetadataNodeType>> = ({
 
   // Small, subtle handle style for connection points
   const handleStyle = {
-    width: '6px',
-    height: '6px',
+    width: '4px',
+    height: '4px',
     background: '#4F46E5',
     border: '1px solid white',
     borderRadius: '50%',
@@ -106,7 +106,7 @@ const MetadataNode: React.FC<NodeProps<MetadataNodeType>> = ({
         />
 
         {/* Content */}
-        <div className="font-medium text-gray-900">
+        <div className="font-normal text-[6px] text-gray-900">
           {name}
         </div>
       </div>

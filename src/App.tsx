@@ -525,20 +525,17 @@ const App: React.FC = () => {
         (name: string, description: string) => {
             try {
                 let selectedShapes = diagramComponents;
-                // if a shape is selected, then get only those shapes that are selected for saving as component
+                // if a shape is selected, then copy those shapes that are selected for saving as component
                 if (selected3DShape) {
                     selectedShapes = diagramComponentsLib.copy3DShape(diagramComponents,selected3DShape);
-                    selectedShapes[0].relativeToId=null;
-                    selectedShapes[0].absolutePosition = {
-                        x:canvasSize.width/2,
-                        y:canvasSize.height/2
-                    }
                 }
                 // Pass true for overwrite since user has already confirmed in dialog
                 const newComponent = componentLibraryManager.createComponent(
                     name,
                     description,
                     selectedShapes,
+                    canvasSize,
+                    svgLibrary,
                     true
                 );
 
@@ -549,6 +546,35 @@ const App: React.FC = () => {
                         svgLibrary
                     );
                     setComponents(componentLibraryManager.getAllComponents());
+
+                    // if a shape was selected and we created a component from it, replace the existing shapes with the component
+                    if (selected3DShape) {
+                        const selectedShape = diagramComponentsLib.get3DShape(
+                            diagramComponents,
+                            selected3DShape
+                        );
+                        const position = selectedShape?.position || 'top';
+                        const parentId = selectedShape?.relativeToId || diagramComponents[0].id;
+                        const updatedComponents = diagramComponentsLib.remove3DShape(
+                            diagramComponents,
+                            selected3DShape
+                        );
+                        const result = diagramComponentsLib.addComponentToScene(
+                            updatedComponents,
+                            newComponent.id,
+                            position,
+                            null,
+                            parentId
+                        );
+                        if (result.newComponent) {
+                            console.log(`App: replaced component ${result.newComponent.id}`);
+                            setDiagramComponents(result.updatedComponents);
+                            updateSelected3DShape(result.newComponent);
+                        } else {
+                            console.error("Failed to replace new component");
+                        }
+            
+                    }
                     return newComponent;
                 }
                 return null;

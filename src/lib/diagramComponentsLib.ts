@@ -917,7 +917,7 @@ export const compileDiagram = (
     svgLibrary: Shape[],
     showAttachmentPoints: boolean
 ): { svgContent: string; processedComponents: DiagramComponent[] } => {
-    console.log("Compiling diagram...", diagramComponents);
+    //console.log("Compiling diagram...", diagramComponents);
 
     // Standardize component IDs before processing
     const standardizedComponents = standardizeComponentIds(diagramComponents);

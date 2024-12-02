@@ -205,6 +205,13 @@ export const defaultShapesLibrary: Shape[] = [
     svgContent: ""
   },
   {
+    name: "search",
+    svgFile: "search2D.svg",
+    type: "2D",
+    attachTo: "top",
+    svgContent: ""
+  },
+  {
     name: "documents",
     svgFile: "documents2D.svg",
     type: "2D",
