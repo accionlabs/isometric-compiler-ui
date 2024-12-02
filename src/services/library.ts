@@ -18,7 +18,6 @@ export async function getLibraries(): Promise<LibraryData[]> {
 }
 
 export async function getShapes(libraryIds?: string[]): Promise<Shape[]> {
-    console.log(libraryIds,'library ids')
     let query = '';
     if(libraryIds) {
         libraryIds.map(library => query = `${query}libraryIds=${library}&`)
