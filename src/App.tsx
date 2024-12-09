@@ -557,7 +557,7 @@ const App: React.FC = () => {
                     description,
                     selectedShapes,
                     canvasSize,
-                    svgLibrary,
+                    svgShapes,
                     true
                 );
 
@@ -610,7 +610,7 @@ const App: React.FC = () => {
                 return null;
             }
         },
-        [diagramComponents, selected3DShape, canvasSize, svgLibrary]
+        [diagramComponents, selected3DShape, canvasSize, svgShapes]
     );
 
     // New handler to delete a component
