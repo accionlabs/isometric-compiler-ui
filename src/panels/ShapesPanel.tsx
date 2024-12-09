@@ -108,7 +108,6 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                 svgLibrary
             );
         }
-        console.log("first", component.name, component);
         return component.svgContent;
     };
 
@@ -149,7 +148,10 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                                             onClick={() =>
                                                 onAdd3DShape(shape.name)
                                             }
-                                            disabled={shouldDisable3DShapeButtons()}
+                                            disabled={
+                                                shape.status !== "active" ||
+                                                shouldDisable3DShapeButtons()
+                                            }
                                         >
                                             Add
                                         </Button>
@@ -221,7 +223,12 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                                             onClick={() =>
                                                 onAddComponent(component.id)
                                             }
-                                            disabled={shouldDisable3DShapeButtons()}
+                                            disabled={
+                                                (component.status &&
+                                                    component.status !==
+                                                        "active") ||
+                                                shouldDisable3DShapeButtons()
+                                            }
                                         >
                                             Add
                                         </Button>
@@ -275,7 +282,10 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                                                 shape.attachTo || ""
                                             )
                                         }
-                                        disabled={selected3DShape === null}
+                                        disabled={
+                                            shape.status !== "active" ||
+                                            selected3DShape === null
+                                        }
                                     >
                                         Add
                                     </Button>
@@ -431,10 +441,13 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                         </span>
                     </div>
                 </div>
-                <SVGPreview
-                    svgContent={componentToEdit?.svgContent ?? ""}
-                    className="w-full"
-                />
+                <div className="w-full h-96 bg-white border border-gray-200 rounded-lg shadow-md overflow-auto">
+                    <SVGPreview
+                        svgContent={getComponentPreview(componentToEdit)}
+                        className="w-full h-full"
+                    />
+                </div>
+
                 <div className="flex justify-end space-x-2">
                     <Button
                         onClick={() => setIsComponentEditDialogOpen(false)}

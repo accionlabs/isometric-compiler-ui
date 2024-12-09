@@ -669,7 +669,6 @@ const App: React.FC = () => {
 
         loadComponentSchema();
     }, [schemaUrl]);
-    console.log("first", components);
     // Load components and shapes library on mount
     useEffect(() => {
         // load components on mount
