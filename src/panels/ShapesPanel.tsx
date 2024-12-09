@@ -10,6 +10,17 @@ import {
 import SVGPreview from "../components/ui/SVGPreview";
 import { SVGLibraryManager } from "../lib/svgLibraryUtils";
 import { componentLibraryManager } from "../lib/componentLib";
+import { updateShape } from "@/services/library";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle
+} from "@/components/ui/Dialog";
+import { Input } from "@/components/ui/Input";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Checkbox } from "@/components/ui/Checkbox";
 
 interface ShapesPanelProps {
     svgLibrary: Shape[];
@@ -36,7 +47,21 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
     components,
     activeLibrary
 }) => {
-    const [openPanels, setOpenPanels] = useState<string>("3d-shapes");
+    const queryClient = useQueryClient();
+    const { mutate, isPending } = useMutation({
+        mutationFn: (payload: Shape) => {
+            return updateShape(payload);
+        }
+    });
+
+    const [openPanels, setOpenPanels] = useState<string>("components");
+    const [isShapeEditDialogOpen, setIsShapeEditDialogOpen] = useState(false);
+    const [isComponentEditDialogOpen, setIsComponentEditDialogOpen] =
+        useState(false);
+    const [shapeToEdit, setShapeToEdit] = useState<Shape>(svgLibrary[0]);
+    const [componentToEdit, setComponentToEdit] = useState<Component>(
+        components[0]
+    );
 
     // Get active library details
     const activeLibraryData = useMemo(() => {
@@ -55,7 +80,25 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
         // TODO: check if this component is inserted in diagramComponents and do not allow delete
         onDeleteComponent(componentId);
     };
+    const processSVGFile = async (svgFile: File): Promise<string> => {
+        try {
+            // Read the content of the SVG file as a string
+            const svgContent = await SVGLibraryManager.readFileAsText(svgFile);
+            return svgContent;
+        } catch (error) {
+            console.error("Error processing SVG file:", error);
+            throw new Error("Failed to read SVG file content.");
+        }
+    };
 
+    const handleUpdate3D2DShape = () => {
+        mutate(shapeToEdit, {
+            onSettled: () => {
+                queryClient.invalidateQueries({ queryKey: ["shapes"] });
+                setIsShapeEditDialogOpen(false);
+            }
+        });
+    };
     // Temporary function to show SVG preview content for a component
     const getComponentPreview = (component: Component): string => {
         if (!component.svgContent || component.svgContent === "") {
@@ -65,6 +108,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                 svgLibrary
             );
         }
+        console.log("first", component.name, component);
         return component.svgContent;
     };
 
@@ -91,7 +135,16 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                                         />
                                     </td>
                                     <td>{shape.name}</td>
-                                    <td className="text-right">
+                                    <td className="text-right flex gap-1">
+                                        <Button
+                                            onClick={() => {
+                                                setShapeToEdit(shape);
+                                                setIsShapeEditDialogOpen(true);
+                                            }}
+                                            disabled={shouldDisable3DShapeButtons()}
+                                        >
+                                            Edit
+                                        </Button>
                                         <Button
                                             onClick={() =>
                                                 onAdd3DShape(shape.name)
@@ -144,6 +197,17 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                                     </td>
                                     <td className="text-right">
                                         <Button
+                                            onClick={() => {
+                                                setComponentToEdit(component);
+                                                setIsComponentEditDialogOpen(
+                                                    true
+                                                );
+                                            }}
+                                            className="mr-2"
+                                        >
+                                            Edit
+                                        </Button>
+                                        <Button
                                             onClick={() =>
                                                 handleDeleteComponent(
                                                     component.id
@@ -195,7 +259,15 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                                 </td>
                                 <td>{shape.name}</td>
                                 <td>{shape.attachTo}</td>
-                                <td className="text-right">
+                                <td className="text-right flex gap-1">
+                                    <Button
+                                        onClick={() => {
+                                            setShapeToEdit(shape);
+                                            setIsShapeEditDialogOpen(true);
+                                        }}
+                                    >
+                                        Edit
+                                    </Button>
                                     <Button
                                         onClick={() =>
                                             onAdd2DShape(
@@ -215,6 +287,165 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
         </div>
     );
 
+    const renderEditShapeDialog = () => (
+        <Dialog
+            open={isShapeEditDialogOpen}
+            onOpenChange={(state) => setIsShapeEditDialogOpen(state)}
+        >
+            <DialogContent className="bg-gray-800 border border-gray-700">
+                <DialogHeader>
+                    <DialogTitle className="text-white">
+                        {"Edit shape - " + shapeToEdit?.name}
+                    </DialogTitle>
+                </DialogHeader>
+                <div>
+                    <label className="block text-sm font-medium text-gray-200 mb-1">
+                        Shape Description
+                    </label>
+                    <Input
+                        placeholder="My Custom Library"
+                        className="w-full bg-gray-700 text-white border-gray-600"
+                        value={shapeToEdit?.description ?? ""}
+                        onChange={(e) =>
+                            setShapeToEdit((prev) => ({
+                                ...prev,
+                                description: e.target.value
+                            }))
+                        }
+                    />
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-gray-200 mb-1">
+                        SVG File
+                    </label>
+                    <Input
+                        onChange={async (e) => {
+                            const files = Array.from(e.target.files || []);
+                            if (files[0]) {
+                                const svgContent = await processSVGFile(
+                                    files[0]
+                                );
+                                setShapeToEdit((prev) => ({
+                                    ...prev,
+                                    svgContent
+                                }));
+                            }
+                        }}
+                        type="file"
+                        accept=".svg"
+                        className="w-full bg-gray-700 text-white border-gray-600"
+                    />
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-gray-200 mb-1">
+                        Toggle Shape State
+                    </label>
+                    <div className="flex gap-2 ">
+                        <Checkbox
+                            id="show-shape-active-state"
+                            className="text-white mt-0.5"
+                            checked={shapeToEdit.status === "active"}
+                            onCheckedChange={(checked) =>
+                                setShapeToEdit((prev) => ({
+                                    ...prev,
+                                    status: (checked as boolean)
+                                        ? "active"
+                                        : "inactive"
+                                }))
+                            }
+                        />
+                        <span className="block text-sm font-medium text-gray-200">
+                            {shapeToEdit.status}
+                        </span>
+                    </div>
+                </div>
+                <SVGPreview
+                    svgContent={shapeToEdit.svgContent}
+                    className="w-full"
+                />
+                <div className="flex justify-end space-x-2">
+                    <Button
+                        onClick={() => setIsShapeEditDialogOpen(false)}
+                        className="bg-gray-600 hover:bg-gray-700 text-white"
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        disabled={isPending}
+                        onClick={handleUpdate3D2DShape}
+                        className="bg-blue-600 hover:bg-blue-700 text-white disabled:bg-blue-800 disabled:opacity-50"
+                    >
+                        Confirm
+                    </Button>
+                </div>
+            </DialogContent>
+        </Dialog>
+    );
+    const renderEditComponentDialog = () => (
+        <Dialog
+            open={isComponentEditDialogOpen}
+            onOpenChange={(state) => setIsComponentEditDialogOpen(state)}
+        >
+            <DialogContent className="bg-gray-800 border border-gray-700">
+                <DialogHeader>
+                    <DialogTitle className="text-white">
+                        {"Edit component - " + componentToEdit?.name}
+                    </DialogTitle>
+                </DialogHeader>
+                <div>
+                    <label className="block text-sm font-medium text-gray-200 mb-1">
+                        Component Description
+                    </label>
+                    <Input
+                        placeholder="My Custom Library"
+                        className="w-full bg-gray-700 text-white border-gray-600"
+                        value={componentToEdit?.description ?? ""}
+                        onChange={(e) =>
+                            setComponentToEdit((prev) => ({
+                                ...prev,
+                                description: e.target.value
+                            }))
+                        }
+                    />
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-gray-200 mb-1">
+                        Toggle Shape State
+                    </label>
+                    <div className="flex gap-2 ">
+                        <Checkbox
+                            id="show-shape-active-state"
+                            className="text-white mt-0.5"
+                            checked={componentToEdit.status === "active"}
+                            onCheckedChange={(checked) =>
+                                setComponentToEdit((prev) => ({
+                                    ...prev,
+                                    status: (checked as boolean)
+                                        ? "active"
+                                        : "inactive"
+                                }))
+                            }
+                        />
+                        <span className="block text-sm font-medium text-gray-200">
+                            {componentToEdit.status || "inactive"}
+                        </span>
+                    </div>
+                </div>
+                <SVGPreview
+                    svgContent={componentToEdit?.svgContent ?? ""}
+                    className="w-full"
+                />
+                <div className="flex justify-end space-x-2">
+                    <Button
+                        onClick={() => setIsComponentEditDialogOpen(false)}
+                        className="bg-gray-600 hover:bg-gray-700 text-white"
+                    >
+                        Cancel
+                    </Button>
+                </div>
+            </DialogContent>
+        </Dialog>
+    );
     const accordionItems = [
         {
             name: "3D Shapes",
@@ -254,6 +485,9 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                     ))}
                 </div>
             </Accordion>
+            {shapeToEdit?.name && renderEditShapeDialog()}
+
+            {componentToEdit?.name && renderEditComponentDialog()}
         </div>
     );
 };

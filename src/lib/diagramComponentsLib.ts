@@ -929,6 +929,7 @@ export const compileDiagram = (
     const processedComponents: DiagramComponent[] = [];
 
     orderedComponents.forEach((component) => {
+        console.log("first orderedComponents", orderedComponents);
         const renderedComponent = renderComponent(
             component,
             canvasSize,

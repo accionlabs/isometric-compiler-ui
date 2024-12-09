@@ -12,8 +12,8 @@ import { createKeyboardShortcuts } from "./KeyboardShortcuts";
 import { SVGLibraryManager } from "./lib/svgLibraryUtils";
 import { schemaLoader } from "./lib/componentSchemaLib";
 import { StorageType, loadFile, saveFile } from "./lib/fileOperations";
-import { QueryKey, useQuery } from "@tanstack/react-query";
-import { getShapes } from "./services/library";
+import { useQuery } from "@tanstack/react-query";
+import { getComponents, getShapes } from "./services/library";
 import { config } from "./config";
 
 const App: React.FC = () => {
@@ -55,15 +55,22 @@ const App: React.FC = () => {
     // Add state for component library
     const [components, setComponents] = useState<Component[]>([]);
 
-    const [currentLibraryId, setCurrentLibary] = useState(
+    const [currentShapeLibraryId, setCurrentShapeLibraryId] = useState(
+        config.defaultLibraryId
+    );
+    const [currentComponentLibraryId, setCurrentComponentLibraryId] = useState(
         config.defaultLibraryId
     );
 
     const { data: svgShapes = [] } = useQuery({
-        queryKey: ["shapes", currentLibraryId],
-        queryFn: () => getShapes([currentLibraryId])
+        queryKey: ["shapes", currentShapeLibraryId],
+        queryFn: () => getShapes([currentShapeLibraryId])
     });
-
+    const { data: componentsResp = [] } = useQuery({
+        queryKey: ["components", currentComponentLibraryId],
+        queryFn: () => getComponents([currentComponentLibraryId]),
+        enabled: svgShapes.length > 0
+    });
     // Update shapes when active library changes
     const handleLibraryChange = useCallback((libraryId: string) => {
         // setActiveLibrary(libraryId);
@@ -79,7 +86,7 @@ const App: React.FC = () => {
         //     );
         // }
 
-        setCurrentLibary(libraryId);
+        setCurrentShapeLibraryId(libraryId);
     }, []);
 
     // update diagram component metadata when added
@@ -642,6 +649,12 @@ const App: React.FC = () => {
         },
         []
     );
+    useEffect(() => {
+        if (componentsResp.length > 0) {
+            componentLibraryManager.deserializeComponentLib(componentsResp);
+            setComponents(componentLibraryManager.getAllComponents());
+        }
+    }, [componentsResp]);
 
     // load the component metadata schema
     useEffect(() => {
@@ -656,7 +669,7 @@ const App: React.FC = () => {
 
         loadComponentSchema();
     }, [schemaUrl]);
-
+    console.log("first", components);
     // Load components and shapes library on mount
     useEffect(() => {
         // load components on mount
@@ -666,15 +679,12 @@ const App: React.FC = () => {
         //     console.log("Initializing libraries...");
         //     // First make sure default library exists and is loaded
         //     await SVGLibraryManager.initializeDefaultLibrary();
-
         //     // Get the active library ID from localStorage or use default
         //     const activeLibraryId =
         //         localStorage.getItem("activeLibrary") || "default";
         //     console.log("Active library ID:", activeLibraryId);
-
         //     // Get the active library
         //     const library = SVGLibraryManager.getLibrary(activeLibraryId);
-
         //     if (library) {
         //         console.log("Setting active library:", library.id);
         //         setActiveLibrary(library.id);
@@ -694,7 +704,6 @@ const App: React.FC = () => {
         //         }
         //     }
         // };
-
         // initializeLibraries();
     }, []); // Empty dependency array - only run once on mount
 
@@ -754,7 +763,7 @@ const App: React.FC = () => {
     return (
         <ImprovedLayout
             svgLibrary={svgShapes}
-            activeLibrary={currentLibraryId}
+            activeLibrary={currentShapeLibraryId}
             onLibraryChange={handleLibraryChange}
             diagramComponents={diagramComponents}
             components={components}

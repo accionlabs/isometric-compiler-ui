@@ -36,12 +36,14 @@ export interface GlobalAttachmentPoint {
 
 // Shape interface
 export interface Shape {
+    id?: string;
     name: string;
     type: "2D" | "3D"; // Changed to specific string literal types
     attachTo?: string;
     svgFile: string;
     svgContent: string;
-    description?: string
+    description?: string;
+    status?: string;
 }
 
 // Updated DiagramComponent interface
@@ -80,6 +82,7 @@ export interface Component {
     svgContent?: string;
     created: Date;
     lastModified: Date;
+    status?: "active" | "inactive";
 }
 
 export interface ComponentLibrary {
@@ -120,7 +123,7 @@ export interface LibraryData {
     folderUrl?: string;
     lastUpdated: Date;
     isLoading?: boolean;
-    totalShapes?: number
+    totalShapes?: number;
 }
 
 export interface ViewBox {
