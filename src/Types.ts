@@ -39,6 +39,7 @@ export interface Shape {
     attachTo?: string;
     svgFile: string;
     svgContent: string;
+    description?: string
 }
 
 // Updated DiagramComponent interface
@@ -117,6 +118,7 @@ export interface LibraryData {
     folderUrl?: string;
     lastUpdated: Date;
     isLoading?: boolean;
+    totalShapes?: number
 }
 
 export interface ViewBox {

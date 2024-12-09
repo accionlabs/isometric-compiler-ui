@@ -6,8 +6,8 @@ import { SVGLibraryManager, ExtendedLibraryData } from '../lib/svgLibraryUtils';
 import { Shape, LibraryData } from '../Types';
 import { loadShapesFromGoogleDrive } from '../lib/googleDriveLib';
 import { ToggleGroup } from '../components/ui/ToggleGroup';
-import { useQuery } from '@tanstack/react-query';
-import { getLibraries } from '@/services/library';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { createBulkShapes, createLibrary, getLibraries } from '@/services/library';
 
 interface LibraryFormData {
   name: string;
@@ -64,9 +64,29 @@ const LibraryManager: React.FC<LibraryManagerProps> = ({
     updateMode: 'replace'
   });
 
+  const queryClient = useQueryClient();
+
   const { data: libraries = [] } = useQuery({
     queryKey: ['libraries'],
     queryFn: () => getLibraries(),
+  })
+
+  const { mutate: createShapesMutation } = useMutation({
+    mutationFn: createBulkShapes,
+    onError: (e) => {
+      console.log("Error creating library", e)
+    },
+    onSuccess: (newLibrary) => {
+      queryClient.setQueryData<LibraryData[]>(['libraries'], (oldLibraries = []) => {
+        const index = oldLibraries.findIndex(lib => lib.id === newLibrary.id)
+        if(index === -1) {
+          return [...oldLibraries, newLibrary]
+        } else {
+          oldLibraries[index] = newLibrary
+          return [...oldLibraries]
+        }
+      });
+    }
   })
 
   // Initialize libraries
@@ -308,40 +328,41 @@ const LibraryManager: React.FC<LibraryManagerProps> = ({
       setLoadingStatus(editingLibraryId ? 'Updating library...' : 'Creating new library...');
       setIsLoadingDialogOpen(true);
 
-      const sourceData = libraryForm.source === 'googledrive'
-        ? {
-          type: 'googledrive' as const,
-          googleDrive: {
-            spreadsheetUrl: libraryForm.spreadsheetUrl,
-            folderUrl: libraryForm.folderUrl
-          }
-        }
-        : {
-          type: 'local' as const,
-          local: {
-            indexFilename: libraryForm.indexFile?.name || '',
-            svgFilenames: libraryForm.svgFiles.map(file => file.name)
-          }
-        };
+      // const sourceData = libraryForm.source === 'googledrive'
+      //   ? {
+      //     type: 'googledrive' as const,
+      //     googleDrive: {
+      //       spreadsheetUrl: libraryForm.spreadsheetUrl,
+      //       folderUrl: libraryForm.folderUrl
+      //     }
+      //   }
+      //   : {
+      //     type: 'local' as const,
+      //     local: {
+      //       indexFilename: libraryForm.indexFile?.name || '',
+      //       svgFilenames: libraryForm.svgFiles.map(file => file.name)
+      //     }
+      //   };
 
-      let libraryId: string;
+      // let libraryId: string;
       let existingShapes: Shape[] = [];
 
-      if (editingLibraryId) {
-        libraryId = editingLibraryId;
-        const library = SVGLibraryManager.getLibrary(editingLibraryId);
-        if (library) {
-          existingShapes = library.shapes;
-        }
-      } else {
-        const newLibrary = SVGLibraryManager.createLibrary({
-          name: libraryForm.name,
-          description: libraryForm.description,
-          source: sourceData
-        });
-        SVGLibraryManager.addLibrary(newLibrary);
-        libraryId = newLibrary.id;
-      }
+      // if (editingLibraryId) {
+      //   libraryId = editingLibraryId;
+        // const library = SVGLibraryManager.getLibrary(editingLibraryId);
+        // if (library) {
+        //   existingShapes = library.shapes;
+        // }
+      // } else {
+        // const newLibrary = SVGLibraryManager.createLibrary({
+        //   name: libraryForm.name,
+        //   description: libraryForm.description,
+        //   source: sourceData
+        // });
+        // SVGLibraryManager.addLibrary(newLibrary);
+        // createLibraryMutation({ name: libraryForm.name, desctiption: libraryForm.description, type: 'shapes' })
+        // libraryId = newlyAddedLibraryId;
+      // }
 
       let shapes: Shape[] = [];
       if (libraryForm.source === 'googledrive') {
@@ -364,7 +385,17 @@ const LibraryManager: React.FC<LibraryManagerProps> = ({
         }
       }
 
-      await handleUpdateLibrary(libraryId, shapes, sourceData);
+      createShapesMutation({ ...(editingLibraryId && { id: editingLibraryId }), name: libraryForm.name, description: libraryForm.description, updateMode: libraryForm.updateMode, shapes: shapes.map(shape => {
+        return {
+          name: shape.name,
+          description: shape.description,
+          svgContent: shape.svgContent,
+          attachTo: shape.attachTo,
+          type: shape.type
+        }
+      }) })
+
+      // await handleUpdateLibrary(libraryId, shapes, sourceData);
 
       setIsLibraryDialogOpen(false);
       resetForm();
@@ -389,7 +420,7 @@ const LibraryManager: React.FC<LibraryManagerProps> = ({
           <h3 className="text-lg font-medium">{library.name}</h3>
           <p className="text-sm text-gray-400">{library.description}</p>
           <p className="text-xs text-gray-500">
-            Shapes: {library.shapes.length} •
+            Shapes: {library.totalShapes} •
             Last updated: {new Date(library.lastUpdated).toLocaleDateString()}
           </p>
         </div>
@@ -451,7 +482,7 @@ const LibraryManager: React.FC<LibraryManagerProps> = ({
               <h3 className="text-lg font-medium">{library.name}</h3>
               <p className="text-sm text-gray-400">{library.description}</p>
               <p className="text-xs text-gray-500">
-                Shapes: {library.shapes.length} •
+                Shapes: {library.totalShapes} •
                 Last updated: {new Date(library.lastUpdated).toLocaleDateString()}
               </p>
             </div>
