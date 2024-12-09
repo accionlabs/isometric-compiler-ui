@@ -19,15 +19,17 @@ export interface AttachmentPoint extends Point {
     name: string;
 }
 
+// Map of attachment points for a shape, with key as its name
 export interface AttachmentPointMap {
     [key: string]: AttachmentPoint;
 }
 
-export interface ParentAttachmentPointMap {
+// Map of array of all attachment points for a component from its constituent shapes
+export interface ComponentAttachmentPointMap {
     [key: string]: AttachmentPoint[];
 }
 
-export interface GlobalAttachmentPoint extends Point {
+export interface GlobalAttachmentPoint {
     componentId: string; // ID of the component this point belongs to
     attachmentPoints: AttachmentPoint[];
 }
@@ -180,4 +182,12 @@ export interface ComponentTypes {
 // Schema file structure
 export interface SchemaDefinition {
     componentTypes: ComponentTypes;
+}
+
+// Types for Points Library
+export enum Direction {
+    N = "N",
+    S = "S",
+    W = "W",
+    E = "E"
 }

@@ -1,12 +1,12 @@
 import React from 'react';
-import { Handle, Position, NodeProps } from 'reactflow';
-import type { HandleType } from '@reactflow/core';
+import { Node, Handle, Position, NodeProps } from '@xyflow/react';
+import type { HandleType } from '@xyflow/react';
 
-export interface LabelNodeData {
+export type LabelNodeData = Node< {
     label: string;
     handleType?: HandleType;
     isInteractive: boolean;  // Add isInteractive flag
-}
+}>;
 
 const LabelNode = ({ data }: NodeProps<LabelNodeData>) => {
     const handleType = data.handleType ?? 'source';

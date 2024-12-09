@@ -1,7 +1,7 @@
 // lib/exportUtils.ts
 
 import { toPng, toSvg } from 'html-to-image';
-import { ReactFlowInstance } from 'reactflow';
+import { ReactFlowInstance } from '@xyflow/react';
 
 interface ExportOptions {
   fileName?: string;

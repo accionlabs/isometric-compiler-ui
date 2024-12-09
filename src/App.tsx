@@ -55,12 +55,14 @@ const App: React.FC = () => {
     // Add state for component library
     const [components, setComponents] = useState<Component[]>([]);
 
-    const [currentLibraryId, setCurrentLibary] = useState(config.defaultLibraryId)
+    const [currentLibraryId, setCurrentLibary] = useState(
+        config.defaultLibraryId
+    );
 
     const { data: svgShapes = [] } = useQuery({
-        queryKey: ['shapes', currentLibraryId],
-        queryFn: () => getShapes([currentLibraryId]),
-      })
+        queryKey: ["shapes", currentLibraryId],
+        queryFn: () => getShapes([currentLibraryId])
+    });
 
     // Update shapes when active library changes
     const handleLibraryChange = useCallback((libraryId: string) => {
@@ -77,7 +79,7 @@ const App: React.FC = () => {
         //     );
         // }
 
-        setCurrentLibary(libraryId)
+        setCurrentLibary(libraryId);
     }, []);
 
     // update diagram component metadata when added
@@ -227,11 +229,18 @@ const App: React.FC = () => {
                 diagramComponents,
                 selected3DShape,
                 shapeName,
-                attachTo
+                attachTo,
+                selectedPosition,
+                selectedAttachmentPoint
             );
             setDiagramComponents(updatedComponents);
         },
-        [diagramComponents, selected3DShape]
+        [
+            diagramComponents,
+            selected3DShape,
+            selectedPosition,
+            selectedAttachmentPoint
+        ]
     );
 
     const handleRemove3DShape = useCallback(
@@ -534,11 +543,21 @@ const App: React.FC = () => {
     const handleSaveAsComponent = useCallback(
         (name: string, description: string) => {
             try {
+                let selectedShapes = diagramComponents;
+                // if a shape is selected, then copy those shapes that are selected for saving as component
+                if (selected3DShape) {
+                    selectedShapes = diagramComponentsLib.copy3DShape(
+                        diagramComponents,
+                        selected3DShape
+                    );
+                }
                 // Pass true for overwrite since user has already confirmed in dialog
                 const newComponent = componentLibraryManager.createComponent(
                     name,
                     description,
-                    diagramComponents,
+                    selectedShapes,
+                    canvasSize,
+                    svgLibrary,
                     true
                 );
 
@@ -549,6 +568,39 @@ const App: React.FC = () => {
                         svgShapes
                     );
                     setComponents(componentLibraryManager.getAllComponents());
+
+                    // if a shape was selected and we created a component from it, replace the existing shapes with the component
+                    if (selected3DShape) {
+                        const selectedShape = diagramComponentsLib.get3DShape(
+                            diagramComponents,
+                            selected3DShape
+                        );
+                        const position = selectedShape?.position || "top";
+                        const parentId =
+                            selectedShape?.relativeToId ||
+                            diagramComponents[0].id;
+                        const updatedComponents =
+                            diagramComponentsLib.remove3DShape(
+                                diagramComponents,
+                                selected3DShape
+                            );
+                        const result = diagramComponentsLib.addComponentToScene(
+                            updatedComponents,
+                            newComponent.id,
+                            position,
+                            null,
+                            parentId
+                        );
+                        if (result.newComponent) {
+                            console.log(
+                                `App: replaced component ${result.newComponent.id}`
+                            );
+                            setDiagramComponents(result.updatedComponents);
+                            updateSelected3DShape(result.newComponent);
+                        } else {
+                            console.error("Failed to replace new component");
+                        }
+                    }
                     return newComponent;
                 }
                 return null;
@@ -558,7 +610,7 @@ const App: React.FC = () => {
                 return null;
             }
         },
-        [diagramComponents, canvasSize, svgShapes]
+        [diagramComponents, selected3DShape, canvasSize, svgLibrary]
     );
 
     // New handler to delete a component

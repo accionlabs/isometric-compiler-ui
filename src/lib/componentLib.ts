@@ -7,11 +7,16 @@ import {
     DiagramComponent,
     AttachmentPoint,
     AttachmentPointMap,
-    ParentAttachmentPointMap
+    ComponentAttachmentPointMap,
+    GlobalAttachmentPoint,
+    Direction
 } from "../Types";
 import { v4 as uuidv4 } from "uuid";
 import {
     compileDiagram,
+    findBottomMostComponents,
+    findTopMostComponents,
+    getExtremeAttachmentPoints,
     serializeDiagramComponents
 } from "./diagramComponentsLib";
 import { calculateSVGBoundingBox } from "./svgUtils";
@@ -19,6 +24,13 @@ import {
     getGlobalAttachmentPoints,
     getGlobalParentAttachmentPoints
 } from "./diagramComponentsLib";
+import {
+    findCenterPoint,
+    getNormalizeAttachmentPoints,
+    createGridPoints
+} from "./pointUtils";
+import { getAttachmentPoint } from "./diagramComponentsLib";
+import { Underline } from "lucide-react";
 
 // Helper interfaces for attachment point calculation
 
@@ -61,111 +73,32 @@ class ComponentLibraryManager {
         localStorage.setItem("componentLibrary", JSON.stringify(this.library));
     }
 
-    private getNextRow(currentRow: string): string {
-        return String.fromCharCode(currentRow.charCodeAt(0) + 1);
-    }
-
-    private getGridPosition(
-        component: DiagramComponent,
-        basePosition: GridPosition
-    ): GridPosition {
-        const position = component.position;
-
-        if (position === "front-left") {
-            return {
-                row: basePosition.row,
-                column: basePosition.column + 1
-            };
-        } else if (position === "front-right") {
-            return {
-                row: this.getNextRow(basePosition.row),
-                column: basePosition.column
-            };
-        }
-
-        return basePosition;
-    }
-
-    private addParentAttachmentPoints(
+    private addComponentAttachmentPoints(
         attachmentPointsMap: AttachmentPointMap,
-        parentAttachmentPoints: ParentAttachmentPointMap
-    ): ParentAttachmentPointMap {
+        parentAttachmentPoints: ComponentAttachmentPointMap
+    ): ComponentAttachmentPointMap {
         Object.keys(attachmentPointsMap).forEach((name) => {
             if (!parentAttachmentPoints[name]) {
-                parentAttachmentPoints[name]=[];
+                parentAttachmentPoints[name] = [];
             }
             parentAttachmentPoints[name].push(attachmentPointsMap[name]);
         });
         return parentAttachmentPoints;
     }
 
-    private processComponentAttachmentPoints(
-        component: DiagramComponent,
-        attachmentPoints: AttachmentPointMap,
-        parentAttachmentPoints: ParentAttachmentPointMap,
-        gridPosition: GridPosition,
-        components: DiagramComponent[]
-    ): void {
-        // Add this component's parent attachment points
-        this.addParentAttachmentPoints(
-            getGlobalParentAttachmentPoints(component),
-            parentAttachmentPoints
-        );
-
-        // Get this component's attachment points
-        const componentPoints: AttachmentPointMap =
-            getGlobalAttachmentPoints(component) || [];
-
-        // Process attachment points based on position
-        if (["top", "front-left", "front-right"].includes(component.position)) {
-            // update the respective attachment point
-            attachmentPoints[`attach-${component.position}`] =
-                componentPoints[`attach-${component.position}`];
-
-            // create or update grid-based attachment points
-            const topPoint = componentPoints["attach-top"];
-            if (topPoint) {
-                const pointName = `attach-top-${gridPosition.row}${gridPosition.column}`;
-                attachmentPoints[pointName] = { ...topPoint, name: pointName };
-            }
-        }
-
-        // Process child components recursively
-        const childComponents = components.filter(
-            (c) => c.relativeToId === component.id
-        );
-        childComponents.forEach((child) => {
-            const childGridPosition = this.getGridPosition(child, gridPosition);
-            this.processComponentAttachmentPoints(
-                child,
-                attachmentPoints,
-                parentAttachmentPoints,
-                childGridPosition,
-                components
-            );
-        });
-    }
-
     private getNormalizedParentAttachmentPoints(
-        parentAttachmentPoints: ParentAttachmentPointMap,
+        parentAttachmentPoints: ComponentAttachmentPointMap,
         attachmentPoints: AttachmentPointMap
     ): AttachmentPointMap {
-        console.log('parent points',parentAttachmentPoints);
         Object.keys(parentAttachmentPoints).forEach((name) => {
-            if (parentAttachmentPoints[name].length>0) {
-                const normalizedPoint:Point = {x:0, y:0};
-                parentAttachmentPoints[name].forEach((point) => {
-                    normalizedPoint.x += Math.round(point.x);
-                    normalizedPoint.y += Math.round(point.y);
-                });
-                console.log('p:',name,'x:',normalizedPoint.x,'y:',normalizedPoint.y);
-                normalizedPoint.x = normalizedPoint.x / parentAttachmentPoints[name].length;
-                normalizedPoint.y = normalizedPoint.y / parentAttachmentPoints[name].length;
-                console.log('np:',name,'x:',normalizedPoint.x,'y:',normalizedPoint.y);
+            const centerPoint: Point | null = findCenterPoint(
+                parentAttachmentPoints[name]
+            );
+            if (centerPoint) {
                 attachmentPoints[name] = {
                     name,
-                    ...normalizedPoint
-                }
+                    ...centerPoint
+                };
             }
         });
         return attachmentPoints;
@@ -180,54 +113,93 @@ class ComponentLibraryManager {
         const rootComponent = components[0];
         if (!rootComponent.attachmentPoints) return [];
 
-        // Initialize attachment points map with root component's points
-        const attachmentPointsMap: AttachmentPointMap =
-            getGlobalAttachmentPoints(rootComponent);
-        const parentAttachmentPointsMap: ParentAttachmentPointMap =
-            this.addParentAttachmentPoints(
-                getGlobalParentAttachmentPoints(rootComponent),
-                {}
+        // Initialize attachment points map, parent attachment points map and final attachment points for component
+        const attachmentPointsMap: AttachmentPointMap = {};
+        const parentAttachmentPointsMap: ComponentAttachmentPointMap = {};
+        const allAttachmentPoints: ComponentAttachmentPointMap = {};
+
+        // for all standard attachment points, only choose the bottom layer
+        const bottomLayer = findBottomMostComponents(components);
+        bottomLayer.forEach((component) => {
+            this.addComponentAttachmentPoints(
+                getGlobalParentAttachmentPoints(component),
+                parentAttachmentPointsMap
             );
-
-        // Start processing from the root with initial grid position
-        const initialGridPosition: GridPosition = { row: "a", column: 1 };
-        // add the first grid attachment point
-        attachmentPointsMap["attach-top-a1"] = {
-            ...(attachmentPointsMap["attach-top"] || {}),
-            name: "attach-top-a1"
-        };
-
-        // remember how many points are there
-        const numPoints = Object.keys(attachmentPointsMap).length;
-
-        // Process children of root component
-        const childComponents = components.filter(
-            (c) => c.relativeToId === rootComponent.id
-        );
-        childComponents.forEach((child) => {
-            const childGridPosition = this.getGridPosition(
-                child,
-                initialGridPosition
-            );
-            this.processComponentAttachmentPoints(
-                child,
-                attachmentPointsMap,
-                parentAttachmentPointsMap,
-                childGridPosition,
-                components
+            this.addComponentAttachmentPoints(
+                getGlobalAttachmentPoints(component),
+                allAttachmentPoints
             );
         });
 
-        // if no new grid attachment points got added, remove the first grid point
-        if (Object.keys(attachmentPointsMap).length === numPoints) {
-            delete attachmentPointsMap["attach-top-a1"];
+        // check for all non-standard attachment points and create a grid for them
+        const nonStandardPoints: ComponentAttachmentPointMap = {};
+        components.forEach((component) => {
+            const points = getGlobalAttachmentPoints(component);
+            Object.keys(points).forEach((p) => {
+                if (
+                    ![
+                        "attach-top",
+                        "attach-bottom",
+                        "attach-front-left",
+                        "attach-front-right",
+                        "attach-back-left",
+                        "attach-back-right"
+                    ].includes(p)
+                ) {
+                    (nonStandardPoints[p] = nonStandardPoints[p] || []).push(
+                        points[p]
+                    );
+                }
+            });
+        });
+        if (Object.keys(nonStandardPoints).length > 0) {
+            console.log("non std points:", nonStandardPoints);
+            Object.keys(nonStandardPoints).forEach((p) => {
+                const gridPoints = createGridPoints(
+                    nonStandardPoints[p],
+                    Direction.N,
+                    Direction.W
+                );
+                gridPoints.forEach((point) => {
+                    attachmentPointsMap[point.name] = point;
+                });
+            });
         }
 
-        // overwrite attachment points with normalized parent attahment points, if any
+        // For top attachment points, get attachment points of the top most layer
+        const topLayer = findTopMostComponents(components);
+        const topPoints: AttachmentPoint[] = [];
+        topLayer.forEach((component) => {
+            const points = getGlobalAttachmentPoints(component);
+            if (points["attach-top"]) {
+                topPoints.push(points["attach-top"]);
+            }
+        });
+        console.log("topPoints:", topPoints);
+        if (topPoints.length > 0 && topPoints[0] != undefined) {
+            allAttachmentPoints["attach-top"] = topPoints;
+            const gridPoints = createGridPoints(
+                topPoints,
+                Direction.N,
+                Direction.W
+            );
+            gridPoints.forEach((point) => {
+                attachmentPointsMap[point.name] = point;
+            });
+        }
+        // Combine all attachment points into normalized attachment points for the component
+        getNormalizeAttachmentPoints(allAttachmentPoints, attachmentPointsMap);
+
+        // Create a grid of top attachment points using only the topmost components
+        if (topPoints.length > 1) {
+        }
+
+        // overwrite attachment points with normalized parent attachment points, if any
         this.getNormalizedParentAttachmentPoints(
-            parentAttachmentPointsMap, 
+            parentAttachmentPointsMap,
             attachmentPointsMap
         );
+
         // Convert map back to array
         return Object.values(attachmentPointsMap);
     }
@@ -305,6 +277,8 @@ class ComponentLibraryManager {
         name: string,
         description: string,
         diagramComponents: DiagramComponent[],
+        canvasSize:CanvasSize,
+        svgLibrary: Shape[],
         overwrite: boolean = false
     ): Component | null {
         if (this.hasComponent(name) && !overwrite) {
@@ -315,13 +289,27 @@ class ComponentLibraryManager {
 
         // Create deep copy of diagram components to avoid reference issues
         const componentsCopy = JSON.parse(JSON.stringify(diagramComponents));
+        // detach the root from its parent and move it to the center
+        componentsCopy[0].relativeToId = null;
+        componentsCopy[0].absolutePosition = {
+            x: canvasSize.width / 2,
+            y: canvasSize.height / 2
+        };
+        // compile the shapes, so that all the internal shapes' absolute positions are updated
+        const { svgContent, processedComponents } =
+            compileDiagram(
+                componentsCopy,
+                canvasSize,
+                svgLibrary,
+                false
+            );
 
         const component: Component = {
             id: name,
             name,
             description,
-            diagramComponents: componentsCopy,
-            attachmentPoints: this.getAttachmentPoints(diagramComponents),
+            diagramComponents: processedComponents,
+            attachmentPoints: this.getAttachmentPoints(processedComponents),
             created: now,
             lastModified: now
         };
@@ -391,8 +379,6 @@ class ComponentLibraryManager {
                 ${svgRender}
             </svg>
         `;
-        // TODO: We need to remove all attachment points in the svgContent of the individual shapes and add only the component's attachment points
-        // this is required to allow proper selection of the component and attachment points from the SVGNode
 
         // Create a temporary container to parse and modify the SVG
         const parser = new DOMParser();
@@ -405,7 +391,9 @@ class ComponentLibraryManager {
         existingPoints.forEach((point) => point.remove());
 
         // Remove all existing parent attachment points
-        const existingParentPoints = svg.querySelectorAll('circle[id^="parent-attach-"]');
+        const existingParentPoints = svg.querySelectorAll(
+            'circle[id^="parent-attach-"]'
+        );
         existingParentPoints.forEach((point) => point.remove());
 
         // Remove all shape IDs from internal elements

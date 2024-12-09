@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
-import { Handle, Position, NodeProps, useStore } from 'reactflow';
+import { Node, Handle, Position, NodeProps, useStore } from '@xyflow/react';
 import { schemaLoader } from '@/lib/componentSchemaLib';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/Dialog';
 
-interface MetadataNodeData {
+interface MetadataNodeData extends Record<string, unknown> {
   componentId: string;
   type: string;
   metadata: Record<string, any>;
   isInteractive?: boolean;
 }
 
-const MetadataNode: React.FC<NodeProps<MetadataNodeData>> = ({ 
+type MetadataNodeType = Node<MetadataNodeData>;
+
+
+const MetadataNode: React.FC<NodeProps<MetadataNodeType>> = ({ 
   data, 
   id,
   isConnectable = true
@@ -27,8 +30,8 @@ const MetadataNode: React.FC<NodeProps<MetadataNodeData>> = ({
 
   // Small, subtle handle style for connection points
   const handleStyle = {
-    width: '6px',
-    height: '6px',
+    width: '4px',
+    height: '4px',
     background: '#4F46E5',
     border: '1px solid white',
     borderRadius: '50%',
@@ -103,7 +106,7 @@ const MetadataNode: React.FC<NodeProps<MetadataNodeData>> = ({
         />
 
         {/* Content */}
-        <div className="font-medium text-gray-900">
+        <div className="font-normal text-[6px] text-gray-900">
           {name}
         </div>
       </div>

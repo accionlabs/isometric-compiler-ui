@@ -103,7 +103,7 @@ export const extractParentAttachmentPoints = (
     const circles = svgElement.querySelectorAll('circle[id^="parent-attach-"]');
 
     circles.forEach((circle) => {
-        const id = circle.getAttribute("id")?.replace("parent-","");
+        const id = circle.getAttribute("id")?.replace("parent-", "");
         const cx = circle.getAttribute("cx");
         const cy = circle.getAttribute("cy");
 
@@ -133,12 +133,24 @@ export const getAvailableAttachmentPoints = (
 export const getAttachmentPoint = (
     component: DiagramComponent,
     pointName: string
-): Point | null => {
+): AttachmentPoint | null => {
     if (component && component.attachmentPoints) {
         const point = component.attachmentPoints.find(
             (p) => p.name === pointName
         );
-        return point ? { x: point.x, y: point.y } : null;
+        return point || null;
+    }
+    return null;
+};
+
+export const getMatchingAttachmentPoints = (
+    component: DiagramComponent,
+    pointPattern: string
+): AttachmentPoint[] | null => {
+    if (component && component.attachmentPoints) {
+        return component.attachmentPoints.filter(
+            (p) => p.name.match(pointPattern)
+        );
     }
     return null;
 };
@@ -385,7 +397,9 @@ export const add2DShape = (
     diagramComponents: DiagramComponent[],
     selected3DShape: string | null,
     shapeName: string,
-    attachTo: string
+    attachTo: string,
+    position?: string,
+    attachmentPoint?: string | null
 ): DiagramComponent[] => {
     if (selected3DShape !== null) {
         return diagramComponents.map((component) => {
@@ -394,7 +408,10 @@ export const add2DShape = (
                     ...component,
                     attached2DShapes: [
                         ...component.attached2DShapes,
-                        { name: shapeName, attachedTo: attachTo }
+                        { 
+                            name: shapeName, 
+                            attachedTo: (position && attachmentPoint && position === attachTo && attachmentPoint!== 'none')? attachmentPoint : attachTo 
+                        }
                     ]
                 };
             }
@@ -855,8 +872,8 @@ const renderComponent = (
     }
 
     let shape3DElement = null;
-    let attachmentPoints:AttachmentPoint[] = [];
-    let parentAttachmentPoints:AttachmentPoint[] = [];
+    let attachmentPoints: AttachmentPoint[] = [];
+    let parentAttachmentPoints: AttachmentPoint[] = [];
 
     if (component.source === "component") {
         // Get component from library
@@ -900,7 +917,7 @@ export const compileDiagram = (
     svgLibrary: Shape[],
     showAttachmentPoints: boolean
 ): { svgContent: string; processedComponents: DiagramComponent[] } => {
-    console.log("Compiling diagram...", diagramComponents);
+    //console.log("Compiling diagram...", diagramComponents);
 
     // Standardize component IDs before processing
     const standardizedComponents = standardizeComponentIds(diagramComponents);
@@ -923,7 +940,8 @@ export const compileDiagram = (
             return;
         }
 
-        const { shape3DElement, attachmentPoints, parentAttachmentPoints } = renderedComponent;
+        const { shape3DElement, attachmentPoints, parentAttachmentPoints } =
+            renderedComponent;
 
         component.attachmentPoints = attachmentPoints;
         component.parentAttachmentPoints = parentAttachmentPoints;
@@ -962,14 +980,6 @@ export const compileDiagram = (
                 const attach3DPoint = getAttachmentPoint(
                     component,
                     `attach-${attached2DShape.attachedTo}`
-                );
-                console.log(
-                    "attach2D point",
-                    attach2DPoints,
-                    "attach to",
-                    attached2DShape.attachedTo,
-                    "attach3D point",
-                    attach3DPoint
                 );
                 if (attach2DPoints.length > 0 && attach3DPoint) {
                     const dx = attach3DPoint.x - attach2DPoints[0].x;
@@ -1136,7 +1146,6 @@ export const extractGlobalAttachmentPoints = (
     return globalPoints;
 };
 
-
 // Helper function to get a specific component's attachment points' global coordinates
 const getSpecifiedGlobalAttachmentPoints = (
     component: DiagramComponent,
@@ -1169,7 +1178,7 @@ export const getGlobalAttachmentPoints = (
         return {};
     }
 
-    return getSpecifiedGlobalAttachmentPoints(component,'attachmentPoints');
+    return getSpecifiedGlobalAttachmentPoints(component, "attachmentPoints");
 };
 
 export const getGlobalParentAttachmentPoints = (
@@ -1179,7 +1188,10 @@ export const getGlobalParentAttachmentPoints = (
         return {};
     }
 
-    return getSpecifiedGlobalAttachmentPoints(component,'parentAttachmentPoints');
+    return getSpecifiedGlobalAttachmentPoints(
+        component,
+        "parentAttachmentPoints"
+    );
 };
 
 // Helper function to find the closest attachment point to a given coordinate
@@ -1225,6 +1237,87 @@ export const findClosestGlobalAttachmentPoint = (
     }
 
     return closestPoint;
+};
+
+// Find all components that have no other components placed on top of them
+export const findTopMostComponents = (
+    components: DiagramComponent[]
+): DiagramComponent[] => {
+    return components.filter((component) => {
+        return !components.some(
+            (other) =>
+                other.relativeToId === component.id &&
+                other.position === "top"
+        );
+    });
+};
+
+// Find all components that are not placed on top of any other components
+export const findBottomMostComponents = (
+    components: DiagramComponent[]
+): DiagramComponent[] => {
+    return components.filter((component) => {
+        return (
+            component.relativeToId === null ||
+            component.position !== "top"
+        );
+    });
+};
+
+export const getExtremeAttachmentPoints = (
+    components: DiagramComponent[]
+): { topPoints: AttachmentPoint[]; bottomPoints: AttachmentPoint[] } => {
+    const topMostComponents = findTopMostComponents(components);
+    const bottomMostComponents = findBottomMostComponents(components);
+    console.log(
+        "components:",
+        components,
+        "topmost:",
+        topMostComponents,
+        "bottommost:",
+        bottomMostComponents
+    );
+
+    const topPoints: AttachmentPoint[] = [];
+    const bottomPoints: AttachmentPoint[] = [];
+
+    // Extract top attachment points from topmost components
+    topMostComponents.forEach(component => {
+        if (component.attachmentPoints) {
+            const topAttachPoints = component.attachmentPoints.filter(point => 
+                point.name.startsWith('attach-top')
+            );
+            if (component.absolutePosition) {
+                topAttachPoints.forEach(point => {
+                    topPoints.push({
+                        ...point,
+                        x: point.x + component.absolutePosition!.x,
+                        y: point.y + component.absolutePosition!.y
+                    });
+                });
+            }
+        }
+    });
+
+    // Extract bottom attachment points from bottommost components
+    bottomMostComponents.forEach(component => {
+        if (component.attachmentPoints) {
+            const bottomAttachPoints = component.attachmentPoints.filter(point =>
+                point.name.startsWith('attach-bottom')
+            );
+            if (component.absolutePosition) {
+                bottomAttachPoints.forEach(point => {
+                    bottomPoints.push({
+                        ...point,
+                        x: point.x + component.absolutePosition!.x,
+                        y: point.y + component.absolutePosition!.y
+                    });
+                });
+            }
+        }
+    });
+
+    return { topPoints, bottomPoints };
 };
 
 export const serializeDiagramComponents = (

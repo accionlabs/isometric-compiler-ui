@@ -5,7 +5,8 @@ import React, {
     MouseEvent as ReactMouseEvent,
     useMemo
 } from "react";
-import ReactFlow, {
+import {
+    ReactFlow, 
     ReactFlowProvider,
     Node,
     Edge,
@@ -21,14 +22,14 @@ import ReactFlow, {
     ReactFlowState,
     useStore,
     XYPosition
-} from "reactflow";
-import "reactflow/dist/style.css";
+} from "@xyflow/react";
+import '@xyflow/react/dist/style.css';
 
 import { DiagramComponent, CanvasSize } from "@/Types";
-import SVGNode from "@/components/ui/SVGNode";
-import LabelNode from "@/components/ui/LabelNode";
-import CustomEdge from "@/components/ui/CustomEdge";
-import MetadataNode from "@/components/ui/MetadataNode";
+import SVGNode from "@/components/flow/SVGNode";
+import LabelNode from "@/components/flow/LabelNode";
+import CustomEdge from "@/components/flow/CustomEdge";
+import MetadataNode from "@/components/flow/MetadataNode";
 
 interface FlowSVGDisplayProps {
     svgContent: string;
@@ -151,8 +152,8 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
     setSelectedPosition,
     setSelectedAttachmentPoint
 }) => {
-    const [nodes, setNodes, onNodesChange] = useNodesState<Node[]>([]);
-    const [edges, setEdges, onEdgesChange] = useEdgesState<Edge[]>([]);
+    const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
+    const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
     const [isConnecting, setIsConnecting] = useState(false);
     const store = useStoreApi();
     const { fitView } = useReactFlow();
@@ -215,7 +216,7 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
     // Track connection state
     useEffect(() => {
         const subscription = store.subscribe((state: ReactFlowState) => {
-            setIsConnecting(state.connectionStartHandle !== null);
+            setIsConnecting(state.connectionClickStartHandle !== null);
         });
         return () => subscription();
     }, [store]);
@@ -261,6 +262,7 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
 
     return (
         <ReactFlow
+            colorMode="light"
             nodes={nodes}
             edges={edges}
             nodeTypes={nodeTypes}
@@ -295,6 +297,12 @@ const FlowSVGDisplay: React.FC<FlowSVGDisplayProps> = (props) => {
             </ReactFlowProvider>
             <style>
                 {`
+                    .react-flow__controls-button {
+                        background-color:#555;
+                    }
+                    .react-flow__controls-button:hover {
+                        background-color:#777;
+                    }
                     .react-flow__node {
                         max-width: none;
                         max-height: none;

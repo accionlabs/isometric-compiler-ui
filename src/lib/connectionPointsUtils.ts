@@ -1,4 +1,4 @@
-import { Position } from 'reactflow';
+import { Position } from '@xyflow/react';
 import type { DiagramComponent, AttachmentPoint } from '../Types';
 
 export interface ConnectionPoint {
