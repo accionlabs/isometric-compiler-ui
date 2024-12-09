@@ -277,7 +277,7 @@ class ComponentLibraryManager {
         name: string,
         description: string,
         diagramComponents: DiagramComponent[],
-        canvasSize:CanvasSize,
+        canvasSize: CanvasSize,
         svgLibrary: Shape[],
         overwrite: boolean = false
     ): Component | null {
@@ -296,13 +296,12 @@ class ComponentLibraryManager {
             y: canvasSize.height / 2
         };
         // compile the shapes, so that all the internal shapes' absolute positions are updated
-        const { svgContent, processedComponents } =
-            compileDiagram(
-                componentsCopy,
-                canvasSize,
-                svgLibrary,
-                false
-            );
+        const { svgContent, processedComponents } = compileDiagram(
+            componentsCopy,
+            canvasSize,
+            svgLibrary,
+            false
+        );
 
         const component: Component = {
             id: name,
@@ -360,66 +359,62 @@ class ComponentLibraryManager {
         if (!component) {
             throw new Error(`Component with id ${id} not found`);
         }
+        // Compile the diagram to generate the initial SVG content
         const { svgContent: svgRender } = compileDiagram(
             component.diagramComponents,
             canvasSize,
             svgLibrary,
             false
         );
-
+        // Calculate the bounding box for the viewBox
         const boundingBox = calculateSVGBoundingBox(svgRender, canvasSize) || {
             x: 0,
             y: 0,
             width: "100%",
             height: "100%"
         };
-
+        // Wrap the SVG content with required viewBox, width, and height
         const wrappedSvg: string = `
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="${boundingBox.x} ${boundingBox.y} ${boundingBox.width} ${boundingBox.height}" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
                 ${svgRender}
             </svg>
         `;
-
-        // Create a temporary container to parse and modify the SVG
+        // Parse the SVG content from the string using DOMParser
         const parser = new DOMParser();
-        // Wrap the content in an SVG tag for proper parsing
         const doc = parser.parseFromString(wrappedSvg, "image/svg+xml");
-        const svg = doc.documentElement;
-
-        // Remove all existing attachment points
-        const existingPoints = svg.querySelectorAll('circle[id^="attach-"]');
-        existingPoints.forEach((point) => point.remove());
-
-        // Remove all existing parent attachment points
-        const existingParentPoints = svg.querySelectorAll(
-            'circle[id^="parent-attach-"]'
+        const svg = doc.querySelector("svg"); // Extract the <svg> tag from the document
+        if (!svg) {
+            throw new Error("Failed to parse SVG content");
+        }
+        // 🗑️ Remove all existing attachment points
+        svg.querySelectorAll('circle[id^="attach-"]').forEach((point) =>
+            point.remove()
         );
-        existingParentPoints.forEach((point) => point.remove());
-
-        // Remove all shape IDs from internal elements
-        const shapesWithIds = svg.querySelectorAll('g[id^="shape-"]');
-        shapesWithIds.forEach((shape) => shape.removeAttribute("id"));
-
-        // Create SVG namespace element for creating new elements
+        // 🗑️ Remove all existing parent attachment points
+        svg.querySelectorAll('circle[id^="parent-attach-"]').forEach((point) =>
+            point.remove()
+        );
+        // 🗑️ Remove all shape IDs from internal elements
+        svg.querySelectorAll('g[id^="shape-"]').forEach((shape) =>
+            shape.removeAttribute("id")
+        );
+        // Create attachment points in the SVG
         const svgNS = "http://www.w3.org/2000/svg";
-
-        // Add new attachment points based on component's attachment points
         component.attachmentPoints.forEach((point) => {
             const circle = document.createElementNS(svgNS, "circle");
             circle.setAttribute("id", point.name);
             circle.setAttribute("cx", point.x.toString());
             circle.setAttribute("cy", point.y.toString());
-            circle.setAttribute("r", "1");
+            circle.setAttribute("r", "3"); // Increased radius for visibility
             circle.setAttribute("fill", "red");
-            //circle.setAttribute('style', 'display: none;'); // Hidden by default
             svg.appendChild(circle);
         });
-
+        // Serialize ONLY the <svg> tag, not the entire document
         const serializer = new XMLSerializer();
         const svgContent = serializer.serializeToString(svg);
-
         // Update the component with the new SVG content
         this.updateComponent(id, { svgContent });
+        // ✅ Return only the SVG string (no extra HTML)
         return svgContent;
     }
 
