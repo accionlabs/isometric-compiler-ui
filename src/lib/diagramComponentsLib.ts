@@ -148,8 +148,8 @@ export const getMatchingAttachmentPoints = (
     pointPattern: string
 ): AttachmentPoint[] | null => {
     if (component && component.attachmentPoints) {
-        return component.attachmentPoints.filter(
-            (p) => p.name.match(pointPattern)
+        return component.attachmentPoints.filter((p) =>
+            p.name.match(pointPattern)
         );
     }
     return null;
@@ -408,9 +408,15 @@ export const add2DShape = (
                     ...component,
                     attached2DShapes: [
                         ...component.attached2DShapes,
-                        { 
-                            name: shapeName, 
-                            attachedTo: (position && attachmentPoint && position === attachTo && attachmentPoint!== 'none')? attachmentPoint : attachTo 
+                        {
+                            name: shapeName,
+                            attachedTo:
+                                position &&
+                                attachmentPoint &&
+                                position === attachTo &&
+                                attachmentPoint !== "none"
+                                    ? attachmentPoint
+                                    : attachTo
                         }
                     ]
                 };
@@ -929,7 +935,6 @@ export const compileDiagram = (
     const processedComponents: DiagramComponent[] = [];
 
     orderedComponents.forEach((component) => {
-        console.log("first orderedComponents", orderedComponents);
         const renderedComponent = renderComponent(
             component,
             canvasSize,
@@ -1247,8 +1252,7 @@ export const findTopMostComponents = (
     return components.filter((component) => {
         return !components.some(
             (other) =>
-                other.relativeToId === component.id &&
-                other.position === "top"
+                other.relativeToId === component.id && other.position === "top"
         );
     });
 };
@@ -1258,10 +1262,7 @@ export const findBottomMostComponents = (
     components: DiagramComponent[]
 ): DiagramComponent[] => {
     return components.filter((component) => {
-        return (
-            component.relativeToId === null ||
-            component.position !== "top"
-        );
+        return component.relativeToId === null || component.position !== "top";
     });
 };
 
@@ -1283,13 +1284,13 @@ export const getExtremeAttachmentPoints = (
     const bottomPoints: AttachmentPoint[] = [];
 
     // Extract top attachment points from topmost components
-    topMostComponents.forEach(component => {
+    topMostComponents.forEach((component) => {
         if (component.attachmentPoints) {
-            const topAttachPoints = component.attachmentPoints.filter(point => 
-                point.name.startsWith('attach-top')
+            const topAttachPoints = component.attachmentPoints.filter((point) =>
+                point.name.startsWith("attach-top")
             );
             if (component.absolutePosition) {
-                topAttachPoints.forEach(point => {
+                topAttachPoints.forEach((point) => {
                     topPoints.push({
                         ...point,
                         x: point.x + component.absolutePosition!.x,
@@ -1301,13 +1302,13 @@ export const getExtremeAttachmentPoints = (
     });
 
     // Extract bottom attachment points from bottommost components
-    bottomMostComponents.forEach(component => {
+    bottomMostComponents.forEach((component) => {
         if (component.attachmentPoints) {
-            const bottomAttachPoints = component.attachmentPoints.filter(point =>
-                point.name.startsWith('attach-bottom')
+            const bottomAttachPoints = component.attachmentPoints.filter(
+                (point) => point.name.startsWith("attach-bottom")
             );
             if (component.absolutePosition) {
-                bottomAttachPoints.forEach(point => {
+                bottomAttachPoints.forEach((point) => {
                     bottomPoints.push({
                         ...point,
                         x: point.x + component.absolutePosition!.x,

@@ -7,10 +7,10 @@ import {
     LibraryData,
     Shape
 } from "@/Types";
-import { Description } from "@radix-ui/react-dialog";
-export async function getLibraries(): Promise<LibraryData[]> {
+
+export async function getLibraries(type: string): Promise<LibraryData[]> {
     const libraryRes: any[] = await fetcher(
-        `${config.gatewayApiUrl}/isometric/library?status=active`,
+        `${config.gatewayApiUrl}/isometric/library?status=active&type=${type}`,
         "get",
         undefined,
         true
@@ -103,6 +103,7 @@ export async function updateShape(payload: Shape): Promise<any> {
     );
     return shapeResp;
 }
+
 export async function createBulkShapes(payload: {
     updateMode?: "replace" | "append";
     id?: string;
@@ -134,7 +135,20 @@ export async function getComponents(
     if (libraryIds) {
         query = libraryIds.map((library) => `libraryIds=${library}`).join("&");
     }
-
+    type ComponentResp = {
+        id: string;
+        slug: string;
+        name: string;
+        description: string;
+        metadata: {
+            attachmentPoints: AttachmentPoint[];
+            diagramComponents: DiagramComponent[];
+        };
+        status: string;
+        createdat: string;
+        updatedat: string;
+        library_id: string;
+    };
     try {
         const compresp: ComponentResp[] = await fetcher(
             `${config.gatewayApiUrl}/isometric/component?${query}&status=active`,
@@ -142,7 +156,7 @@ export async function getComponents(
             undefined,
             true
         );
-
+        console.log("updatedShapes", compresp);
         const updatedShapes: Component[] = compresp.map((comp) => {
             return {
                 id: comp.name,
@@ -152,6 +166,7 @@ export async function getComponents(
                 diagramComponents: comp.metadata.diagramComponents,
                 description: comp.description,
                 status: comp.status as "active" | "inactive",
+                library_id: comp.library_id,
                 created: new Date(comp.createdat),
                 lastModified: new Date(comp.updatedat)
             };
@@ -160,26 +175,47 @@ export async function getComponents(
         return updatedShapes;
     } catch (error) {
         console.error("Error fetching components", error);
-        return []; // Return an empty array if an error occurs
+        return [];
     }
 }
 
-type ComponentResp = {
-    id: string;
-    slug: string;
-    name: string;
-    description: string;
-    metadata: {
-        attachmentPoints: AttachmentPoint[];
-        diagramComponents: DiagramComponent[];
+export async function createComponent(payload: Component): Promise<any> {
+    const body = {
+        name: payload.name,
+        description: payload.description,
+        metadata: {
+            attachmentPoints: payload.attachmentPoints,
+            diagramComponents: payload.diagramComponents
+        },
+        libraryId: "2",
+        status: payload.status,
+        svgContent: "<svg></svg>"
     };
-    status: string;
-    createdat: string; // ISO date string
-    updatedat: string; // ISO date string
-    library_name: string;
-    library_metadata: {
-        [key: string]: string; // flexible key-value pair for metadata
+
+    const createCompRes = await fetcher(
+        `${config.gatewayApiUrl}/isometric/component`,
+        "post",
+        body,
+        true
+    );
+    return createCompRes;
+}
+
+export async function updateComponent(payload: Component): Promise<any> {
+    const body = {
+        description: payload.description,
+        metadata: {
+            attachmentPoints: payload.attachmentPoints,
+            diagramComponents: payload.diagramComponents
+        },
+        status: payload.status
     };
-    library_type: string;
-    library_status: string;
-};
+
+    const createCompRes = await fetcher(
+        `${config.gatewayApiUrl}/isometric/component/${payload.dbId}`,
+        "put",
+        body,
+        true
+    );
+    return createCompRes;
+}

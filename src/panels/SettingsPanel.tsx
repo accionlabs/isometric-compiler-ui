@@ -1,19 +1,20 @@
-import React from 'react';
-import { Button } from '../components/ui/Button';
-import { Input } from '../components/ui/Input';
-import { Checkbox } from '../components/ui/Checkbox';
-import LibraryManager from './LibraryManager';
-import { Shape } from '../Types';
-import { StorageType } from '../lib/fileOperations';
-import { ToggleGroup, ToggleGroupOption } from '../components/ui/ToggleGroup';
+import React, { useState } from "react";
+import { Button } from "../components/ui/Button";
+import { Input } from "../components/ui/Input";
+import { Checkbox } from "../components/ui/Checkbox";
+import LibraryManager from "./LibraryManager";
+import { Shape } from "../Types";
+import { StorageType } from "../lib/fileOperations";
+import { ToggleGroup, ToggleGroupOption } from "../components/ui/ToggleGroup";
 
 interface SettingsPanelProps {
     canvasSize: { width: number; height: number };
     onSetCanvasSize: (size: { width: number; height: number }) => void;
     fileName: string;
     setFileName: (name: string) => void;
-    activeLibrary: string;
-    onLibraryChange: (libraryId: string) => void;
+    activeShapesLibrary: string;
+    activeComponentsLibrary: string;
+    onLibraryChange: (libraryId: string, type: "components" | "shapes") => void;
     onSaveDiagram: () => void;
     onLoadDiagram: (file?: File) => Promise<void>;
     folderPath: string;
@@ -31,7 +32,8 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
     onSetCanvasSize,
     fileName,
     setFileName,
-    activeLibrary,
+    activeShapesLibrary,
+    activeComponentsLibrary,
     onLibraryChange,
     onSaveDiagram,
     onLoadDiagram,
@@ -42,15 +44,17 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
     setShowAttachmentPoints,
     onUpdateShapes,
     storageType,
-    onStorageTypeChange,
+    onStorageTypeChange
 }) => {
     const storageOptions: ToggleGroupOption[] = [
-        { value: StorageType.Local, label: 'Local File' },
-        { value: StorageType.GoogleDrive, label: 'Google Drive' }
+        { value: StorageType.Local, label: "Local File" },
+        { value: StorageType.GoogleDrive, label: "Google Drive" }
     ];
 
     const fileInputRef = React.useRef<HTMLInputElement>(null);
-
+    const [activePanel, setActivePanel] = useState<"shapes" | "components">(
+        "shapes"
+    );
     const handleFileSelect = () => {
         fileInputRef.current?.click();
     };
@@ -64,7 +68,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
         if (file) {
             onLoadDiagram(file);
             // Clear the input so the same file can be selected again if needed
-            event.target.value = '';
+            event.target.value = "";
         }
     };
 
@@ -78,7 +82,12 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                         <input
                             type="number"
                             value={canvasSize.width}
-                            onChange={(e) => onSetCanvasSize({ ...canvasSize, width: parseInt(e.target.value) })}
+                            onChange={(e) =>
+                                onSetCanvasSize({
+                                    ...canvasSize,
+                                    width: parseInt(e.target.value)
+                                })
+                            }
                             className="w-full bg-gray-700 text-white p-2 rounded"
                         />
                     </div>
@@ -87,7 +96,12 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                         <input
                             type="number"
                             value={canvasSize.height}
-                            onChange={(e) => onSetCanvasSize({ ...canvasSize, height: parseInt(e.target.value) })}
+                            onChange={(e) =>
+                                onSetCanvasSize({
+                                    ...canvasSize,
+                                    height: parseInt(e.target.value)
+                                })
+                            }
                             className="w-full bg-gray-700 text-white p-2 rounded"
                         />
                     </div>
@@ -97,10 +111,14 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                             <Checkbox
                                 id="show-attachment-points"
                                 checked={showAttachmentPoints}
-                                onCheckedChange={(checked) => setShowAttachmentPoints(checked as boolean)}
+                                onCheckedChange={(checked) =>
+                                    setShowAttachmentPoints(checked as boolean)
+                                }
                                 className="mr-2"
                             />
-                            <label htmlFor="show-attachment-points">{showAttachmentPoints ? "Show" : "Hide"}</label>
+                            <label htmlFor="show-attachment-points">
+                                {showAttachmentPoints ? "Show" : "Hide"}
+                            </label>
                         </div>
                     </div>
                 </div>
@@ -127,8 +145,10 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 </div>
 
                 {storageType === StorageType.GoogleDrive && (
-                <div className="mb-4">
-                        <label className="block mb-2">Google Drive Folder Path:</label>
+                    <div className="mb-4">
+                        <label className="block mb-2">
+                            Google Drive Folder Path:
+                        </label>
                         <Input
                             type="text"
                             value={folderPath}
@@ -145,7 +165,10 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                     </Button>
                     {storageType === StorageType.Local ? (
                         <>
-                            <Button onClick={handleFileSelect} className="flex-1">
+                            <Button
+                                onClick={handleFileSelect}
+                                className="flex-1"
+                            >
                                 Load Diagram
                             </Button>
                             <input
@@ -157,21 +180,53 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                             />
                         </>
                     ) : (
-                        <Button onClick={() => onLoadDiagram()} className="flex-1">
+                        <Button
+                            onClick={() => onLoadDiagram()}
+                            className="flex-1"
+                        >
                             Load Diagram
                         </Button>
-                    )}                    <Button onClick={onDownloadSVG} className="flex-1">
+                    )}{" "}
+                    <Button onClick={onDownloadSVG} className="flex-1">
                         Download SVG
                     </Button>
                 </div>
             </div>
+            {/* Tab buttons */}
+            <div className="flex flex-row justify-between border-b border-gray-700">
+                <button
+                    onClick={() => setActivePanel("shapes")}
+                    className={`flex-col h-12 w-1/3 py-2 ${
+                        activePanel === "shapes" ? "bg-blue-600" : "bg-gray-800"
+                    } `}
+                >
+                    Shapes Library
+                </button>
+                <button
+                    onClick={() => setActivePanel("components")}
+                    className={`flex-col h-12 w-1/3 py-2 ${
+                        activePanel === "components"
+                            ? "bg-blue-600"
+                            : "bg-gray-800"
+                    }`}
+                >
+                    Components Library
+                </button>
+            </div>
 
-            <div className="mb-6">
+            <div className="py-6">
+                {/* {activePanel === "shapes" && ( */}
                 <LibraryManager
-                    activeLibrary={activeLibrary}
+                    typeOfLibrary={activePanel}
+                    activeLibrary={
+                        activePanel === "shapes"
+                            ? activeShapesLibrary
+                            : activeComponentsLibrary
+                    }
                     onLibraryChange={onLibraryChange}
                     onUpdateShapes={onUpdateShapes}
                 />
+                {/* )} */}
             </div>
         </div>
     );

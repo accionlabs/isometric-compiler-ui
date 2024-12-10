@@ -75,6 +75,7 @@ export interface DiagramComponent {
 // New interfaces for Component Library
 export interface Component {
     id: string;
+    dbId?: string;
     name: string;
     description: string;
     diagramComponents: DiagramComponent[];

@@ -1,30 +1,52 @@
-import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/Dialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/AlertDialog';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { Textarea } from '@/components/ui/Textarea';
-import { componentLibraryManager } from '@/lib/componentLib';
+import React, { useState } from "react";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle
+} from "@/components/ui/Dialog";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle
+} from "@/components/ui/AlertDialog";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Textarea } from "@/components/ui/Textarea";
+import { componentLibraryManager } from "@/lib/componentLib";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { createComponent } from "@/services/library";
+import { Checkbox } from "@/components/ui/Checkbox";
 
 interface SaveComponentDialogProps {
     isOpen: boolean;
     onClose: () => void;
-    onSave: (name: string, description: string) => void;
+    onSave: (
+        name: string,
+        description: string,
+        status: "active" | "inactive"
+    ) => void;
 }
 
 const SaveComponentDialog: React.FC<SaveComponentDialogProps> = ({
     isOpen,
     onClose,
-    onSave,
+    onSave
 }) => {
-    const [name, setName] = useState('');
-    const [description, setDescription] = useState('');
+    const [name, setName] = useState("");
+    const [isActive, setIsActive] = useState<"active" | "inactive">("active");
+    const [description, setDescription] = useState("");
     const [error, setError] = useState<string | null>(null);
     const [showOverwriteDialog, setShowOverwriteDialog] = useState(false);
 
     const handleSubmit = () => {
         if (!name.trim()) {
-            setError('Component name is required');
+            setError("Component name is required");
             return;
         }
 
@@ -38,13 +60,13 @@ const SaveComponentDialog: React.FC<SaveComponentDialogProps> = ({
     };
 
     const handleSaveComponent = () => {
-        onSave(name.trim(), description.trim());
+        onSave(name.trim(), description.trim(), isActive);
         handleClose();
     };
 
     const handleClose = () => {
-        setName('');
-        setDescription('');
+        setName("");
+        setDescription("");
         setError(null);
         setShowOverwriteDialog(false);
         onClose();
@@ -53,19 +75,19 @@ const SaveComponentDialog: React.FC<SaveComponentDialogProps> = ({
     return (
         <>
             <Dialog open={isOpen} onOpenChange={handleClose}>
-                <DialogContent 
+                <DialogContent
                     className="bg-gray-800 text-white"
                     aria-describedby="dialog-description"
                 >
                     <DialogHeader>
                         <DialogTitle>Save as Component</DialogTitle>
                     </DialogHeader>
-                    
+
                     {/* Hidden description for screen readers */}
                     <span id="dialog-description" className="sr-only">
                         Create a reusable component from the current composition
                     </span>
-                    
+
                     <div className="space-y-4 mt-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-200 mb-1">
@@ -78,7 +100,9 @@ const SaveComponentDialog: React.FC<SaveComponentDialogProps> = ({
                                 className="w-full bg-gray-700 text-white border-gray-600"
                             />
                             {error && (
-                                <div className="text-red-400 text-sm mt-1">{error}</div>
+                                <div className="text-red-400 text-sm mt-1">
+                                    {error}
+                                </div>
                             )}
                         </div>
 
@@ -94,7 +118,26 @@ const SaveComponentDialog: React.FC<SaveComponentDialogProps> = ({
                                 rows={3}
                             />
                         </div>
-
+                        <div>
+                            <label className="block text-sm font-medium text-gray-200 mb-1">
+                                Toggle Component State
+                            </label>
+                            <div className="flex gap-2 ">
+                                <Checkbox
+                                    id="show-shape-active-state"
+                                    className="text-white mt-0.5"
+                                    checked={isActive === "active"}
+                                    onCheckedChange={(checked) =>
+                                        setIsActive(
+                                            checked ? "active" : "inactive"
+                                        )
+                                    }
+                                />
+                                <span className="block text-sm font-medium text-gray-200">
+                                    {isActive}
+                                </span>
+                            </div>
+                        </div>
                         <div className="flex justify-end space-x-2">
                             <Button
                                 onClick={handleClose}
@@ -114,16 +157,24 @@ const SaveComponentDialog: React.FC<SaveComponentDialogProps> = ({
                 </DialogContent>
             </Dialog>
 
-            <AlertDialog open={showOverwriteDialog} onOpenChange={setShowOverwriteDialog}>
+            <AlertDialog
+                open={showOverwriteDialog}
+                onOpenChange={setShowOverwriteDialog}
+            >
                 <AlertDialogContent className="bg-gray-800 text-white">
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Overwrite Existing Component?</AlertDialogTitle>
+                        <AlertDialogTitle>
+                            Overwrite Existing Component?
+                        </AlertDialogTitle>
                         <AlertDialogDescription>
-                            A component with the name "{name}" already exists. Do you want to overwrite it?
+                            A component with the name "{name}" already exists.
+                            Do you want to overwrite it?
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel onClick={() => setShowOverwriteDialog(false)}>
+                        <AlertDialogCancel
+                            onClick={() => setShowOverwriteDialog(false)}
+                        >
                             Cancel
                         </AlertDialogCancel>
                         <AlertDialogAction onClick={handleSaveComponent}>

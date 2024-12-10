@@ -12,11 +12,13 @@ import { createKeyboardShortcuts } from "./KeyboardShortcuts";
 import { SVGLibraryManager } from "./lib/svgLibraryUtils";
 import { schemaLoader } from "./lib/componentSchemaLib";
 import { StorageType, loadFile, saveFile } from "./lib/fileOperations";
-import { useQuery } from "@tanstack/react-query";
-import { getComponents, getShapes } from "./services/library";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { createComponent, getComponents, getShapes } from "./services/library";
 import { config } from "./config";
 
 const App: React.FC = () => {
+    const queryClient = useQueryClient();
+
     // const [svgLibrary, setSvgLibrary] = useState<Shape[]>([]);
     const [diagramComponents, setDiagramComponents] = useState<
         DiagramComponent[]
@@ -53,41 +55,84 @@ const App: React.FC = () => {
     );
 
     // Add state for component library
-    const [components, setComponents] = useState<Component[]>([]);
 
     const [currentShapeLibraryId, setCurrentShapeLibraryId] = useState(
-        config.defaultLibraryId
+        localStorage.getItem("active_shapes_library") ||
+            config.defaultShapesLibraryId
     );
     const [currentComponentLibraryId, setCurrentComponentLibraryId] = useState(
-        config.defaultLibraryId
+        localStorage.getItem("active_components_library") ||
+            config.defaultComponentsLibraryId
     );
-
+    const [components, setComponents] = useState<Component[]>([]);
     const { data: svgShapes = [] } = useQuery({
         queryKey: ["shapes", currentShapeLibraryId],
         queryFn: () => getShapes([currentShapeLibraryId])
     });
-    const { data: componentsResp = [] } = useQuery({
+    const { data: componentsRes = [] } = useQuery({
         queryKey: ["components", currentComponentLibraryId],
         queryFn: () => getComponents([currentComponentLibraryId]),
         enabled: svgShapes.length > 0
     });
+
+    const { mutate } = useMutation({
+        mutationFn: createComponent,
+        onError: (e) => {
+            console.log("Error creating library", e);
+        },
+        onSuccess: (newComponent) => {
+            queryClient.refetchQueries({
+                queryKey: ["components"]
+            });
+            // .then(() => {
+            //     if (selected3DShape) {
+            //         const selectedShape = diagramComponentsLib.get3DShape(
+            //             diagramComponents,
+            //             selected3DShape
+            //         );
+            //         const position = selectedShape?.position || "top";
+            //         const parentId =
+            //             selectedShape?.relativeToId ||
+            //             diagramComponents[0].id;
+            //         const updatedComponents =
+            //             diagramComponentsLib.remove3DShape(
+            //                 diagramComponents,
+            //                 selected3DShape
+            //             );
+            //         const result = diagramComponentsLib.addComponentToScene(
+            //             updatedComponents,
+            //             newComponent.name,
+            //             position,
+            //             null,
+            //             parentId
+            //         );
+            //         if (result.newComponent) {
+            //             console.log(
+            //                 `App: replaced component ${result.newComponent.id}`
+            //             );
+            //             setDiagramComponents(result.updatedComponents);
+            //             updateSelected3DShape(result.newComponent);
+            //         } else {
+            //             console.error("Failed to replace new component");
+            //         }
+            //     }
+            // });
+            //     // if a shape was selected and we created a component from it, replace the existing shapes with the component
+        }
+    });
     // Update shapes when active library changes
-    const handleLibraryChange = useCallback((libraryId: string) => {
-        // setActiveLibrary(libraryId);
-        // localStorage.setItem("activeLibrary", libraryId);
-
-        // const library = SVGLibraryManager.getLibrary(libraryId);
-        // if (library) {
-        //     setSvgLibrary(library.shapes);
-        //     // render all components, if any
-        //     componentLibraryManager.renderAllComponents(
-        //         canvasSize,
-        //         library.shapes
-        //     );
-        // }
-
-        setCurrentShapeLibraryId(libraryId);
-    }, []);
+    const handleLibraryChange = (
+        libraryId: string,
+        type: "components" | "shapes"
+    ) => {
+        if (type === "components") {
+            localStorage.setItem("active_components_library", libraryId);
+            setCurrentComponentLibraryId(libraryId);
+        } else {
+            localStorage.setItem("active_shapes_library", libraryId);
+            setCurrentShapeLibraryId(libraryId);
+        }
+    };
 
     // update diagram component metadata when added
     const handleUpdateMetadata = useCallback(
@@ -548,7 +593,7 @@ const App: React.FC = () => {
 
     // New handler to save current composition as a component
     const handleSaveAsComponent = useCallback(
-        (name: string, description: string) => {
+        (name: string, description: string, status: string) => {
             try {
                 let selectedShapes = diagramComponents;
                 // if a shape is selected, then copy those shapes that are selected for saving as component
@@ -558,6 +603,7 @@ const App: React.FC = () => {
                         selected3DShape
                     );
                 }
+
                 // Pass true for overwrite since user has already confirmed in dialog
                 const newComponent = componentLibraryManager.createComponent(
                     name,
@@ -567,16 +613,19 @@ const App: React.FC = () => {
                     svgShapes,
                     true
                 );
+                console.log("newComponent", newComponent);
+                // mutate({
+                //     ...newComponent,
+                //     status: status,
+                //     diagramComponents:
+                //         diagramComponentsLib.serializeDiagramComponents(
+                //             newComponent?.diagramComponents ?? [],
+                //             true
+                //         )
+                // } as Component);
+                setComponents(componentLibraryManager.getAllComponents());
 
                 if (newComponent) {
-                    componentLibraryManager.renderComponent(
-                        newComponent.id,
-                        canvasSize,
-                        svgShapes
-                    );
-                    setComponents(componentLibraryManager.getAllComponents());
-
-                    // if a shape was selected and we created a component from it, replace the existing shapes with the component
                     if (selected3DShape) {
                         const selectedShape = diagramComponentsLib.get3DShape(
                             diagramComponents,
@@ -593,7 +642,7 @@ const App: React.FC = () => {
                             );
                         const result = diagramComponentsLib.addComponentToScene(
                             updatedComponents,
-                            newComponent.id,
+                            newComponent.name,
                             position,
                             null,
                             parentId
@@ -649,13 +698,11 @@ const App: React.FC = () => {
         },
         []
     );
-    useEffect(() => {
-        if (componentsResp.length > 0) {
-            componentLibraryManager.deserializeComponentLib(componentsResp);
-            setComponents(componentLibraryManager.getAllComponents());
-        }
-    }, [componentsResp]);
 
+    useEffect(() => {
+        componentLibraryManager.deserializeComponentLib(componentsRes);
+        setComponents(componentLibraryManager.getAllComponents());
+    }, [componentsRes]);
     // load the component metadata schema
     useEffect(() => {
         const loadComponentSchema = async () => {
@@ -671,39 +718,7 @@ const App: React.FC = () => {
     }, [schemaUrl]);
     // Load components and shapes library on mount
     useEffect(() => {
-        // load components on mount
         setComponents(componentLibraryManager.getAllComponents());
-        // initiatlize libraries
-        // const initializeLibraries = async () => {
-        //     console.log("Initializing libraries...");
-        //     // First make sure default library exists and is loaded
-        //     await SVGLibraryManager.initializeDefaultLibrary();
-        //     // Get the active library ID from localStorage or use default
-        //     const activeLibraryId =
-        //         localStorage.getItem("activeLibrary") || "default";
-        //     console.log("Active library ID:", activeLibraryId);
-        //     // Get the active library
-        //     const library = SVGLibraryManager.getLibrary(activeLibraryId);
-        //     if (library) {
-        //         console.log("Setting active library:", library.id);
-        //         setActiveLibrary(library.id);
-        //         setSvgLibrary(library.shapes);
-        //         // render all components if any
-        //         componentLibraryManager.renderAllComponents(
-        //             canvasSize,
-        //             library.shapes
-        //         );
-        //     } else {
-        //         // Fallback to default library if active library not found
-        //         console.log("Falling back to default library");
-        //         const defaultLibrary = SVGLibraryManager.getLibrary("default");
-        //         if (defaultLibrary) {
-        //             setActiveLibrary("default");
-        //             setSvgLibrary(defaultLibrary.shapes);
-        //         }
-        //     }
-        // };
-        // initializeLibraries();
     }, []); // Empty dependency array - only run once on mount
 
     useEffect(() => {
@@ -762,7 +777,8 @@ const App: React.FC = () => {
     return (
         <ImprovedLayout
             svgLibrary={svgShapes}
-            activeLibrary={currentShapeLibraryId}
+            activeShapesLibrary={currentShapeLibraryId}
+            activeComponentsLibrary={currentComponentLibraryId}
             onLibraryChange={handleLibraryChange}
             diagramComponents={diagramComponents}
             components={components}

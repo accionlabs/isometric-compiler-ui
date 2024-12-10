@@ -19,7 +19,8 @@ import { StorageType } from "./lib/fileOperations";
 
 interface ImprovedLayoutProps {
     svgLibrary: Shape[];
-    activeLibrary: string;
+    activeComponentsLibrary: string;
+    activeShapesLibrary: string;
     diagramComponents: DiagramComponent[];
     components: Component[];
     isCopied: boolean;
@@ -57,7 +58,7 @@ interface ImprovedLayoutProps {
     setFolderPath: (path: string) => void;
     showAttachmentPoints: boolean;
     setShowAttachmentPoints: (show: boolean) => void;
-    onLibraryChange: (libraryId: string) => void;
+    onLibraryChange: (libraryId: string, type: "components" | "shapes") => void;
     onUpdateMetadata: (
         id: string,
         type: string | undefined,
@@ -65,12 +66,17 @@ interface ImprovedLayoutProps {
     ) => void;
     storageType: StorageType;
     onStorageTypeChange: (type: StorageType) => void;
-    onSaveAsComponent: (name: string, description: string) => void;
+    onSaveAsComponent: (
+        name: string,
+        description: string,
+        status: "active" | "inactive"
+    ) => void;
 }
 
 const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     svgLibrary,
-    activeLibrary,
+    activeComponentsLibrary,
+    activeShapesLibrary,
     onLibraryChange,
     diagramComponents,
     components,
@@ -285,7 +291,6 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                 <ShapesPanel
                                     svgLibrary={svgLibrary}
                                     canvasSize={canvasSize}
-                                    activeLibrary={activeLibrary}
                                     onAdd3DShape={handleAdd3DShape}
                                     onAddComponent={onAddComponent}
                                     onDeleteComponent={onDeleteComponent}
@@ -321,7 +326,10 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                     setFileName={setFileName}
                                     onSaveDiagram={handleSaveDiagram}
                                     onLoadDiagram={handleLoadDiagram}
-                                    activeLibrary={activeLibrary}
+                                    activeShapesLibrary={activeShapesLibrary}
+                                    activeComponentsLibrary={
+                                        activeComponentsLibrary
+                                    }
                                     onLibraryChange={onLibraryChange}
                                     folderPath={folderPath}
                                     setFolderPath={setFolderPath}

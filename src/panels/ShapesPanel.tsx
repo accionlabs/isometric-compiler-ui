@@ -10,7 +10,7 @@ import {
 import SVGPreview from "../components/ui/SVGPreview";
 import { SVGLibraryManager } from "../lib/svgLibraryUtils";
 import { componentLibraryManager } from "../lib/componentLib";
-import { updateShape } from "@/services/library";
+import { updateComponent, updateShape } from "@/services/library";
 import {
     Dialog,
     DialogContent,
@@ -32,7 +32,6 @@ interface ShapesPanelProps {
     selected3DShape: string | null;
     diagramComponents: DiagramComponent[];
     components: Component[];
-    activeLibrary: string;
 }
 
 const ShapesPanel: React.FC<ShapesPanelProps> = ({
@@ -44,8 +43,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
     onDeleteComponent,
     selected3DShape,
     diagramComponents,
-    components,
-    activeLibrary
+    components
 }) => {
     const queryClient = useQueryClient();
     const { mutate, isPending } = useMutation({
@@ -53,21 +51,21 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
             return updateShape(payload);
         }
     });
+    const { mutate: update, isPending: isUpdatePending } = useMutation({
+        mutationFn: updateComponent
+    });
 
     const [openPanels, setOpenPanels] = useState<string>("components");
     const [isShapeEditDialogOpen, setIsShapeEditDialogOpen] = useState(false);
     const [isComponentEditDialogOpen, setIsComponentEditDialogOpen] =
         useState(false);
-    const [shapeToEdit, setShapeToEdit] = useState<Shape>(svgLibrary[0]);
-    const [componentToEdit, setComponentToEdit] = useState<Component>(
-        components[0]
+    const [shapeToEdit, setShapeToEdit] = useState<Shape | undefined>(
+        undefined
     );
-
-    // Get active library details
-    const activeLibraryData = useMemo(() => {
-        return SVGLibraryManager.getLibrary(activeLibrary);
-    }, [activeLibrary]);
-
+    const [componentToEdit, setComponentToEdit] = useState<
+        Component | undefined
+    >(undefined);
+    console.log("componentToEdit", componentToEdit);
     const shouldDisable3DShapeButtons = () => {
         return diagramComponents.length > 0 && selected3DShape === null;
     };
@@ -77,6 +75,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
     };
 
     const handleDeleteComponent = (componentId: string) => {
+        setComponentToEdit(undefined);
         // TODO: check if this component is inserted in diagramComponents and do not allow delete
         onDeleteComponent(componentId);
     };
@@ -92,13 +91,25 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
     };
 
     const handleUpdate3D2DShape = () => {
-        mutate(shapeToEdit, {
-            onSettled: () => {
-                queryClient.invalidateQueries({ queryKey: ["shapes"] });
-                setIsShapeEditDialogOpen(false);
-            }
-        });
+        shapeToEdit?.name &&
+            mutate(shapeToEdit, {
+                onSettled: () => {
+                    queryClient.invalidateQueries({ queryKey: ["shapes"] });
+                    setIsShapeEditDialogOpen(false);
+                }
+            });
     };
+
+    const handleUpdateComponent = () => {
+        componentToEdit?.name &&
+            update(componentToEdit, {
+                onSettled: () => {
+                    queryClient.invalidateQueries({ queryKey: ["components"] });
+                    setIsComponentEditDialogOpen(false);
+                }
+            });
+    };
+
     // Temporary function to show SVG preview content for a component
     const getComponentPreview = (component: Component): string => {
         if (!component.svgContent || component.svgContent === "") {
@@ -209,7 +220,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                                         >
                                             Edit
                                         </Button>
-                                        <Button
+                                        {/* <Button
                                             onClick={() =>
                                                 handleDeleteComponent(
                                                     component.id
@@ -218,7 +229,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                                             className="mr-2"
                                         >
                                             Del
-                                        </Button>
+                                        </Button> */}
                                         <Button
                                             onClick={() =>
                                                 onAddComponent(component.id)
@@ -302,12 +313,16 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
             open={isShapeEditDialogOpen}
             onOpenChange={(state) => setIsShapeEditDialogOpen(state)}
         >
-            <DialogContent className="bg-gray-800 border border-gray-700">
+            <DialogContent
+                aria-describedby="dialog-header"
+                className="bg-gray-800 border border-gray-700"
+            >
                 <DialogHeader>
                     <DialogTitle className="text-white">
-                        {"Edit shape - " + shapeToEdit?.name}
+                        {"Edit Shape - " + shapeToEdit?.name}
                     </DialogTitle>
                 </DialogHeader>
+
                 <div>
                     <label className="block text-sm font-medium text-gray-200 mb-1">
                         Shape Description
@@ -317,10 +332,13 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                         className="w-full bg-gray-700 text-white border-gray-600"
                         value={shapeToEdit?.description ?? ""}
                         onChange={(e) =>
-                            setShapeToEdit((prev) => ({
-                                ...prev,
-                                description: e.target.value
-                            }))
+                            setShapeToEdit((prev) => {
+                                if (prev)
+                                    return {
+                                        ...prev,
+                                        description: e.target.value
+                                    };
+                            })
                         }
                     />
                 </div>
@@ -335,10 +353,13 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                                 const svgContent = await processSVGFile(
                                     files[0]
                                 );
-                                setShapeToEdit((prev) => ({
-                                    ...prev,
-                                    svgContent
-                                }));
+                                setShapeToEdit(
+                                    (prev) =>
+                                        prev && {
+                                            ...prev,
+                                            svgContent
+                                        }
+                                );
                             }
                         }}
                         type="file"
@@ -354,23 +375,26 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                         <Checkbox
                             id="show-shape-active-state"
                             className="text-white mt-0.5"
-                            checked={shapeToEdit.status === "active"}
+                            checked={shapeToEdit?.status === "active"}
                             onCheckedChange={(checked) =>
-                                setShapeToEdit((prev) => ({
-                                    ...prev,
-                                    status: (checked as boolean)
-                                        ? "active"
-                                        : "inactive"
-                                }))
+                                setShapeToEdit(
+                                    (prev) =>
+                                        prev && {
+                                            ...prev,
+                                            status: (checked as boolean)
+                                                ? "active"
+                                                : "inactive"
+                                        }
+                                )
                             }
                         />
                         <span className="block text-sm font-medium text-gray-200">
-                            {shapeToEdit.status}
+                            {shapeToEdit?.status}
                         </span>
                     </div>
                 </div>
                 <SVGPreview
-                    svgContent={shapeToEdit.svgContent}
+                    svgContent={shapeToEdit?.svgContent ?? ""}
                     className="w-full"
                 />
                 <div className="flex justify-end space-x-2">
@@ -391,15 +415,19 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
             </DialogContent>
         </Dialog>
     );
+
     const renderEditComponentDialog = () => (
         <Dialog
             open={isComponentEditDialogOpen}
             onOpenChange={(state) => setIsComponentEditDialogOpen(state)}
         >
-            <DialogContent className="bg-gray-800 border border-gray-700">
+            <DialogContent
+                aria-describedby="dialog-header"
+                className="bg-gray-800 border border-gray-700"
+            >
                 <DialogHeader>
                     <DialogTitle className="text-white">
-                        {"Edit component - " + componentToEdit?.name}
+                        {"Edit Component - " + componentToEdit?.name}
                     </DialogTitle>
                 </DialogHeader>
                 <div>
@@ -411,39 +439,50 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                         className="w-full bg-gray-700 text-white border-gray-600"
                         value={componentToEdit?.description ?? ""}
                         onChange={(e) =>
-                            setComponentToEdit((prev) => ({
-                                ...prev,
-                                description: e.target.value
-                            }))
+                            setComponentToEdit(
+                                (prev) =>
+                                    prev && {
+                                        ...prev,
+                                        description: e.target.value
+                                    }
+                            )
                         }
                     />
                 </div>
+
                 <div>
                     <label className="block text-sm font-medium text-gray-200 mb-1">
-                        Toggle Shape State
+                        Toggle Component State
                     </label>
                     <div className="flex gap-2 ">
                         <Checkbox
                             id="show-shape-active-state"
                             className="text-white mt-0.5"
-                            checked={componentToEdit.status === "active"}
+                            checked={componentToEdit?.status === "active"}
                             onCheckedChange={(checked) =>
-                                setComponentToEdit((prev) => ({
-                                    ...prev,
-                                    status: (checked as boolean)
-                                        ? "active"
-                                        : "inactive"
-                                }))
+                                setComponentToEdit(
+                                    (prev) =>
+                                        prev && {
+                                            ...prev,
+                                            status: (checked as boolean)
+                                                ? "active"
+                                                : "inactive"
+                                        }
+                                )
                             }
                         />
                         <span className="block text-sm font-medium text-gray-200">
-                            {componentToEdit.status || "inactive"}
+                            {componentToEdit?.status || "inactive"}
                         </span>
                     </div>
                 </div>
                 <div className="w-full h-96 bg-white border border-gray-200 rounded-lg shadow-md overflow-auto">
                     <SVGPreview
-                        svgContent={getComponentPreview(componentToEdit)}
+                        svgContent={
+                            componentToEdit
+                                ? getComponentPreview(componentToEdit)
+                                : ""
+                        }
                         className="w-full h-full"
                     />
                 </div>
@@ -454,6 +493,13 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                         className="bg-gray-600 hover:bg-gray-700 text-white"
                     >
                         Cancel
+                    </Button>
+                    <Button
+                        disabled={isUpdatePending}
+                        onClick={handleUpdateComponent}
+                        className="bg-blue-600 hover:bg-blue-700 text-white disabled:bg-blue-800 disabled:opacity-50"
+                    >
+                        Confirm
                     </Button>
                 </div>
             </DialogContent>
@@ -498,9 +544,9 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                     ))}
                 </div>
             </Accordion>
-            {shapeToEdit?.name && renderEditShapeDialog()}
+            {renderEditShapeDialog()}
 
-            {componentToEdit?.name && renderEditComponentDialog()}
+            {renderEditComponentDialog()}
         </div>
     );
 };
