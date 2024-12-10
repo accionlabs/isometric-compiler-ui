@@ -76,6 +76,7 @@ export interface DiagramComponent {
 export interface Component {
     id: string;
     dbId?: string;
+    libraryId?: string;
     name: string;
     description: string;
     diagramComponents: DiagramComponent[];

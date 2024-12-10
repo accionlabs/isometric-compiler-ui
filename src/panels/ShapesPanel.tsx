@@ -65,7 +65,6 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
     const [componentToEdit, setComponentToEdit] = useState<
         Component | undefined
     >(undefined);
-    console.log("componentToEdit", componentToEdit);
     const shouldDisable3DShapeButtons = () => {
         return diagramComponents.length > 0 && selected3DShape === null;
     };

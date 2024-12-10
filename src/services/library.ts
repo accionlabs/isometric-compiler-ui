@@ -156,7 +156,6 @@ export async function getComponents(
             undefined,
             true
         );
-        console.log("updatedShapes", compresp);
         const updatedShapes: Component[] = compresp.map((comp) => {
             return {
                 id: comp.name,
@@ -166,7 +165,7 @@ export async function getComponents(
                 diagramComponents: comp.metadata.diagramComponents,
                 description: comp.description,
                 status: comp.status as "active" | "inactive",
-                library_id: comp.library_id,
+                libraryId: comp.library_id,
                 created: new Date(comp.createdat),
                 lastModified: new Date(comp.updatedat)
             };
@@ -187,11 +186,10 @@ export async function createComponent(payload: Component): Promise<any> {
             attachmentPoints: payload.attachmentPoints,
             diagramComponents: payload.diagramComponents
         },
-        libraryId: "2",
+        libraryId: payload.libraryId,
         status: payload.status,
         svgContent: "<svg></svg>"
     };
-
     const createCompRes = await fetcher(
         `${config.gatewayApiUrl}/isometric/component`,
         "post",

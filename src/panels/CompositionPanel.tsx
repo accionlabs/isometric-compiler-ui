@@ -29,7 +29,8 @@ interface CompositionPanelProps {
     onSaveAsComponent: (
         name: string,
         description: string,
-        status: "active" | "inactive"
+        status: "active" | "inactive",
+        libId: string
     ) => void;
 }
 

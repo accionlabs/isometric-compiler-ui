@@ -75,7 +75,7 @@ const App: React.FC = () => {
         enabled: svgShapes.length > 0
     });
 
-    const { mutate } = useMutation({
+    const { mutate, isPending } = useMutation({
         mutationFn: createComponent,
         onError: (e) => {
             console.log("Error creating library", e);
@@ -593,8 +593,10 @@ const App: React.FC = () => {
 
     // New handler to save current composition as a component
     const handleSaveAsComponent = useCallback(
-        (name: string, description: string, status: string) => {
+        (name: string, description: string, status: string, libId: string) => {
             try {
+                if (isPending) return;
+
                 let selectedShapes = diagramComponents;
                 // if a shape is selected, then copy those shapes that are selected for saving as component
                 if (selected3DShape) {
@@ -603,7 +605,6 @@ const App: React.FC = () => {
                         selected3DShape
                     );
                 }
-
                 // Pass true for overwrite since user has already confirmed in dialog
                 const newComponent = componentLibraryManager.createComponent(
                     name,
@@ -613,17 +614,17 @@ const App: React.FC = () => {
                     svgShapes,
                     true
                 );
-                console.log("newComponent", newComponent);
-                // mutate({
-                //     ...newComponent,
-                //     status: status,
-                //     diagramComponents:
-                //         diagramComponentsLib.serializeDiagramComponents(
-                //             newComponent?.diagramComponents ?? [],
-                //             true
-                //         )
-                // } as Component);
-                setComponents(componentLibraryManager.getAllComponents());
+                mutate({
+                    ...newComponent,
+                    status: status,
+                    libraryId: libId,
+                    diagramComponents:
+                        diagramComponentsLib.serializeDiagramComponents(
+                            newComponent?.diagramComponents ?? [],
+                            true
+                        )
+                } as Component);
+                // setComponents(componentLibraryManager.getAllComponents());
 
                 if (newComponent) {
                     if (selected3DShape) {

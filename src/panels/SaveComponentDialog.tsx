@@ -19,9 +19,10 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
 import { componentLibraryManager } from "@/lib/componentLib";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createComponent } from "@/services/library";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { createComponent, getLibraries } from "@/services/library";
 import { Checkbox } from "@/components/ui/Checkbox";
+import { RadixSelect } from "@/components/ui/Select";
 
 interface SaveComponentDialogProps {
     isOpen: boolean;
@@ -29,7 +30,8 @@ interface SaveComponentDialogProps {
     onSave: (
         name: string,
         description: string,
-        status: "active" | "inactive"
+        status: "active" | "inactive",
+        libId: string
     ) => void;
 }
 
@@ -40,9 +42,16 @@ const SaveComponentDialog: React.FC<SaveComponentDialogProps> = ({
 }) => {
     const [name, setName] = useState("");
     const [isActive, setIsActive] = useState<"active" | "inactive">("active");
+    const [libId, setlibId] = useState("");
     const [description, setDescription] = useState("");
     const [error, setError] = useState<string | null>(null);
+    const [libError, setLibError] = useState<string | null>(null);
     const [showOverwriteDialog, setShowOverwriteDialog] = useState(false);
+    console.log("libId", libId);
+    const { data: libraries = [] } = useQuery({
+        queryKey: ["libraries", "components"],
+        queryFn: () => getLibraries("components")
+    });
 
     const handleSubmit = () => {
         if (!name.trim()) {
@@ -60,7 +69,7 @@ const SaveComponentDialog: React.FC<SaveComponentDialogProps> = ({
     };
 
     const handleSaveComponent = () => {
-        onSave(name.trim(), description.trim(), isActive);
+        onSave(name.trim(), description.trim(), isActive, libId);
         handleClose();
     };
 
@@ -76,6 +85,7 @@ const SaveComponentDialog: React.FC<SaveComponentDialogProps> = ({
         <>
             <Dialog open={isOpen} onOpenChange={handleClose}>
                 <DialogContent
+                    aria-description="dialog-description"
                     className="bg-gray-800 text-white"
                     aria-describedby="dialog-description"
                 >
@@ -105,7 +115,20 @@ const SaveComponentDialog: React.FC<SaveComponentDialogProps> = ({
                                 </div>
                             )}
                         </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-1">
+                                Select Component Library *
+                            </label>
 
+                            <RadixSelect
+                                options={libraries.map((lib) => ({
+                                    label: lib.name,
+                                    value: lib.id
+                                }))}
+                                value={libId}
+                                onChange={(value) => setlibId(value)}
+                            />
+                        </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-200 mb-1">
                                 Description
@@ -118,6 +141,7 @@ const SaveComponentDialog: React.FC<SaveComponentDialogProps> = ({
                                 rows={3}
                             />
                         </div>
+
                         <div>
                             <label className="block text-sm font-medium text-gray-200 mb-1">
                                 Toggle Component State
