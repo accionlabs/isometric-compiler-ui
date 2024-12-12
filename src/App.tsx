@@ -715,24 +715,16 @@ const App: React.FC = () => {
     );
 
     const handleDownloadOfNecessaryShapesLibsForComponents = () => {
-        // const librariesUsedInAllComponents =
-        //     componentLibraryManager.extractUniqueLibraryIds(componentsRes);
-        // const librariesrequiredToDownload = Array.from(
-        //     new Set([...currentShapeLibraryId, ...librariesUsedInAllComponents])
-        // );
-        // console.log(
-        //     "first",
-        //     librariesrequiredToDownload,
-        //     currentShapeLibraryId
-        // );
-        // if (librariesrequiredToDownload.length > currentShapeLibraryId.length) {
-        //     console.log(
-        //         "first",
-        //         librariesrequiredToDownload,
-        //         currentShapeLibraryId
-        //     );
-        // }
+        const librariesUsedInAllComponents =
+            componentLibraryManager.extractUniqueLibraryIds(componentsRes);
+        const librariesrequiredToDownload = Array.from(
+            new Set([...currentShapeLibraryId, ...librariesUsedInAllComponents])
+        );
 
+        if (librariesrequiredToDownload.length > currentShapeLibraryId.length) {
+            handleLibraryChange(librariesrequiredToDownload, "shapes");
+        }
+        componentLibraryManager.clearLibrary();
         componentLibraryManager.deserializeComponentLib(componentsRes);
         setComponents(componentLibraryManager.getAllComponents());
     };
