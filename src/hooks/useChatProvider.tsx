@@ -7,7 +7,7 @@ import React, {
   createContext,
 } from "react";
 
-type Message = { text: string; isUser: boolean };
+type Message = { text: string; isUser: boolean,isSystemQuery:boolean };
 interface ChatProviderProps {
   children: ReactNode;
 }

@@ -29,7 +29,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ handleLoadDiagramFromJSON }) => {
 	const handleSend = async (e: { preventDefault: () => void }) => {
 		e.preventDefault();
 		if (input.trim()) {
-			setMessages((prev) => [...prev, { text: input, isUser: true }]);
+			setMessages((prev) => [...prev, { text: input, isUser: true,isSystemQuery:false }]);
 			handleResponse(input);
 			setInput("");
 		}
@@ -39,17 +39,23 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ handleLoadDiagramFromJSON }) => {
 		setLoading(true);
 		try {
 			const res = await sendChatRequest(input);
-			const resCopy = JSON.parse(JSON.stringify(res));
-			handleLoadDiagramFromJSON(res);
-			setMessages((prev) => [
-				...prev,
-				{ text: JSON.stringify(resCopy, null, 2), isUser: false },
-			]);
+			if(res.needFeedback){
+				setMessages((prev) => [
+					...prev,
+					{ text: res.action, isUser: false,isSystemQuery:true },
+				]);
+			}else{
+				handleLoadDiagramFromJSON(res.result);
+				setMessages((prev) => [
+					...prev,
+					{ text: JSON.stringify(res.result, null, 2), isUser: false,isSystemQuery:false },
+				]);
+			}
 		} catch (error) {
 			console.error("Error in handleResponse:", error);
 			setMessages((prev) => [
 				...prev,
-				{ text: "An error occurred. Please try again.", isUser: false },
+				{ text: "An error occurred. Please try again.", isUser: false ,isSystemQuery:true},
 			]);
 		} finally {
 			setLoading(false);
@@ -66,7 +72,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ handleLoadDiagramFromJSON }) => {
 							message.isUser ? "justify-end" : "justify-start"
 						}`}
 					>
-						{message.isUser ? (
+						{(message.isUser || message.isSystemQuery) ? (
 							<div
 								className={`max-w-xs px-4 py-2 rounded-lg break-words ${
 									message.isUser
