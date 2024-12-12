@@ -8,6 +8,7 @@ export interface CanvasSize {
 export interface Attached2DShape {
     name: string;
     attachedTo: string;
+    libraryId?: string;
 }
 
 export interface Point {
@@ -44,11 +45,13 @@ export interface Shape {
     svgContent: string;
     description?: string;
     status?: string;
+    libraryId: string;
 }
 
 // Updated DiagramComponent interface
 export interface DiagramComponent {
     id: string;
+    libraryId?: string;
     shape: string;
     source?: "shape" | "component"; // Indicates if this is from SVG library or component library
     type?: string; // References componentType from schema (optional)

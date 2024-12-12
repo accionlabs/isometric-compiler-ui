@@ -47,7 +47,6 @@ const SaveComponentDialog: React.FC<SaveComponentDialogProps> = ({
     const [error, setError] = useState<string | null>(null);
     const [libError, setLibError] = useState<string | null>(null);
     const [showOverwriteDialog, setShowOverwriteDialog] = useState(false);
-    console.log("libId", libId);
     const { data: libraries = [] } = useQuery({
         queryKey: ["libraries", "components"],
         queryFn: () => getLibraries("components")

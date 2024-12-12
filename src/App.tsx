@@ -55,23 +55,20 @@ const App: React.FC = () => {
     );
 
     // Add state for component library
-
-    const [currentShapeLibraryId, setCurrentShapeLibraryId] = useState(
-        localStorage.getItem("active_shapes_library") ||
-            config.defaultShapesLibraryId
-    );
-    const [currentComponentLibraryId, setCurrentComponentLibraryId] = useState(
-        localStorage.getItem("active_components_library") ||
-            config.defaultComponentsLibraryId
-    );
+    const [currentShapeLibraryId, setCurrentShapeLibraryId] = useState<
+        string[]
+    >(getLibrariesFromLocalStorage("shapes"));
+    const [currentComponentLibraryId, setCurrentComponentLibraryId] = useState<
+        string[]
+    >(getLibrariesFromLocalStorage("components"));
     const [components, setComponents] = useState<Component[]>([]);
     const { data: svgShapes = [] } = useQuery({
         queryKey: ["shapes", currentShapeLibraryId],
-        queryFn: () => getShapes([currentShapeLibraryId])
+        queryFn: () => getShapes(currentShapeLibraryId)
     });
     const { data: componentsRes = [] } = useQuery({
         queryKey: ["components", currentComponentLibraryId],
-        queryFn: () => getComponents([currentComponentLibraryId]),
+        queryFn: () => getComponents(currentComponentLibraryId),
         enabled: svgShapes.length > 0
     });
 
@@ -81,57 +78,88 @@ const App: React.FC = () => {
             console.log("Error creating library", e);
         },
         onSuccess: (newComponent) => {
-            queryClient.refetchQueries({
-                queryKey: ["components"]
-            });
-            // .then(() => {
-            //     if (selected3DShape) {
-            //         const selectedShape = diagramComponentsLib.get3DShape(
-            //             diagramComponents,
-            //             selected3DShape
-            //         );
-            //         const position = selectedShape?.position || "top";
-            //         const parentId =
-            //             selectedShape?.relativeToId ||
-            //             diagramComponents[0].id;
-            //         const updatedComponents =
-            //             diagramComponentsLib.remove3DShape(
-            //                 diagramComponents,
-            //                 selected3DShape
-            //             );
-            //         const result = diagramComponentsLib.addComponentToScene(
-            //             updatedComponents,
-            //             newComponent.name,
-            //             position,
-            //             null,
-            //             parentId
-            //         );
-            //         if (result.newComponent) {
-            //             console.log(
-            //                 `App: replaced component ${result.newComponent.id}`
-            //             );
-            //             setDiagramComponents(result.updatedComponents);
-            //             updateSelected3DShape(result.newComponent);
-            //         } else {
-            //             console.error("Failed to replace new component");
-            //         }
-            //     }
-            // });
-            //     // if a shape was selected and we created a component from it, replace the existing shapes with the component
+            if (newComponent) {
+                if (selected3DShape) {
+                    const selectedShape = diagramComponentsLib.get3DShape(
+                        diagramComponents,
+                        selected3DShape
+                    );
+                    const position = selectedShape?.position || "top";
+                    const parentId =
+                        selectedShape?.relativeToId || diagramComponents[0].id;
+                    const updatedComponents =
+                        diagramComponentsLib.remove3DShape(
+                            diagramComponents,
+                            selected3DShape
+                        );
+                    const result = diagramComponentsLib.addComponentToScene(
+                        updatedComponents,
+                        newComponent.name,
+                        position,
+                        null,
+                        parentId
+                    );
+                    if (result.newComponent) {
+                        console.log(
+                            `App: replaced component ${result.newComponent.id}`
+                        );
+                        setDiagramComponents(result.updatedComponents);
+                        updateSelected3DShape(result.newComponent);
+                    } else {
+                        console.error("Failed to replace new component");
+                    }
+                }
+                return newComponent;
+            }
+            if (selected3DShape) {
+                const selectedShape = diagramComponentsLib.get3DShape(
+                    diagramComponents,
+                    selected3DShape
+                );
+                const position = selectedShape?.position || "top";
+                const parentId =
+                    selectedShape?.relativeToId || diagramComponents[0].id;
+                const updatedComponents = diagramComponentsLib.remove3DShape(
+                    diagramComponents,
+                    selected3DShape
+                );
+                const result = diagramComponentsLib.addComponentToScene(
+                    updatedComponents,
+                    newComponent.name,
+                    position,
+                    null,
+                    parentId
+                );
+                if (result.newComponent) {
+                    console.log(
+                        `App: replaced component ${result.newComponent.id}`
+                    );
+                    setDiagramComponents(result.updatedComponents);
+                    updateSelected3DShape(result.newComponent);
+                } else {
+                    console.error("Failed to replace new component");
+                }
+            }
+            queryClient.invalidateQueries({ queryKey: ["components"] });
         }
     });
     // Update shapes when active library changes
     const handleLibraryChange = (
-        libraryId: string,
+        libraryIds: string[],
         type: "components" | "shapes"
     ) => {
-        if (type === "components") {
-            localStorage.setItem("active_components_library", libraryId);
-            setCurrentComponentLibraryId(libraryId);
-        } else {
-            localStorage.setItem("active_shapes_library", libraryId);
-            setCurrentShapeLibraryId(libraryId);
-        }
+        const key =
+            type === "components"
+                ? "active_components_library"
+                : "active_shapes_library";
+        const setLibraryId =
+            type === "components"
+                ? setCurrentComponentLibraryId
+                : setCurrentShapeLibraryId;
+
+        const libraryIdsString = JSON.stringify(libraryIds);
+        localStorage.setItem(key, libraryIdsString);
+        setLibraryId(libraryIds);
     };
 
     // update diagram component metadata when added
@@ -152,7 +180,29 @@ const App: React.FC = () => {
         },
         []
     );
+    function getLibrariesFromLocalStorage(
+        type: "shapes" | "components"
+    ): string[] {
+        const key =
+            type === "shapes"
+                ? "active_shapes_library"
+                : "active_components_library";
+        const defaultValue =
+            type === "shapes"
+                ? [config.defaultShapesLibraryId]
+                : [config.defaultComponentsLibraryId];
 
+        try {
+            const item = localStorage.getItem(key);
+            return item ? JSON.parse(item) : defaultValue;
+        } catch (error) {
+            console.error(
+                `Error parsing localStorage item for ${type}:`,
+                error
+            );
+            return defaultValue;
+        }
+    }
     // on selection of storage type for saving and loading the diagram
     const handleStorageTypeChange = useCallback((type: StorageType) => {
         setStorageType(type);
@@ -276,12 +326,13 @@ const App: React.FC = () => {
     );
 
     const handleAdd2DShape = useCallback(
-        (shapeName: string, attachTo: string) => {
+        (shapeName: string, attachTo: string, libraryId: string) => {
             const updatedComponents = diagramComponentsLib.add2DShape(
                 diagramComponents,
                 selected3DShape,
                 shapeName,
                 attachTo,
+                libraryId,
                 selectedPosition,
                 selectedAttachmentPoint
             );
@@ -590,7 +641,6 @@ const App: React.FC = () => {
         selectedPosition,
         selectedAttachmentPoint
     ]);
-
     // New handler to save current composition as a component
     const handleSaveAsComponent = useCallback(
         (name: string, description: string, status: string, libId: string) => {
@@ -624,43 +674,7 @@ const App: React.FC = () => {
                             true
                         )
                 } as Component);
-                // setComponents(componentLibraryManager.getAllComponents());
-
-                if (newComponent) {
-                    if (selected3DShape) {
-                        const selectedShape = diagramComponentsLib.get3DShape(
-                            diagramComponents,
-                            selected3DShape
-                        );
-                        const position = selectedShape?.position || "top";
-                        const parentId =
-                            selectedShape?.relativeToId ||
-                            diagramComponents[0].id;
-                        const updatedComponents =
-                            diagramComponentsLib.remove3DShape(
-                                diagramComponents,
-                                selected3DShape
-                            );
-                        const result = diagramComponentsLib.addComponentToScene(
-                            updatedComponents,
-                            newComponent.name,
-                            position,
-                            null,
-                            parentId
-                        );
-                        if (result.newComponent) {
-                            console.log(
-                                `App: replaced component ${result.newComponent.id}`
-                            );
-                            setDiagramComponents(result.updatedComponents);
-                            updateSelected3DShape(result.newComponent);
-                        } else {
-                            console.error("Failed to replace new component");
-                        }
-                    }
-                    return newComponent;
-                }
-                return null;
+                setComponents(componentLibraryManager.getAllComponents());
             } catch (error) {
                 console.error("Error saving component:", error);
                 setErrorMessage("Failed to save component. Please try again.");
@@ -700,10 +714,32 @@ const App: React.FC = () => {
         []
     );
 
-    useEffect(() => {
+    const handleDownloadOfNecessaryShapesLibsForComponents = () => {
+        // const librariesUsedInAllComponents =
+        //     componentLibraryManager.extractUniqueLibraryIds(componentsRes);
+        // const librariesrequiredToDownload = Array.from(
+        //     new Set([...currentShapeLibraryId, ...librariesUsedInAllComponents])
+        // );
+        // console.log(
+        //     "first",
+        //     librariesrequiredToDownload,
+        //     currentShapeLibraryId
+        // );
+        // if (librariesrequiredToDownload.length > currentShapeLibraryId.length) {
+        //     console.log(
+        //         "first",
+        //         librariesrequiredToDownload,
+        //         currentShapeLibraryId
+        //     );
+        // }
+
         componentLibraryManager.deserializeComponentLib(componentsRes);
         setComponents(componentLibraryManager.getAllComponents());
+    };
+    useEffect(() => {
+        handleDownloadOfNecessaryShapesLibsForComponents();
     }, [componentsRes]);
+
     // load the component metadata schema
     useEffect(() => {
         const loadComponentSchema = async () => {
@@ -717,10 +753,6 @@ const App: React.FC = () => {
 
         loadComponentSchema();
     }, [schemaUrl]);
-    // Load components and shapes library on mount
-    useEffect(() => {
-        setComponents(componentLibraryManager.getAllComponents());
-    }, []); // Empty dependency array - only run once on mount
 
     useEffect(() => {
         const { handleKeyDown } = handleKeyboardShortcuts();

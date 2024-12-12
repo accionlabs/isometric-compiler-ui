@@ -38,8 +38,11 @@ interface LoadingProgress {
 
 interface LibraryManagerProps {
     typeOfLibrary: "components" | "shapes";
-    activeLibrary: string;
-    onLibraryChange: (libraryId: string, type: "components" | "shapes") => void;
+    activeLibraries: string[];
+    onLibraryChange: (
+        libraryIds: string[],
+        type: "components" | "shapes"
+    ) => void;
     onUpdateShapes: (shapes: Shape[]) => void;
 }
 
@@ -55,7 +58,7 @@ const updateModeOptions = [
 
 const LibraryManager: React.FC<LibraryManagerProps> = ({
     typeOfLibrary,
-    activeLibrary,
+    activeLibraries,
     onLibraryChange,
     onUpdateShapes
 }) => {
@@ -223,7 +226,7 @@ const LibraryManager: React.FC<LibraryManagerProps> = ({
                 }
 
                 // Update active library
-                onLibraryChange(libraryId, typeOfLibrary);
+                onLibraryChange([...activeLibraries, libraryId], typeOfLibrary);
                 onUpdateShapes(shapes);
 
                 setLoadingStatus("Library activated successfully!");
@@ -269,7 +272,7 @@ const LibraryManager: React.FC<LibraryManagerProps> = ({
                     );
                 }
 
-                if (libraryId === activeLibrary) {
+                if (activeLibraries.includes(libraryId)) {
                     onUpdateShapes(shapes);
                 }
 
@@ -287,7 +290,7 @@ const LibraryManager: React.FC<LibraryManagerProps> = ({
                 }, 2000);
             }
         },
-        [activeLibrary, handleLoadShapes, onUpdateShapes]
+        [activeLibraries, handleLoadShapes, onUpdateShapes]
     );
 
     const processLocalFiles = async (
@@ -325,13 +328,13 @@ const LibraryManager: React.FC<LibraryManagerProps> = ({
                     // Skip existing shapes in append mode
                     shapes.push(existingShapeMap.get(name)!);
                 } else {
-                    shapes.push({
-                        name,
-                        type: type as "2D" | "3D",
-                        attachTo,
-                        svgContent,
-                        svgFile: svgFile
-                    });
+                    // shapes.push({
+                    //     name,
+                    //     type: type as "2D" | "3D",
+                    //     attachTo,
+                    //     svgContent,
+                    //     svgFile: svgFile
+                    // });
                 }
             }
         }
@@ -365,11 +368,11 @@ const LibraryManager: React.FC<LibraryManagerProps> = ({
             });
 
             // setLibraries(SVGLibraryManager.getLibraries());
-            if (libraryId === activeLibrary) {
+            if (activeLibraries.includes(libraryId)) {
                 onUpdateShapes(shapes);
             }
         },
-        [activeLibrary, onUpdateShapes]
+        [activeLibraries, onUpdateShapes]
     );
 
     const handleDeleteLibrary = useCallback(
@@ -378,7 +381,7 @@ const LibraryManager: React.FC<LibraryManagerProps> = ({
 
             // setLibraries(SVGLibraryManager.getLibraries());
         },
-        [activeLibrary, onUpdateShapes]
+        [activeLibraries, onUpdateShapes]
     );
 
     const handleSubmitLibrary = useCallback(async () => {
@@ -484,61 +487,61 @@ const LibraryManager: React.FC<LibraryManagerProps> = ({
         }
     }, [libraryForm, editingLibraryId, handleUpdateLibrary]);
 
-    const renderLibraryCard = (library: ExtendedLibraryData) => (
-        <div
-            key={library.id}
-            className={`p-4 rounded-lg border ${
-                activeLibrary === library.id
-                    ? "border-blue-500 bg-blue-900/20"
-                    : "border-gray-700"
-            }`}
-        >
-            <div className="flex justify-between items-center">
-                <div>
-                    <h3 className="text-lg font-medium">{library.name}</h3>
-                    <p className="text-sm text-gray-400">
-                        {library.description}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                        Shapes: {library.totalShapes} • Last updated:{" "}
-                        {new Date(library.lastUpdated).toLocaleDateString()}
-                    </p>
-                </div>
-                <div className="flex space-x-2">
-                    {library.id !== "default" && (
-                        <Button
-                            onClick={() => handleEditLibrary(library.id)}
-                            className="bg-gray-600 hover:bg-gray-700"
-                        >
-                            Edit
-                        </Button>
-                    )}
-                    {library.source?.type === "googledrive" && (
-                        <Button
-                            onClick={() => handleReloadLibrary(library.id)}
-                            className="bg-gray-600 hover:bg-gray-700"
-                        >
-                            Reload
-                        </Button>
-                    )}
-                    <Button
-                        onClick={() => handleActivateLibrary(library.id)}
-                        disabled={activeLibrary === library.id}
-                    >
-                        {activeLibrary === library.id ? "Active" : "Activate"}
-                    </Button>
-                    {library.id !== "default" && (
-                        <Button
-                            onClick={() => handleDeleteLibrary(library.id)}
-                            className="bg-red-600 hover:bg-red-700"
-                        >
-                            Delete
-                        </Button>
-                    )}
-                </div>
-            </div>
-        </div>
-    );
+    // const renderLibraryCard = (library: ExtendedLibraryData) => (
+    //     <div
+    //         key={library.id}
+    //         className={`p-4 rounded-lg border ${
+    //             activeLibrary === library.id
+    //                 ? "border-blue-500 bg-blue-900/20"
+    //                 : "border-gray-700"
+    //         }`}
+    //     >
+    //         <div className="flex justify-between items-center">
+    //             <div>
+    //                 <h3 className="text-lg font-medium">{library.name}</h3>
+    //                 <p className="text-sm text-gray-400">
+    //                     {library.description}
+    //                 </p>
+    //                 <p className="text-xs text-gray-500">
+    //                     Shapes: {library.totalShapes} • Last updated:{" "}
+    //                     {new Date(library.lastUpdated).toLocaleDateString()}
+    //                 </p>
+    //             </div>
+    //             <div className="flex space-x-2">
+    //                 {library.id !== "default" && (
+    //                     <Button
+    //                         onClick={() => handleEditLibrary(library.id)}
+    //                         className="bg-gray-600 hover:bg-gray-700"
+    //                     >
+    //                         Edit
+    //                     </Button>
+    //                 )}
+    //                 {library.source?.type === "googledrive" && (
+    //                     <Button
+    //                         onClick={() => handleReloadLibrary(library.id)}
+    //                         className="bg-gray-600 hover:bg-gray-700"
+    //                     >
+    //                         Reload
+    //                     </Button>
+    //                 )}
+    //                 <Button
+    //                     onClick={() => handleActivateLibrary(library.id)}
+    //                     disabled={activeLibrary === library.id}
+    //                 >
+    //                     {activeLibrary === library.id ? "Active" : "Activate"}
+    //                 </Button>
+    //                 {library.id !== "default" && (
+    //                     <Button
+    //                         onClick={() => handleDeleteLibrary(library.id)}
+    //                         className="bg-red-600 hover:bg-red-700"
+    //                     >
+    //                         Delete
+    //                     </Button>
+    //                 )}
+    //             </div>
+    //         </div>
+    //     </div>
+    // );
 
     return (
         <div className="space-y-4">
@@ -552,63 +555,80 @@ const LibraryManager: React.FC<LibraryManagerProps> = ({
                 </Button>
             </div>
 
-            {libraries.map((library) => (
-                <div
-                    key={library.id}
-                    className={`p-4 rounded-lg border ${
-                        activeLibrary === library.id
-                            ? "border-blue-500 bg-blue-900/20"
-                            : "border-gray-700"
-                    }`}
-                >
-                    <div className="flex justify-between items-center">
-                        <div>
-                            <h3 className="text-lg font-medium">
-                                {library.name}
-                            </h3>
-                            <p className="text-sm text-gray-400">
-                                {library.description}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                                Shapes: {library.totalShapes} • Last updated:{" "}
-                                {new Date(
-                                    library.lastUpdated
-                                ).toLocaleDateString()}
-                            </p>
-                        </div>
-                        <div className="flex space-x-2">
-                            <Button
-                                onClick={() => handleEditLibrary(library.id)}
-                                className="bg-gray-600 hover:bg-gray-700"
-                                disabled={library.id === "default"}
-                            >
-                                Edit
-                            </Button>
-                            <Button
-                                onClick={() =>
-                                    onLibraryChange(library.id, typeOfLibrary)
-                                }
-                                disabled={activeLibrary === library.id}
-                            >
-                                {activeLibrary === library.id
-                                    ? "Active"
-                                    : "Activate"}
-                            </Button>
-                            {library.id !== "default" &&
-                                activeLibrary !== library.id && (
-                                    <Button
-                                        onClick={() =>
-                                            handleDeleteLibrary(library.id)
-                                        }
-                                        className="bg-red-600 hover:bg-red-700"
-                                    >
-                                        Delete
-                                    </Button>
-                                )}
+            {libraries.map((library) => {
+                const isLibIdPresent = activeLibraries.includes(library.id);
+                return (
+                    <div
+                        key={library.id}
+                        className={`p-4 rounded-lg border ${
+                            isLibIdPresent
+                                ? "border-blue-500 bg-blue-900/20"
+                                : "border-gray-700"
+                        }`}
+                    >
+                        <div className="flex justify-between items-center">
+                            <div>
+                                <h3 className="text-lg font-medium">
+                                    {library.name}
+                                </h3>
+                                <p className="text-sm text-gray-400">
+                                    {library.description}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                    Shapes: {library.totalShapes} • Last
+                                    updated:{" "}
+                                    {new Date(
+                                        library.lastUpdated
+                                    ).toLocaleDateString()}
+                                </p>
+                            </div>
+                            <div className="flex space-x-2">
+                                <Button
+                                    onClick={() =>
+                                        handleEditLibrary(library.id)
+                                    }
+                                    className="bg-gray-600 hover:bg-gray-700"
+                                    disabled={library.id === "default"}
+                                >
+                                    Edit
+                                </Button>
+                                <Button
+                                    disabled={
+                                        isLibIdPresent &&
+                                        activeLibraries.length < 2
+                                    }
+                                    onClick={() => {
+                                        const updatedLibraries = isLibIdPresent
+                                            ? activeLibraries.filter(
+                                                  (id) => id !== library.id
+                                              )
+                                            : [...activeLibraries, library.id];
+                                        if (!updatedLibraries.length) return;
+
+                                        onLibraryChange(
+                                            updatedLibraries,
+                                            typeOfLibrary
+                                        );
+                                    }}
+                                >
+                                    {isLibIdPresent ? "Deactive" : "Activate"}
+                                </Button>
+                                {library.id !== "default" &&
+                                    !isLibIdPresent && (
+                                        <Button
+                                            onClick={() =>
+                                                handleDeleteLibrary(library.id)
+                                            }
+                                            className="bg-red-600 hover:bg-red-700"
+                                        >
+                                            Delete
+                                        </Button>
+                                    )}
+                            </div>
                         </div>
                     </div>
-                </div>
-            ))}
+                );
+            })}
 
             <Dialog
                 open={isLibraryDialogOpen}

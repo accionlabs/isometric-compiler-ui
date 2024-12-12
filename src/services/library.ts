@@ -7,7 +7,20 @@ import {
     LibraryData,
     Shape
 } from "@/Types";
-
+type ComponentResp = {
+    id: string;
+    slug: string;
+    name: string;
+    description: string;
+    metadata: {
+        attachmentPoints: AttachmentPoint[];
+        diagramComponents: DiagramComponent[];
+    };
+    status: string;
+    createdat: string;
+    updatedat: string;
+    library_id: string;
+};
 export async function getLibraries(type: string): Promise<LibraryData[]> {
     const libraryRes: any[] = await fetcher(
         `${config.gatewayApiUrl}/isometric/library?status=active&type=${type}`,
@@ -50,7 +63,8 @@ export async function getShapes(libraryIds?: string[]): Promise<Shape[]> {
             svgFile: shape.name,
             svgContent: shape.svgcontent,
             description: shape.description,
-            status: shape.status
+            status: shape.status,
+            libraryId: shape.libraryid
         };
     });
     return updatedShapes;
@@ -135,20 +149,7 @@ export async function getComponents(
     if (libraryIds) {
         query = libraryIds.map((library) => `libraryIds=${library}`).join("&");
     }
-    type ComponentResp = {
-        id: string;
-        slug: string;
-        name: string;
-        description: string;
-        metadata: {
-            attachmentPoints: AttachmentPoint[];
-            diagramComponents: DiagramComponent[];
-        };
-        status: string;
-        createdat: string;
-        updatedat: string;
-        library_id: string;
-    };
+
     try {
         const compresp: ComponentResp[] = await fetcher(
             `${config.gatewayApiUrl}/isometric/component?${query}&status=active`,
@@ -209,11 +210,23 @@ export async function updateComponent(payload: Component): Promise<any> {
         status: payload.status
     };
 
-    const createCompRes = await fetcher(
+    const updatedComp: ComponentResp = await fetcher(
         `${config.gatewayApiUrl}/isometric/component/${payload.dbId}`,
         "put",
         body,
         true
     );
-    return createCompRes;
+
+    return {
+        id: updatedComp.name,
+        dbId: updatedComp.id,
+        name: updatedComp.name,
+        attachmentPoints: updatedComp.metadata.attachmentPoints,
+        diagramComponents: updatedComp.metadata.diagramComponents,
+        description: updatedComp.description,
+        status: updatedComp.status as "active" | "inactive",
+        libraryId: updatedComp.library_id,
+        created: new Date(updatedComp.createdat),
+        lastModified: new Date(updatedComp.updatedat)
+    };
 }

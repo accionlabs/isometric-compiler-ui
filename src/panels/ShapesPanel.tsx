@@ -26,7 +26,11 @@ interface ShapesPanelProps {
     svgLibrary: Shape[];
     canvasSize: CanvasSize;
     onAdd3DShape: (shapeName: string) => void;
-    onAdd2DShape: (shapeName: string, attachTo: string) => void;
+    onAdd2DShape: (
+        shapeName: string,
+        attachTo: string,
+        libraryId: string
+    ) => void;
     onAddComponent: (componentId: string) => void;
     onDeleteComponent: (componentId: string) => void;
     selected3DShape: string | null;
@@ -289,7 +293,8 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                                         onClick={() =>
                                             onAdd2DShape(
                                                 shape.name,
-                                                shape.attachTo || ""
+                                                shape.attachTo || "",
+                                                shape.libraryId
                                             )
                                         }
                                         disabled={

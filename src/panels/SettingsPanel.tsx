@@ -6,15 +6,19 @@ import LibraryManager from "./LibraryManager";
 import { Shape } from "../Types";
 import { StorageType } from "../lib/fileOperations";
 import { ToggleGroup, ToggleGroupOption } from "../components/ui/ToggleGroup";
+import { componentLibraryManager } from "@/lib/componentLib";
 
 interface SettingsPanelProps {
     canvasSize: { width: number; height: number };
     onSetCanvasSize: (size: { width: number; height: number }) => void;
     fileName: string;
     setFileName: (name: string) => void;
-    activeShapesLibrary: string;
-    activeComponentsLibrary: string;
-    onLibraryChange: (libraryId: string, type: "components" | "shapes") => void;
+    activeShapesLibrary: string[];
+    activeComponentsLibrary: string[];
+    onLibraryChange: (
+        libraryIds: string[],
+        type: "components" | "shapes"
+    ) => void;
     onSaveDiagram: () => void;
     onLoadDiagram: (file?: File) => Promise<void>;
     folderPath: string;
@@ -218,7 +222,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 {/* {activePanel === "shapes" && ( */}
                 <LibraryManager
                     typeOfLibrary={activePanel}
-                    activeLibrary={
+                    activeLibraries={
                         activePanel === "shapes"
                             ? activeShapesLibrary
                             : activeComponentsLibrary

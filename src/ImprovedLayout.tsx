@@ -19,8 +19,8 @@ import { StorageType } from "./lib/fileOperations";
 
 interface ImprovedLayoutProps {
     svgLibrary: Shape[];
-    activeComponentsLibrary: string;
-    activeShapesLibrary: string;
+    activeComponentsLibrary: string[];
+    activeShapesLibrary: string[];
     diagramComponents: DiagramComponent[];
     components: Component[];
     isCopied: boolean;
@@ -28,7 +28,11 @@ interface ImprovedLayoutProps {
     onSetCanvasSize: (size: { width: number; height: number }) => void;
     composedSVG: string;
     onAdd3DShape: (shapeName: string) => void;
-    onAdd2DShape: (shapeName: string, attachTo: string) => void;
+    onAdd2DShape: (
+        shapeName: string,
+        attachTo: string,
+        libraryId: string
+    ) => void;
     onAddComponent: (componentId: string) => void;
     onDeleteComponent: (componentId: string) => void;
     onRemove3DShape: (id: string) => void;
@@ -47,7 +51,6 @@ interface ImprovedLayoutProps {
     onDownloadSVG: () => void;
     fileName: string;
     setFileName: (name: string) => void;
-
     availableAttachmentPoints: string[];
     errorMessage: string | null;
     setErrorMessage: (message: string | null) => void;
@@ -58,7 +61,10 @@ interface ImprovedLayoutProps {
     setFolderPath: (path: string) => void;
     showAttachmentPoints: boolean;
     setShowAttachmentPoints: (show: boolean) => void;
-    onLibraryChange: (libraryId: string, type: "components" | "shapes") => void;
+    onLibraryChange: (
+        libraryIds: string[],
+        type: "components" | "shapes"
+    ) => void;
     onUpdateMetadata: (
         id: string,
         type: string | undefined,

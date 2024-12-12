@@ -306,6 +306,7 @@ export const add3DShape = (
 
         const newComponent: DiagramComponent = {
             id: newId,
+            libraryId: shape.libraryId,
             shape: shapeName,
             source: "shape",
             position: (attachmentPoint ||
@@ -398,6 +399,7 @@ export const add2DShape = (
     selected3DShape: string | null,
     shapeName: string,
     attachTo: string,
+    libraryId: string,
     position?: string,
     attachmentPoint?: string | null
 ): DiagramComponent[] => {
@@ -410,6 +412,7 @@ export const add2DShape = (
                         ...component.attached2DShapes,
                         {
                             name: shapeName,
+                            libraryId: libraryId,
                             attachedTo:
                                 position &&
                                 attachmentPoint &&

@@ -29,7 +29,7 @@ import {
 } from "./pointUtils";
 
 class ComponentLibraryManager {
-    private static instance: ComponentLibraryManager | undefined;
+    private static instance: ComponentLibraryManager;
     private library: ComponentLibrary;
 
     // Private constructor to prevent direct instantiation
@@ -257,7 +257,8 @@ class ComponentLibraryManager {
         diagramComponents: DiagramComponent[],
         canvasSize: CanvasSize,
         svgLibrary: Shape[],
-        overwrite: boolean = false
+        overwrite: boolean = false,
+        saveCallback?: (library: ComponentLibrary) => void
     ): Component | null {
         if (this.hasComponent(name) && !overwrite) {
             return null;
@@ -292,6 +293,10 @@ class ComponentLibraryManager {
         this.library.components[name] = component;
         this.library.lastModified = now;
 
+        if (saveCallback) {
+            saveCallback(this.library);
+        }
+
         return component;
     }
 
@@ -315,7 +320,10 @@ class ComponentLibraryManager {
     };
 
     // Deserialize and load component library
-    public deserializeComponentLib = (components: Component[]) => {
+    public deserializeComponentLib = (
+        components: Component[],
+        saveCallback?: (library: ComponentLibrary) => void
+    ) => {
         if (!this.validateComponentLibrary(components)) {
             throw new Error("Invalid component library structure");
         }
@@ -326,6 +334,10 @@ class ComponentLibraryManager {
         });
 
         this.library.lastModified = now;
+
+        if (saveCallback) {
+            saveCallback(this.library);
+        }
     };
 
     // Render a specific component
@@ -396,31 +408,12 @@ class ComponentLibraryManager {
 
         return svgContent;
     }
-    public extractUniqueLibraryIds(componentResponse: Component[]) {
-        const libraryIds = new Set(); // Using a Set to ensure uniqueness
 
-        componentResponse.forEach((component) => {
-            component.diagramComponents.forEach((diagramComponent) => {
-                if (diagramComponent?.libraryId)
-                    libraryIds.add(diagramComponent.libraryId);
-
-                if (diagramComponent?.attached2DShapes) {
-                    diagramComponent.attached2DShapes.forEach(
-                        (attachedShape) => {
-                            if (attachedShape?.libraryId)
-                                libraryIds.add(attachedShape.libraryId);
-                        }
-                    );
-                }
-            });
-        });
-
-        return Array.from(libraryIds);
-    }
     // Update a component
     public updateComponent(
         id: string,
-        updates: Partial<Omit<Component, "id" | "created">>
+        updates: Partial<Omit<Component, "id" | "created">>,
+        saveCallback?: (library: ComponentLibrary) => void
     ): Component {
         const component = this.library.components[id];
         if (!component) {
@@ -436,17 +429,28 @@ class ComponentLibraryManager {
         this.library.components[id] = updatedComponent;
         this.library.lastModified = new Date();
 
+        if (saveCallback) {
+            saveCallback(this.library);
+        }
+
         return updatedComponent;
     }
 
     // Delete a component
-    public deleteComponent(id: string): void {
+    public deleteComponent(
+        id: string,
+        saveCallback?: (library: ComponentLibrary) => void
+    ): void {
         if (!this.library.components[id]) {
             throw new Error(`Component with id ${id} not found`);
         }
 
         delete this.library.components[id];
         this.library.lastModified = new Date();
+
+        if (saveCallback) {
+            saveCallback(this.library);
+        }
     }
 
     // Get a specific component
@@ -457,6 +461,20 @@ class ComponentLibraryManager {
     // Get all components
     public getAllComponents(): Component[] {
         return Object.values(this.library.components);
+    }
+
+    // Clear the entire library
+    public clearLibrary(
+        saveCallback?: (library: ComponentLibrary) => void
+    ): void {
+        this.library = {
+            components: {},
+            lastModified: new Date()
+        };
+
+        if (saveCallback) {
+            saveCallback(this.library);
+        }
     }
 
     // Helper method to create a diagram component from a component
