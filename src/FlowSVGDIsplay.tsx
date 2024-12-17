@@ -101,7 +101,7 @@ const LAYOUT_CONFIG = {
     "hull-based": {
         padding: 150,
         minSpacing: 150,
-        minYSpacing: 50,
+        minYSpacing: 30,
         smoothingAngle: Math.PI / 4, // 45 degrees
         placementDistance: 100,
         stepSize: 20
@@ -416,7 +416,7 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
                     target: "svg-main",
                     sourceHandle,
                     targetHandle,
-                    type: "custom",
+                    type: "simplebezier",
                     deletable: false,
                     data: { permanent: true }
                 } as FlowEdge;
