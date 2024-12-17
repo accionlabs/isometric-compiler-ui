@@ -271,6 +271,7 @@ export interface HullBasedLayoutConfig extends BaseLayoutConfig {
     smoothingAngle: number; // Angle threshold for corner removal (in radians)
     placementDistance: number; // Initial distance from hull
     stepSize: number; // Distance to move along path when resolving overlaps
+    minYSpacing: number // Minimum Y separation between labels... will check minSpacing if this is violated
 }
 
 export class HullBasedLayoutManager extends BaseLayoutManager {
@@ -398,16 +399,15 @@ export class HullBasedLayoutManager extends BaseLayoutManager {
             // Check distance against all occupied vertices
             for (const occupiedIndex of occupiedVertices) {
                 const occupiedVertex = this.vertices[occupiedIndex];
-                const distance = Math.sqrt(
-                    Math.pow(vertex.x - occupiedVertex.x, 2) +
-                        Math.pow(vertex.y - occupiedVertex.y, 2)
-                );
+                const dx = vertex.x - occupiedVertex.x;
+                const dy = vertex.y - occupiedVertex.y;
 
-                if (distance < this.config.minSpacing) {
+                // updated logic - instead of distance, check dx and dy
+                if (dy < this.config.minYSpacing && dx < this.config.minSpacing) {
                     meetsMinimumSpacing = false;
                     break;
                 }
-            }
+           }
 
             if (meetsMinimumSpacing) {
                 return vertex;
