@@ -7,10 +7,13 @@ import {
 import { Button } from '@/components/ui/Button';
 import { X } from 'lucide-react';
 
-interface CustomEdgeProps extends EdgeProps {
-    data?: {
-        label?: string;
-    };
+interface CustomEdgeData extends Record<string, unknown> {
+    label?: string;
+    permanent?: boolean;
+}
+
+export interface CustomEdgeProps extends EdgeProps {
+    data: CustomEdgeData;
 }
 
 const CustomEdge: React.FC<CustomEdgeProps> = ({
