@@ -1,0 +1,8 @@
+<html>
+  <body>
+    <script>
+      // This file is necessary for silent token renewal
+      window.parent.postMessage({ type: "oidcSilentRenewMessage" }, window.location.origin);
+    </script>
+  </body>
+</html>
