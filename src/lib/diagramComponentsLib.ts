@@ -427,7 +427,6 @@ export const remove3DShape = (
     diagramComponents: DiagramComponent[],
     id: string
 ): DiagramComponent[] => {
-    console.log(`App: remove 3D shape ${id}`);
     const { dependentIds, maxIndex } = findDependentShapes(
         diagramComponents,
         id
@@ -546,10 +545,6 @@ export const pasteCut3DShapes = (
     let cutComponents: DiagramComponent[] = [];
     let nonCutComponents: DiagramComponent[] = [];
 
-    console.log(
-        `pasting object ${id} on ${targetId} at ${newPosition} ${attachmentPoint}`
-    );
-
     if (attachmentPoint === "none") {
         attachmentPoint = null;
     }
@@ -600,7 +595,6 @@ export const pasteCopied3DShapes = (
     );
     if (componentExists) {
         // create a new copy
-        console.log("component copy already pasted... re-copying");
         componentsToPaste = copy3DShape(
             copiedComponents,
             copiedComponents[0].id
@@ -917,7 +911,6 @@ export const compileDiagram = (
     svgLibrary: Shape[],
     showAttachmentPoints: boolean
 ): { svgContent: string; processedComponents: DiagramComponent[] } => {
-    //console.log("Compiling diagram...", diagramComponents);
 
     // Standardize component IDs before processing
     const standardizedComponents = standardizeComponentIds(diagramComponents);
@@ -1112,7 +1105,6 @@ export const extractGlobalAttachmentPoints = (
     diagramComponents: DiagramComponent[]
 ): GlobalAttachmentPoint[] => {
     const globalPoints: GlobalAttachmentPoint[] = [];
-    console.log("extract global points", diagramComponents);
     for (const component of diagramComponents) {
         // Skip if component has no absolute position (shouldn't happen after compilation)
         if (!component.absolutePosition) {
@@ -1241,28 +1233,31 @@ export const findClosestGlobalAttachmentPoint = (
 
 // Find all components that have no other components placed on top of them
 export const findTopMostComponents = (
-    components: DiagramComponent[]
+    components: DiagramComponent[],
+    side: string = 'top'
 ): DiagramComponent[] => {
     return components.filter((component) => {
         return !components.some(
             (other) =>
                 other.relativeToId === component.id &&
-                other.position === "top"
+                other.position === side
         );
     });
 };
 
 // Find all components that are not placed on top of any other components
 export const findBottomMostComponents = (
-    components: DiagramComponent[]
+    components: DiagramComponent[],
+    side: string = 'top'
 ): DiagramComponent[] => {
     return components.filter((component) => {
         return (
             component.relativeToId === null ||
-            component.position !== "top"
+            component.position !== side
         );
     });
 };
+
 
 export const getExtremeAttachmentPoints = (
     components: DiagramComponent[]

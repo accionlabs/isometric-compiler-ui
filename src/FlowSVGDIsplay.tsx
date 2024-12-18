@@ -133,7 +133,7 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
     // Handler for component bounds updates
     const handleComponentBoundsUpdate = useCallback(
         (bounds: ComponentBoundsMap) => {
-            console.log("Component bounds updated:", bounds);
+            //console.log("Component bounds updated:", bounds);
             setComponentBounds(bounds);
         },
         [setComponentBounds]
@@ -467,7 +467,6 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
                 }
                 return node;
             });
-            console.log("edges:", result.edges);
             setEdges(result.edges);
             return result.nodes; // Return the nodes!
         });

@@ -1,6 +1,6 @@
 // @/lib/layoutUtils.ts
 import { ComponentBoundsMap } from "@/components/flow/SVGNode";
-import { createSmoothHull, offsetPath } from "./pointUtils";
+import { createSmoothHull, findConcaveHull, offsetPath } from "./pointUtils";
 
 interface Point {
     x: number;
@@ -308,62 +308,6 @@ export class HullBasedLayoutManager extends BaseLayoutManager {
         return points;
     }
 
-    private findOptimalPosition(
-        component: ComponentPosition,
-        placementPath: Point[],
-        placedNodes: { id: string; position: Point }[]
-    ): Point {
-        // Initial placement at closest point
-        const componentBound = this.componentBounds[component.componentId];
-        if (!componentBound) return placementPath[0];
-
-        let bestPoint = placementPath[0];
-        let minDistance = Infinity;
-
-        // Find closest point on path to component center
-        placementPath.forEach((point) => {
-            const dx = point.x - componentBound.center.x;
-            const dy = point.y - componentBound.center.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-
-            if (distance < minDistance) {
-                minDistance = distance;
-                bestPoint = point;
-            }
-        });
-
-        // Check for overlaps and adjust if needed
-        let currentPoint = bestPoint;
-        let attempts = 0;
-        const maxAttempts = placementPath.length;
-
-        while (attempts < maxAttempts) {
-            let hasOverlap = false;
-
-            // Check for overlaps with placed nodes
-            for (const placedNode of placedNodes) {
-                const dx = currentPoint.x - placedNode.position.x;
-                const dy = currentPoint.y - placedNode.position.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-
-                if (distance < this.config.minSpacing) {
-                    hasOverlap = true;
-                    break;
-                }
-            }
-
-            if (!hasOverlap) break;
-
-            // Move to next point on path
-            const currentIndex = placementPath.indexOf(currentPoint);
-            const nextIndex = (currentIndex + 1) % placementPath.length;
-            currentPoint = placementPath[nextIndex];
-            attempts++;
-        }
-
-        return currentPoint;
-    }
-
     private findOptimalVertex(
         component: ComponentPosition,
         occupiedVertices: Set<number>
@@ -420,6 +364,7 @@ export class HullBasedLayoutManager extends BaseLayoutManager {
 
     public getPoints(): Point[] {
         const points = this.getBoundingPoints();
+        const hull = findConcaveHull(points);
         const smoothedPoints = createSmoothHull(points);
         const offsetPoints = offsetPath(
             smoothedPoints,

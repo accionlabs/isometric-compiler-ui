@@ -215,7 +215,7 @@ const SVGNode = ({ id, data }: NodeProps<SVGNodeData>) => {
         if (!isReady) return;
 
         const bounds = calculateComponentBounds();
-        console.log("component bounds:", bounds, data.onComponentBoundsUpdate);
+        //console.log("component bounds:", bounds, data.onComponentBoundsUpdate);
         data.onComponentBoundsUpdate?.(bounds);
     }, [isReady, calculateComponentBounds, data.onComponentBoundsUpdate]);
 

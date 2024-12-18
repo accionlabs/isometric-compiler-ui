@@ -104,7 +104,222 @@ class ComponentLibraryManager {
         return attachmentPoints;
     }
 
-    private getAttachmentPoints(
+    private handleSideAttachments(
+        side: { side: string; opposite: string },
+        bottomLayer: DiagramComponent[],
+        direction: string,
+        allAttachmentPoints: ComponentAttachmentPointMap,
+        parentAttachmentPointsMap: ComponentAttachmentPointMap
+    ): void {
+        console.log('selecting side points for side', side.side);
+    
+        // Handle back points
+        const backMostLayer = findBottomMostComponents(bottomLayer, direction);
+        console.log("back most components", backMostLayer);
+        
+        const backPoints = this.collectAttachmentPoints(
+            backMostLayer,
+            `attach-back-${side.opposite}`,
+            'backmost'
+        );
+    
+        if (backPoints.points.length > 0) {
+            allAttachmentPoints[`attach-back-${side.opposite}`] = backPoints.points;
+        }
+        if (backPoints.parentPoints.length > 0) {
+            parentAttachmentPointsMap[`attach-back-${side.opposite}`] = backPoints.parentPoints;
+        }
+        console.log('collected back points:', parentAttachmentPointsMap, allAttachmentPoints);
+    
+        // Handle front points
+        const frontMostLayer = findTopMostComponents(bottomLayer, direction);
+        console.log("front most components", frontMostLayer);
+    
+        const frontPoints = this.collectAttachmentPoints(
+            frontMostLayer,
+            `attach-front-${side.side}`,
+            'front most'
+        );
+    
+        if (frontPoints.points.length > 0) {
+            allAttachmentPoints[`attach-front-${side.side}`] = frontPoints.points;
+        }
+        if (frontPoints.parentPoints.length > 0) {
+            parentAttachmentPointsMap[`attach-front-${side.side}`] = frontPoints.parentPoints;
+        }
+        console.log('collected front points:', parentAttachmentPointsMap, allAttachmentPoints);
+    }
+    
+    private collectAttachmentPoints(
+        components: DiagramComponent[],
+        attachmentKey: string,
+        logPrefix: string
+    ): { points: AttachmentPoint[]; parentPoints: AttachmentPoint[] } {
+        const points: AttachmentPoint[] = [];
+        const parentPoints: AttachmentPoint[] = [];
+    
+        components.forEach((component) => {
+            const globalPoints = getGlobalAttachmentPoints(component);
+            const globalParentPoints = getGlobalParentAttachmentPoints(component);
+            console.log(` --> ${logPrefix} points`, globalPoints, globalParentPoints);
+    
+            if (globalPoints[attachmentKey]) {
+                points.push(globalPoints[attachmentKey]);
+                console.log(globalPoints[attachmentKey]);
+            }
+            if (globalParentPoints[attachmentKey]) {
+                parentPoints.push(globalParentPoints[attachmentKey]);
+                console.log(globalParentPoints[attachmentKey]);
+            }
+        });
+    
+        return { points, parentPoints };
+    }
+    
+    private handleTopAttachments(
+        components: DiagramComponent[],
+        allAttachmentPoints: ComponentAttachmentPointMap,
+        attachmentPointsMap: AttachmentPointMap
+    ): void {
+        const topLayer = findTopMostComponents(components);
+        const topPoints: AttachmentPoint[] = [];
+    
+        // First try to collect points with "attach-top-" prefix
+        this.collectTopPoints(topLayer, "attach-top-", topPoints);
+    
+        // If no points found, try with exact "attach-top"
+        if (topPoints.length === 0) {
+            this.collectTopPoints(topLayer, "attach-top", topPoints);
+        }
+    
+        console.log("topPoints:", topPoints);
+        if (topPoints.length > 0 && topPoints[0] != undefined) {
+            allAttachmentPoints["attach-top"] = topPoints;
+            const gridPoints = createGridPoints(topPoints, Direction.N, Direction.W);
+            gridPoints.forEach((point) => {
+                attachmentPointsMap[point.name] = point;
+            });
+        }
+    }
+    
+    private collectTopPoints(
+        components: DiagramComponent[],
+        prefix: string,
+        topPoints: AttachmentPoint[]
+    ): void {
+        components.forEach((component) => {
+            const points = getGlobalAttachmentPoints(component);
+            Object.keys(points).forEach((p) => {
+                if (prefix === "attach-top-" ? p.startsWith(prefix) : p === prefix) {
+                    const topPoint = points[p];
+                    topPoint.name = "attach-top";
+                    topPoints.push(topPoint);
+                }
+            });
+        });
+    }
+    
+    private handleNonStandardPoints(
+        components: DiagramComponent[],
+        attachmentPointsMap: AttachmentPointMap
+    ): void {
+        const standardPoints = new Set([
+            "attach-top",
+            "attach-bottom",
+            "attach-front-left",
+            "attach-front-right",
+            "attach-back-left",
+            "attach-back-right"
+        ]);
+    
+        const nonStandardPoints: ComponentAttachmentPointMap = {};
+    
+        components.forEach((component) => {
+            const points = getGlobalAttachmentPoints(component);
+            Object.keys(points).forEach((p) => {
+                if (!p.startsWith("attach-top-") && !standardPoints.has(p)) {
+                    (nonStandardPoints[p] = nonStandardPoints[p] || []).push(points[p]);
+                }
+            });
+        });
+    
+        if (Object.keys(nonStandardPoints).length > 0) {
+            Object.keys(nonStandardPoints).forEach((p) => {
+                const gridPoints = createGridPoints(
+                    nonStandardPoints[p],
+                    Direction.N,
+                    Direction.W
+                );
+                gridPoints.forEach((point) => {
+                    attachmentPointsMap[point.name] = point;
+                });
+            });
+        }
+    }
+    
+    private getAttachmentPoints(components: DiagramComponent[]): AttachmentPoint[] {
+        if (!components.length) return [];
+    
+        const rootComponent = components[0];
+        if (!rootComponent.attachmentPoints) return [];
+    
+        const attachmentPointsMap: AttachmentPointMap = {};
+        const parentAttachmentPointsMap: ComponentAttachmentPointMap = {};
+        const allAttachmentPoints: ComponentAttachmentPointMap = {};
+    
+        console.log("Extracting attachment points...");
+    
+        // Handle bottom layer points
+        const bottomLayer = findBottomMostComponents(components);
+        bottomLayer.forEach((component) => {
+            this.addComponentAttachmentPoints(
+                getGlobalParentAttachmentPoints(component),
+                parentAttachmentPointsMap
+            );
+            this.addComponentAttachmentPoints(
+                getGlobalAttachmentPoints(component),
+                allAttachmentPoints
+            );
+        });
+    
+        console.log('collected bottom layer points:', parentAttachmentPointsMap, allAttachmentPoints);
+    
+        // Handle side attachment points
+        const sides = [
+            { side: "left", opposite: "right" },
+            { side: "right", opposite: "left" }
+        ];
+    
+        sides.forEach((side) => {
+            const direction = `front-${side.side}`;
+            this.handleSideAttachments(
+                side,
+                bottomLayer,
+                direction,
+                allAttachmentPoints,
+                parentAttachmentPointsMap
+            );
+        });
+    
+        // Handle non-standard points
+        this.handleNonStandardPoints(components, attachmentPointsMap);
+    
+        // Handle top attachment points
+        this.handleTopAttachments(components, allAttachmentPoints, attachmentPointsMap);
+    
+        // Normalize points
+        getNormalizeAttachmentPoints(allAttachmentPoints, attachmentPointsMap);
+    
+        // Add normalized parent points
+        this.getNormalizedParentAttachmentPoints(
+            parentAttachmentPointsMap,
+            attachmentPointsMap
+        );
+    
+        return Object.values(attachmentPointsMap);
+    }
+
+    private getAttachmentPointsOld(
         components: DiagramComponent[]
     ): AttachmentPoint[] {
         if (!components.length) return [];
@@ -117,6 +332,8 @@ class ComponentLibraryManager {
         const attachmentPointsMap: AttachmentPointMap = {};
         const parentAttachmentPointsMap: ComponentAttachmentPointMap = {};
         const allAttachmentPoints: ComponentAttachmentPointMap = {};
+
+        console.log("Extracting attachment points...")
 
         // for all standard attachment points, only choose the bottom layer
         const bottomLayer = findBottomMostComponents(components);
@@ -131,12 +348,81 @@ class ComponentLibraryManager {
             );
         });
 
+        console.log('collected bottom layer points:',parentAttachmentPointsMap,allAttachmentPoints);
+
+        const sides = [
+            {
+                "side":"left",
+                "opposite":"right"
+            },
+            {
+                "side":"right",
+                "opposite":"left"
+            }
+        ];
+        // For left and right sides, get the back and front most components
+        sides.forEach((side) => {
+            console.log('selecting side points for side ',side.side);
+            const direction = `front-${side.side}`;
+            const backMostLayer = findBottomMostComponents(bottomLayer,direction);
+            const backMostPoints: AttachmentPoint[] = [];
+            const backMostParentPoints: AttachmentPoint[] = [];
+            console.log("back most components",backMostLayer);
+            backMostLayer.forEach((component) => {
+                const points = getGlobalAttachmentPoints(component);
+                const parentPoints = getGlobalParentAttachmentPoints(component);
+                console.log(' --> backmost points',points,parentPoints);
+                if (points[`attach-back-${side.opposite}`]) {
+                    backMostPoints.push(points[`attach-back-${side.opposite}`]);
+                    console.log(points[`attach-back-${side.opposite}`]);
+                }
+                if (parentPoints[`attach-back-${side.opposite}`]) {
+                    backMostParentPoints.push(parentPoints[`attach-back-${side.opposite}`]);
+                    console.log(parentPoints[`attach-back-${side.opposite}`]);
+                }
+            });
+            if (backMostPoints.length>0) {
+                allAttachmentPoints[`attach-back-${side.opposite}`] = backMostPoints;
+            }
+            if (backMostParentPoints.length>0) {
+                parentAttachmentPointsMap[`attach-back-${side.opposite}`] = backMostParentPoints;
+            }
+            console.log('collected back points:',parentAttachmentPointsMap,allAttachmentPoints);
+
+            const frontMostLayer = findTopMostComponents(bottomLayer,direction);
+            const frontMostPoints: AttachmentPoint[] = [];
+            const frontMostParentPoints: AttachmentPoint[] = [];
+            console.log("front most components",frontMostLayer);
+
+            frontMostLayer.forEach((component) => {
+                const points = getGlobalAttachmentPoints(component);
+                const parentPoints = getGlobalParentAttachmentPoints(component);
+                console.log(' --> front most points',points,parentPoints);
+                if (points[`attach-front-${side.side}`]) {
+                    frontMostPoints.push(points[`attach-front-${side.side}`]);
+                    console.log(points[`attach-front-${side.side}`]);
+                }
+                if (parentPoints[`attach-front-${side.side}`]) {
+                    frontMostParentPoints.push(parentPoints[`attach-front-${side.side}`]);
+                    console.log(parentPoints[`attach-front-${side.side}`]);
+                }
+            });
+            if (frontMostPoints.length>0) {
+                allAttachmentPoints[`attach-front-${side.side}`] = frontMostPoints;
+            }
+            if (frontMostParentPoints.length>0) {
+                parentAttachmentPointsMap[`attach-front-${side.side}`] = frontMostParentPoints;
+            }
+            console.log('collected front points:',parentAttachmentPointsMap,allAttachmentPoints);
+        })
+
         // check for all non-standard attachment points and create a grid for them
         const nonStandardPoints: ComponentAttachmentPointMap = {};
         components.forEach((component) => {
             const points = getGlobalAttachmentPoints(component);
             Object.keys(points).forEach((p) => {
                 if (
+                    !p.startsWith("attach-top-") &&
                     ![
                         "attach-top",
                         "attach-bottom",
@@ -153,7 +439,7 @@ class ComponentLibraryManager {
             });
         });
         if (Object.keys(nonStandardPoints).length > 0) {
-            console.log("non std points:", nonStandardPoints);
+            //console.log("non std points:", nonStandardPoints);
             Object.keys(nonStandardPoints).forEach((p) => {
                 const gridPoints = createGridPoints(
                     nonStandardPoints[p],
@@ -171,10 +457,26 @@ class ComponentLibraryManager {
         const topPoints: AttachmentPoint[] = [];
         topLayer.forEach((component) => {
             const points = getGlobalAttachmentPoints(component);
-            if (points["attach-top"]) {
-                topPoints.push(points["attach-top"]);
-            }
+            Object.keys(points).forEach((p) => {
+                if (p.startsWith("attach-top-")) {
+                    const topPoint = points[p];
+                    topPoint.name = "attach-top";
+                    topPoints.push(topPoint);    
+                }
+            })
         });
+        if (topPoints.length === 0) {
+            topLayer.forEach((component) => {
+                const points = getGlobalAttachmentPoints(component);
+                Object.keys(points).forEach((p) => {
+                    if (p === "attach-top") {
+                        const topPoint = points[p];
+                        topPoint.name = "attach-top";
+                        topPoints.push(topPoint);    
+                    }
+                })
+            });    
+        }
         console.log("topPoints:", topPoints);
         if (topPoints.length > 0 && topPoints[0] != undefined) {
             allAttachmentPoints["attach-top"] = topPoints;
@@ -277,7 +579,7 @@ class ComponentLibraryManager {
         name: string,
         description: string,
         diagramComponents: DiagramComponent[],
-        canvasSize:CanvasSize,
+        canvasSize: CanvasSize,
         svgLibrary: Shape[],
         overwrite: boolean = false
     ): Component | null {
@@ -296,13 +598,12 @@ class ComponentLibraryManager {
             y: canvasSize.height / 2
         };
         // compile the shapes, so that all the internal shapes' absolute positions are updated
-        const { svgContent, processedComponents } =
-            compileDiagram(
-                componentsCopy,
-                canvasSize,
-                svgLibrary,
-                false
-            );
+        const { svgContent, processedComponents } = compileDiagram(
+            componentsCopy,
+            canvasSize,
+            svgLibrary,
+            false
+        );
 
         const component: Component = {
             id: name,
@@ -409,7 +710,7 @@ class ComponentLibraryManager {
             circle.setAttribute("id", point.name);
             circle.setAttribute("cx", point.x.toString());
             circle.setAttribute("cy", point.y.toString());
-            circle.setAttribute("r", "1");
+            circle.setAttribute("r", "3");
             circle.setAttribute("fill", "red");
             //circle.setAttribute('style', 'display: none;'); // Hidden by default
             svg.appendChild(circle);
