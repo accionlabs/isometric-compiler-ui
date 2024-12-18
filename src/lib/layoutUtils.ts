@@ -343,9 +343,8 @@ export class HullBasedLayoutManager extends BaseLayoutManager {
             // Check distance against all occupied vertices
             for (const occupiedIndex of occupiedVertices) {
                 const occupiedVertex = this.vertices[occupiedIndex];
-                const dx = vertex.x - occupiedVertex.x;
-                const dy = vertex.y - occupiedVertex.y;
-
+                const dx = Math.abs(vertex.x - occupiedVertex.x);
+                const dy = Math.abs(vertex.y - occupiedVertex.y);
                 // updated logic - instead of distance, check dx and dy
                 if (dy < this.config.minYSpacing && dx < this.config.minSpacing) {
                     meetsMinimumSpacing = false;
@@ -403,6 +402,7 @@ export class HullBasedLayoutManager extends BaseLayoutManager {
             const vertex = this.findOptimalVertex(component, occupiedVertices);
 
             // Mark vertex as occupied
+            vertex.isOccupied=true;
             occupiedVertices.add(vertex.index);
 
             // Determine alignment based on component center

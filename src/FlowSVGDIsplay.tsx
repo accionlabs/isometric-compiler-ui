@@ -100,7 +100,7 @@ const LAYOUT_CONFIG = {
 
     "hull-based": {
         padding: 150,
-        minSpacing: 150,
+        minSpacing: 200,
         minYSpacing: 30,
         smoothingAngle: Math.PI / 4, // 45 degrees
         placementDistance: 100,
