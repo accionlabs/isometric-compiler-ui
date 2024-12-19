@@ -400,9 +400,8 @@ export class HullBasedLayoutManager extends BaseLayoutManager {
         for (const component of components) {
             // Find optimal vertex position for this component
             const vertex = this.findOptimalVertex(component, occupiedVertices);
-
+            if (!vertex) {break;}
             // Mark vertex as occupied
-            vertex.isOccupied=true;
             occupiedVertices.add(vertex.index);
 
             // Determine alignment based on component center

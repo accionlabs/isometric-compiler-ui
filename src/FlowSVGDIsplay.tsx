@@ -63,20 +63,21 @@ interface MarkerNodeData extends Record<string, unknown> {
 }
 type MarkerNodeType = Node<MarkerNodeData>;
 
-const MarkerNode: React.FC<NodeProps<MarkerNodeType>> = ({data}) => {
+const MarkerNode: React.FC<NodeProps<MarkerNodeType>> = ({ data }) => {
     return (
-    <div
-        className="absolute rounded-full"
-        style={{
-            width: "30px",
-            height: "30px",
-            borderRadius: "50%",
-            backgroundColor: "red",
-            border: "2px solid white",
-            transform: "translate(-50%,-50%)"
-        }}
-    />
-)};
+        <div
+            className="absolute rounded-full"
+            style={{
+                width: "30px",
+                height: "30px",
+                borderRadius: "50%",
+                backgroundColor: "red",
+                border: "2px solid white",
+                transform: "translate(-50%,-50%)"
+            }}
+        />
+    );
+};
 
 const nodeTypes = {
     svgNode: SVGNode,
@@ -192,6 +193,47 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
         [layoutManager, componentBounds]
     );
 
+    // Add this effect after the existing useEffect hooks
+    useEffect(() => {
+        if (Object.keys(componentBounds).length > 0 && layoutManager) {
+            setNodes((prevNodes) => {
+                const componentsWithMetadata = diagramComponents.filter(
+                    (component) => component.type && component.metadata
+                );
+
+                const nodePositions = calculateMetadataNodePositions(
+                    componentsWithMetadata
+                );
+
+                return prevNodes.map((node) => {
+                    if (node.type === "metadata") {
+                        const metaData = node.data as MetadataNodeData;
+                        const position = nodePositions.get(
+                            metaData.componentId
+                        );
+
+                        if (position) {
+                            return {
+                                ...node,
+                                position: position.position,
+                                data: {
+                                    ...node.data,
+                                    alignment: position.alignment
+                                }
+                            };
+                        }
+                    }
+                    return node;
+                });
+            });
+        }
+    }, [
+        componentBounds,
+        layoutManager,
+        diagramComponents,
+        calculateMetadataNodePositions
+    ]);
+
     const getHandlesForConnection = (
         metadataNode: Node,
         componentBounds: ComponentBounds,
@@ -239,8 +281,9 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
 
         // For metadata node, determine which handle to use
         const metaData = metadataNode.data as MetadataNodeData;
-        const widthAdjustment = 75; // configured to approximate the width of the metadata node
-        const isVerticallyAligned = Math.abs(dy) > Math.abs(dx - widthAdjustment) ;
+        const widthAdjustment = 200; // configured to approximate the width of the metadata node
+        const isVerticallyAligned =
+            Math.abs(dy) > Math.abs(dx - widthAdjustment);
         let sourcePosition: Position;
         let sourceHandle: string;
 
@@ -363,19 +406,21 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
         );
 
         const placementPoints = layoutManager?.getPoints();
-        const markerNodes = placementPoints ? placementPoints.map((point,index) => {
-            return {
-                id:`p-${index}`,
-                type:'marker',
-                position: {
-                    x: point.x,
-                    y: point.y
-                },
-                data: {
-                    componentId:'root'
-                } as MarkerNodeData
-            }
-        }) : [];
+        const markerNodes = placementPoints
+            ? placementPoints.map((point, index) => {
+                  return {
+                      id: `p-${index}`,
+                      type: "marker",
+                      position: {
+                          x: point.x,
+                          y: point.y
+                      },
+                      data: {
+                          componentId: "root"
+                      } as MarkerNodeData
+                  };
+              })
+            : [];
 
         const edges: FlowEdge[] = metadataNodes
             .map((metadataNode) => {
@@ -423,7 +468,7 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
             })
             .filter((edge): edge is FlowEdge => edge !== null);
 
-        return { nodes: [ mainNode, ...metadataNodes], edges };
+        return { nodes: [mainNode, ...metadataNodes], edges };
     };
 
     const isInteractive = useStore(
