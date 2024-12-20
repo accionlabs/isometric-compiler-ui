@@ -78,3 +78,35 @@ componentTypes:
       - name: "version"
         type: "string"
         label: "Engine Version"
+
+  layer:
+    displayName: "Layer"
+    fields:
+      - name: "name"
+        type: "string"
+        label: "Name"
+        required: true
+      
+      - name: "description"
+        type: "string"
+        label: "Description"
+        required: false
+
+      - name: "labelPosition"
+        type: "select"
+        label: "Label Position"
+        options:
+          - label: "front-left"
+            value: "front-left"
+          - label: "front-right"
+            value: "front-right"
+          - label: "back-left"
+            value: "back-left"
+          - label: "back-right"
+            value: "back-right"
+
+      - name: "lastModified"
+        type: "string"
+        label: "Last Modified"
+        required: false
+      
