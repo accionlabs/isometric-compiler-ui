@@ -1,15 +1,16 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { Button } from "../components/ui/Button";
 import { CanvasSize, DiagramComponent, Shape, Component } from "../Types";
-import {
-    Accordion,
-    AccordionItem,
-    AccordionTrigger,
-    AccordionContent
-} from "../components/ui/Accordion";
+
 import SVGPreview from "../components/ui/SVGPreview";
 import { SVGLibraryManager } from "../lib/svgLibraryUtils";
 import { componentLibraryManager } from "../lib/componentLib";
+import {
+    HoverCard,
+    HoverCardContent,
+    HoverCardTrigger
+} from "@/components/ui/HoverCard";
+import { Card, CardContent, CardFooter } from "@/components/ui/Card";
 
 interface ShapesPanelProps {
     svgLibrary: Shape[];
@@ -55,205 +56,151 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
         // TODO: check if this component is inserted in diagramComponents and do not allow delete
         onDeleteComponent(componentId);
     };
-
-    // Temporary function to show SVG preview content for a component
-    const getComponentPreview = (component: Component): string => {
-        if (!component.svgContent || component.svgContent === "") {
-            return componentLibraryManager.renderComponent(
-                component.id,
-                canvasSize,
-                svgLibrary
-            );
-        }
-        return component.svgContent;
+    const isAddDisabled = {
+        "3D": diagramComponents.length > 0 && selected3DShape === null,
+        "2D": selected3DShape === null,
+        component: diagramComponents.length > 0 && selected3DShape === null
     };
 
-    const render3DShapesContent = () => (
-        <div className="space-y-2">
-            <div className="overflow-auto">
-                <table className="w-full">
-                    <thead className="sticky top-0 bg-gray-800">
-                        <tr>
-                            <th className="text-left">Preview</th>
-                            <th className="text-left">Name</th>
-                            <th className="w-20 text-right">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {svgLibrary
-                            .filter((shape) => shape.type === "3D")
-                            .map((shape) => (
-                                <tr key={shape.name}>
-                                    <td className="w-16">
-                                        <SVGPreview
-                                            svgContent={shape.svgContent}
-                                            className="w-12 h-12 mr-2"
-                                        />
-                                    </td>
-                                    <td>{shape.name}</td>
-                                    <td className="text-right">
-                                        <Button
-                                            onClick={() =>
-                                                onAdd3DShape(shape.name)
-                                            }
-                                            disabled={shouldDisable3DShapeButtons()}
-                                        >
-                                            Add
-                                        </Button>
-                                    </td>
-                                </tr>
-                            ))}
-                    </tbody>
-                </table>
-            </div>
-        </div>
+    // Temporary function to show SVG preview content for a component
+    const getComponentPreview = useCallback(
+        (component: Component): string => {
+            if (!component.svgContent || component.svgContent === "") {
+                return componentLibraryManager.renderComponent(
+                    component.id,
+                    canvasSize,
+                    svgLibrary
+                );
+            }
+            return component.svgContent;
+        },
+        [canvasSize, svgLibrary]
     );
 
-    const renderComponentsContent = () => (
-        <div className="space-y-2">
-            <div className="overflow-auto">
-                {components.length === 0 ? (
-                    <div className="text-center text-gray-400 py-4">
-                        No components available. Save a composition to create
-                        components.
+    const renderPreview = (element: Shape | Component) => (
+        <SVGPreview
+            svgContent={
+                ("type" in element &&
+                (element.type === "2D" || element.type === "3D")
+                    ? element.svgContent
+                    : getComponentPreview(element as Component)) ?? ""
+            }
+            className="w-full h-full object-cover"
+        />
+    );
+    const renderElement = (
+        element: Shape | Component,
+        onAdd: (element: Shape | Component) => void,
+        onEdit?: (element: Shape | Component) => void,
+        onDelete?: (element: Shape | Component) => void
+    ) => (
+        <HoverCard key={element.name}>
+            <HoverCardTrigger asChild>
+                <Card className="transform transition-all duration-300 hover:scale-105 hover:shadow-lg cursor-pointer">
+                    <button
+                        disabled={
+                            isAddDisabled[
+                                "type" in element ? element.type : "component"
+                            ]
+                        }
+                        onClick={() => onAdd(element)}
+                        className={`flex items-center justify-center p-1 bg-gray-700 rounded-lg relative aspect-[3/2] transition-all hover:scale-105 focus:outline-none disabled:opacity-80 disabled:cursor-not-allowed`}
+                    >
+                        {renderPreview(element)}
+                    </button>
+                </Card>
+            </HoverCardTrigger>
+            <HoverCardContent className="w-80">
+                <Card key={element.name} className="group overflow-hidden">
+                    {/* Image Container */}
+                    <div className="relative aspect-square overflow-hidden">
+                        {renderPreview(element)}
                     </div>
-                ) : (
-                    <table className="w-full">
-                        <thead className="sticky top-0 bg-gray-800">
-                            <tr>
-                                <th className="text-left">Preview</th>
-                                <th className="text-left">Name</th>
-                                <th className="text-left">Description</th>
-                                <th className="w-40 text-right">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {components.map((component) => (
-                                <tr key={component.id}>
-                                    <td className="w-16">
-                                        <SVGPreview
-                                            svgContent={getComponentPreview(
-                                                component
-                                            )}
-                                            className="w-12 h-12 mr-2"
-                                        />
-                                    </td>
-                                    <td>{component.name}</td>
-                                    <td className="text-gray-400">
-                                        {component.description}
-                                    </td>
-                                    <td className="text-right">
-                                        <Button
-                                            onClick={() =>
-                                                handleDeleteComponent(
-                                                    component.id
-                                                )
-                                            }
-                                            className="mr-2"
-                                        >
-                                            Del
-                                        </Button>
-                                        <Button
-                                            onClick={() =>
-                                                onAddComponent(component.id)
-                                            }
-                                            disabled={shouldDisable3DShapeButtons()}
-                                        >
-                                            Add
-                                        </Button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                )}
-            </div>
-        </div>
-    );
 
-    const render2DShapesContent = () => (
-        <div className="overflow-auto">
-            <table className="w-full">
-                <thead className="sticky top-0 bg-gray-800">
-                    <tr>
-                        <th className="text-left">Preview</th>
-                        <th className="text-left">Name</th>
-                        <th className="text-left">Attach To</th>
-                        <th className="w-20 text-right">Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {svgLibrary
-                        .filter((shape) => shape.type === "2D")
-                        .map((shape) => (
-                            <tr key={shape.name}>
-                                <td className="w-16">
-                                    <SVGPreview
-                                        svgContent={shape.svgContent}
-                                        className="w-12 h-12 mr-2"
-                                    />
-                                </td>
-                                <td>{shape.name}</td>
-                                <td>{shape.attachTo}</td>
-                                <td className="text-right">
-                                    <Button
-                                        onClick={() =>
-                                            onAdd2DShape(
-                                                shape.name,
-                                                shape.attachTo || ""
-                                            )
-                                        }
-                                        disabled={selected3DShape === null}
-                                    >
-                                        Add
-                                    </Button>
-                                </td>
-                            </tr>
-                        ))}
-                </tbody>
-            </table>
-        </div>
-    );
+                    {/* Product Details */}
+                    <CardContent className="p-4">
+                        <div className="space-y-2">
+                            <h3 className="font-semibold text-lg truncate">
+                                {element.name}
+                            </h3>
+                            {"attachTo" in element && element.attachTo && (
+                                <span className="text-md ">
+                                    attached to - {element.attachTo}
+                                </span>
+                            )}
+                            {"description" in element && (
+                                <span className="text-sm ml-1">
+                                    {element.description}
+                                </span>
+                            )}
+                        </div>
+                    </CardContent>
 
-    const accordionItems = [
-        {
-            name: "3D Shapes",
-            value: "3d-shapes",
-            render: render3DShapesContent
-        },
-        {
-            name: "Components",
-            value: "components",
-            render: renderComponentsContent
-        },
-        { name: "2D Shapes", value: "2d-shapes", render: render2DShapesContent }
-    ];
-    return (
-        <div className="flex flex-col h-full">
-            <Accordion
-                type="single"
-                collapsible
-                value={openPanels}
-                onValueChange={handleAccordionChange}
-                className="flex flex-col h-full"
-            >
-                <div className="flex flex-col h-full">
-                    {accordionItems.map((item) => (
-                        <AccordionItem
-                            key={item.value}
-                            value={item.value}
-                            className="flex flex-col min-h-12 border-b border-gray-500"
-                        >
-                            <AccordionTrigger className="p-2 text-xl font-semibold">
-                                {item.name}
-                            </AccordionTrigger>
-                            <AccordionContent className="flex-grow overflow-auto">
-                                <div className="p-2">{item.render()}</div>
-                            </AccordionContent>
-                        </AccordionItem>
-                    ))}
+                    {/* Add to Cart Button */}
+                    <CardFooter className="p-4 pt-0">
+                        {onDelete && (
+                            <Button
+                                onClick={() => {
+                                    onDelete(element);
+                                }}
+                                className="mr-2"
+                            >
+                                Delete
+                                {"type" in element ? "Shape" : "Component"}
+                            </Button>
+                        )}
+                        {onEdit && (
+                            <Button disabled={shouldDisable3DShapeButtons()}>
+                                Edit {"type" in element ? "Shape" : "Component"}
+                            </Button>
+                        )}
+                    </CardFooter>
+                </Card>
+            </HoverCardContent>
+        </HoverCard>
+    );
+    // Function to render shape/component sections
+    const renderSection = (
+        title: string,
+        items: (Shape | Component)[],
+        onAdd: any,
+        onDelete?: any,
+        onEdit?: any
+    ) => (
+        <div className="space-y-4">
+            <span className="font-bold">{title}</span>
+            {items.length > 0 ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    {items.map((element) =>
+                        renderElement(element, onAdd, onEdit, onDelete)
+                    )}
                 </div>
-            </Accordion>
+            ) : (
+                <div className=" text-gray-400">No {title} available</div>
+            )}
+        </div>
+    );
+
+    return (
+        <div className="container mx-auto p-6 pb-20 h-screen overflow-y-scroll flex flex-col gap-4">
+            {/* {AllElementsRender.map((ele) => ele.render)}
+             */}
+            {renderSection(
+                "3D Shapes",
+                svgLibrary.filter((shape) => shape.type === "3D"),
+                (shape: Shape) => onAdd3DShape(shape.name)
+            )}
+            {renderSection(
+                "2D Shapes",
+                svgLibrary.filter((shape) => shape.type === "2D"),
+                (shape: Shape) => onAdd2DShape(shape.name, shape.attachTo ?? "")
+            )}
+            {renderSection(
+                "Components",
+                components,
+                (component: Component) => onAddComponent(component.id),
+                (component: Component) => handleDeleteComponent(component.id)
+            )}
         </div>
     );
 };

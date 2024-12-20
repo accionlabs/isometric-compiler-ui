@@ -1,23 +1,26 @@
-import React from 'react';
+import React from "react";
 
 interface SVGPreviewProps {
     svgContent: string;
     className?: string;
 }
 
-const SVGPreview: React.FC<SVGPreviewProps> = ({ svgContent, className = '' }) => {
+const SVGPreview: React.FC<SVGPreviewProps> = ({
+    svgContent,
+    className = ""
+}) => {
     const renderSVG = () => {
         // Parse the SVG content
         const parser = new DOMParser();
-        const svgDoc = parser.parseFromString(svgContent, 'image/svg+xml');
+        const svgDoc = parser.parseFromString(svgContent, "image/svg+xml");
         const svgElement = svgDoc.documentElement;
 
         // Get the viewBox
-        let viewBox = svgElement.getAttribute('viewBox');
+        let viewBox = svgElement.getAttribute("viewBox");
         if (!viewBox) {
             // If viewBox is not present, create one based on width and height
-            const width = svgElement.getAttribute('width') || '100';
-            const height = svgElement.getAttribute('height') || '100';
+            const width = svgElement.getAttribute("width") || "100";
+            const height = svgElement.getAttribute("height") || "100";
             viewBox = `0 0 ${width} ${height}`;
         }
 
@@ -32,10 +35,12 @@ const SVGPreview: React.FC<SVGPreviewProps> = ({ svgContent, className = '' }) =
     };
 
     return (
-        <div className={`flex items-center justify-center p-1 bg-gray-700 rounded ${className}`}>
-            <div 
+        <div
+            className={`flex items-center justify-center p-1 bg-gray-700 rounded-lg ${className}`}
+        >
+            <div
                 className="w-full h-full"
-                dangerouslySetInnerHTML={{ __html: renderSVG() }} 
+                dangerouslySetInnerHTML={{ __html: renderSVG() }}
             />
         </div>
     );
