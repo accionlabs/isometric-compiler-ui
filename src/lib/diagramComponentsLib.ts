@@ -382,7 +382,8 @@ export function addComponentToScene(
         relativeToId: selectedComponentId,
         attached2DShapes: [],
         absolutePosition: { x: 0, y: 0 },
-        attachmentPoints: component.attachmentPoints
+        attachmentPoints: component.attachmentPoints,
+        libraryId: component.libraryId
     };
 
     // Add to existing components
@@ -1333,6 +1334,7 @@ export const serializeDiagramComponents = (
     return diagramComponents.map((component) => {
         const serializedComponent: SerializedDiagramComponent = {
             id: component.id,
+            libraryId: component.libraryId,
             shape: component.shape,
             position: component.position,
             source: component.source,

@@ -38,9 +38,9 @@ interface LoadingProgress {
 
 interface LibraryManagerProps {
     typeOfLibrary: "components" | "shapes";
-    activeLibraries: string[];
+    activeLibrary: string;
     onLibraryChange: (
-        libraryIds: string[],
+        libraryIds: string,
         type: "components" | "shapes"
     ) => void;
     onUpdateShapes: (shapes: Shape[]) => void;
@@ -58,7 +58,7 @@ const updateModeOptions = [
 
 const LibraryManager: React.FC<LibraryManagerProps> = ({
     typeOfLibrary,
-    activeLibraries,
+    activeLibrary,
     onLibraryChange,
     onUpdateShapes
 }) => {
@@ -226,7 +226,7 @@ const LibraryManager: React.FC<LibraryManagerProps> = ({
                 }
 
                 // Update active library
-                onLibraryChange([...activeLibraries, libraryId], typeOfLibrary);
+                onLibraryChange(libraryId, typeOfLibrary);
                 onUpdateShapes(shapes);
 
                 setLoadingStatus("Library activated successfully!");
@@ -272,7 +272,7 @@ const LibraryManager: React.FC<LibraryManagerProps> = ({
                     );
                 }
 
-                if (activeLibraries.includes(libraryId)) {
+                if (activeLibrary === libraryId) {
                     onUpdateShapes(shapes);
                 }
 
@@ -290,7 +290,7 @@ const LibraryManager: React.FC<LibraryManagerProps> = ({
                 }, 2000);
             }
         },
-        [activeLibraries, handleLoadShapes, onUpdateShapes]
+        [activeLibrary, handleLoadShapes, onUpdateShapes]
     );
 
     const processLocalFiles = async (
@@ -368,11 +368,11 @@ const LibraryManager: React.FC<LibraryManagerProps> = ({
             });
 
             // setLibraries(SVGLibraryManager.getLibraries());
-            if (activeLibraries.includes(libraryId)) {
+            if (activeLibrary === libraryId) {
                 onUpdateShapes(shapes);
             }
         },
-        [activeLibraries, onUpdateShapes]
+        [activeLibrary, onUpdateShapes]
     );
 
     const handleDeleteLibrary = useCallback(
@@ -381,7 +381,7 @@ const LibraryManager: React.FC<LibraryManagerProps> = ({
 
             // setLibraries(SVGLibraryManager.getLibraries());
         },
-        [activeLibraries, onUpdateShapes]
+        [activeLibrary, onUpdateShapes]
     );
 
     const handleSubmitLibrary = useCallback(async () => {
@@ -546,7 +546,10 @@ const LibraryManager: React.FC<LibraryManagerProps> = ({
     return (
         <div className="space-y-4">
             <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold">Shape Libraries</h3>
+                <h3 className="text-lg font-semibold">
+                    {typeOfLibrary === "shapes" ? "Shape" : "Component"}{" "}
+                    Libraries
+                </h3>
                 <Button
                     onClick={() => setIsLibraryDialogOpen(true)}
                     className="bg-blue-600 hover:bg-blue-700"
@@ -556,7 +559,7 @@ const LibraryManager: React.FC<LibraryManagerProps> = ({
             </div>
 
             {libraries.map((library) => {
-                const isLibIdPresent = activeLibraries.includes(library.id);
+                const isLibIdPresent = activeLibrary === library.id;
                 return (
                     <div
                         key={library.id}
@@ -593,20 +596,10 @@ const LibraryManager: React.FC<LibraryManagerProps> = ({
                                     Edit
                                 </Button>
                                 <Button
-                                    disabled={
-                                        isLibIdPresent &&
-                                        activeLibraries.length < 2
-                                    }
+                                    disabled={isLibIdPresent}
                                     onClick={() => {
-                                        const updatedLibraries = isLibIdPresent
-                                            ? activeLibraries.filter(
-                                                  (id) => id !== library.id
-                                              )
-                                            : [...activeLibraries, library.id];
-                                        if (!updatedLibraries.length) return;
-
                                         onLibraryChange(
-                                            updatedLibraries,
+                                            library.id,
                                             typeOfLibrary
                                         );
                                     }}

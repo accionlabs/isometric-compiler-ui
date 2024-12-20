@@ -157,7 +157,7 @@ export async function getComponents(
             undefined,
             true
         );
-        const updatedShapes: Component[] = compresp.map((comp) => {
+        const components: Component[] = compresp.map((comp) => {
             return {
                 id: comp.name,
                 dbId: comp.id,
@@ -172,7 +172,7 @@ export async function getComponents(
             };
         });
 
-        return updatedShapes;
+        return components;
     } catch (error) {
         console.error("Error fetching components", error);
         return [];

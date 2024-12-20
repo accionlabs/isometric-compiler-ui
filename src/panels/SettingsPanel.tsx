@@ -13,12 +13,9 @@ interface SettingsPanelProps {
     onSetCanvasSize: (size: { width: number; height: number }) => void;
     fileName: string;
     setFileName: (name: string) => void;
-    activeShapesLibrary: string[];
-    activeComponentsLibrary: string[];
-    onLibraryChange: (
-        libraryIds: string[],
-        type: "components" | "shapes"
-    ) => void;
+    activeShapesLibrary: string;
+    activeComponentsLibrary: string;
+    onLibraryChange: (libraryId: string, type: "components" | "shapes") => void;
     onSaveDiagram: () => void;
     onLoadDiagram: (file?: File) => Promise<void>;
     folderPath: string;
@@ -222,7 +219,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 {/* {activePanel === "shapes" && ( */}
                 <LibraryManager
                     typeOfLibrary={activePanel}
-                    activeLibraries={
+                    activeLibrary={
                         activePanel === "shapes"
                             ? activeShapesLibrary
                             : activeComponentsLibrary

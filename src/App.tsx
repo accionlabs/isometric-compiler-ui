@@ -23,6 +23,9 @@ const App: React.FC = () => {
     const [diagramComponents, setDiagramComponents] = useState<
         DiagramComponent[]
     >([]);
+    const [diagramComponentsTemp, setDiagramComponentsTemp] = useState<
+        DiagramComponent[]
+    >([]);
     const [canvasSize, setCanvasSize] = useState({ width: 1000, height: 1000 });
     const [composedSVG, setComposedSVG] = useState<string>("");
     const [selected3DShape, setSelected3DShape] = useState<string | null>(null);
@@ -55,22 +58,24 @@ const App: React.FC = () => {
     );
 
     // Add state for component library
-    const [currentShapeLibraryId, setCurrentShapeLibraryId] = useState<
-        string[]
-    >(getLibrariesFromLocalStorage("shapes"));
-    const [currentComponentLibraryId, setCurrentComponentLibraryId] = useState<
-        string[]
-    >(getLibrariesFromLocalStorage("components"));
+    const [currentShapeLibraryId, setCurrentShapeLibraryId] = useState<string>(
+        getLibrariesFromLocalStorage("shapes")
+    );
+    const [currentComponentLibraryId, setCurrentComponentLibraryId] =
+        useState<string>(getLibrariesFromLocalStorage("components"));
+
     const [components, setComponents] = useState<Component[]>([]);
-    const { data: svgShapes = [] } = useQuery({
+
+    const { data: svgShapes = [], isSuccess: isShapesLibFetched } = useQuery({
         queryKey: ["shapes", currentShapeLibraryId],
-        queryFn: () => getShapes(currentShapeLibraryId)
+        queryFn: () => getShapes([currentShapeLibraryId])
     });
-    const { data: componentsRes = [] } = useQuery({
-        queryKey: ["components", currentComponentLibraryId],
-        queryFn: () => getComponents(currentComponentLibraryId),
-        enabled: svgShapes.length > 0
-    });
+    const { data: componentsRes = [], isSuccess: isComponentsLibFetched } =
+        useQuery({
+            queryKey: ["components", currentComponentLibraryId],
+            queryFn: () => getComponents([currentComponentLibraryId]),
+            enabled: svgShapes.length > 0
+        });
 
     const { mutate, isPending } = useMutation({
         mutationFn: createComponent,
@@ -145,9 +150,18 @@ const App: React.FC = () => {
     });
     // Update shapes when active library changes
     const handleLibraryChange = (
-        libraryIds: string[],
+        libraryId: string,
         type: "components" | "shapes"
     ) => {
+        if (
+            type === "shapes" &&
+            components?.[0].diagramComponents?.[0].libraryId !== libraryId
+        ) {
+            handleLibraryChange(
+                components?.[0].diagramComponents?.[0].libraryId ?? "",
+                "components"
+            );
+        }
         const key =
             type === "components"
                 ? "active_components_library"
@@ -157,9 +171,9 @@ const App: React.FC = () => {
                 ? setCurrentComponentLibraryId
                 : setCurrentShapeLibraryId;
 
-        const libraryIdsString = JSON.stringify(libraryIds);
+        const libraryIdsString = JSON.stringify(libraryId);
         localStorage.setItem(key, libraryIdsString);
-        setLibraryId(libraryIds);
+        setLibraryId(libraryId);
     };
 
     // update diagram component metadata when added
@@ -182,15 +196,15 @@ const App: React.FC = () => {
     );
     function getLibrariesFromLocalStorage(
         type: "shapes" | "components"
-    ): string[] {
+    ): string {
         const key =
             type === "shapes"
                 ? "active_shapes_library"
                 : "active_components_library";
         const defaultValue =
             type === "shapes"
-                ? [config.defaultShapesLibraryId]
-                : [config.defaultComponentsLibraryId];
+                ? config.defaultShapesLibraryId
+                : config.defaultComponentsLibraryId;
 
         try {
             const item = localStorage.getItem(key);
@@ -527,13 +541,54 @@ const App: React.FC = () => {
                     diagramComponentsLib.deserializeDiagramComponents(
                         parsedData.serializedDiagramComponents
                     );
-
-                componentLibraryManager.deserializeComponentLib(
-                    parsedData.serializedComponentLib
+                const shapeLibIds = new Set<string>(); // To store unique IDs for source "shape"
+                const componentLibIds = new Set<string>(); // To store unique IDs for source "component"
+                console.log(
+                    "deserializedComponentsdeserializedComponents",
+                    deserializedComponents
+                );
+                const libraryIds = deserializedComponents.reduce(
+                    (acc, component) => {
+                        // Check if libraryId exists and is not null/undefined
+                        if (component.libraryId) {
+                            if (component.source === "shape") {
+                                acc.shapeLibIds.add(
+                                    component.libraryId.toString()
+                                );
+                            } else if (component.source === "component") {
+                                acc.componentLibIds.add(
+                                    component.libraryId.toString()
+                                );
+                            }
+                        }
+                        return acc;
+                    },
+                    {
+                        shapeLibIds: new Set<string>(),
+                        componentLibIds: new Set<string>()
+                    }
                 );
 
-                setComponents(componentLibraryManager.getAllComponents());
-                setDiagramComponents(deserializedComponents);
+                // handleLibraryChange(
+                //     Array.from(
+                //         new Set([
+                //             ...currentShapeLibraryId,
+                //             ...Array.from(libraryIds.shapeLibIds)
+                //         ])
+                //     ),
+                //     "shapes"
+                // );
+                // handleLibraryChange(
+                //     Array.from(
+                //         new Set([
+                //             ...currentComponentLibraryId,
+                //             ...Array.from(libraryIds.componentLibIds)
+                //         ])
+                //     ),
+                //     "components"
+                // );
+
+                setDiagramComponentsTemp(deserializedComponents);
                 setErrorMessage(null);
             } catch (error) {
                 console.error("Error loading diagram:", error);
@@ -722,15 +777,37 @@ const App: React.FC = () => {
         );
 
         if (librariesrequiredToDownload.length > currentShapeLibraryId.length) {
-            handleLibraryChange(librariesrequiredToDownload, "shapes");
+            // handleLibraryChange(librariesrequiredToDownload, "shapes");
         }
         componentLibraryManager.clearLibrary();
         componentLibraryManager.deserializeComponentLib(componentsRes);
         setComponents(componentLibraryManager.getAllComponents());
     };
+
     useEffect(() => {
-        handleDownloadOfNecessaryShapesLibsForComponents();
+        // Trigger downloading necessary shape libraries when components are loaded
+        if (componentsRes.length > 0) {
+            handleDownloadOfNecessaryShapesLibsForComponents();
+        } else {
+            componentLibraryManager.clearLibrary();
+            setComponents([]);
+        }
     }, [componentsRes]);
+
+    useEffect(() => {
+        //trigger for setting diagram components when onload diagram
+        // Check if all necessary conditions are met to set diagram components
+        const canSetDiagramComponents =
+            diagramComponentsTemp.length > 0 &&
+            isShapesLibFetched &&
+            isComponentsLibFetched;
+
+        if (canSetDiagramComponents) {
+            // Set diagram components and clear temporary storage
+            setDiagramComponents(diagramComponentsTemp);
+            setDiagramComponentsTemp([]);
+        }
+    }, [diagramComponentsTemp, isShapesLibFetched, isComponentsLibFetched]);
 
     // load the component metadata schema
     useEffect(() => {

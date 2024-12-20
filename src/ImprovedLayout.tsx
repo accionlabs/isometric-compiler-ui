@@ -19,8 +19,8 @@ import { StorageType } from "./lib/fileOperations";
 
 interface ImprovedLayoutProps {
     svgLibrary: Shape[];
-    activeComponentsLibrary: string[];
-    activeShapesLibrary: string[];
+    activeComponentsLibrary: string;
+    activeShapesLibrary: string;
     diagramComponents: DiagramComponent[];
     components: Component[];
     isCopied: boolean;
@@ -61,10 +61,7 @@ interface ImprovedLayoutProps {
     setFolderPath: (path: string) => void;
     showAttachmentPoints: boolean;
     setShowAttachmentPoints: (show: boolean) => void;
-    onLibraryChange: (
-        libraryIds: string[],
-        type: "components" | "shapes"
-    ) => void;
+    onLibraryChange: (libraryId: string, type: "components" | "shapes") => void;
     onUpdateMetadata: (
         id: string,
         type: string | undefined,

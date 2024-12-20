@@ -110,11 +110,11 @@ export interface SerializedDiagramComponent {
         | string;
     relativeToId: string | null;
     attachmentPoints?: AttachmentPoint[];
-
     attached2DShapes: {
         name: string;
         attachedTo: string;
     }[];
+    libraryId?: string;
     type?: string; // Add type field
     metadata?: Record<string, any>; // Add metadata field
 }
