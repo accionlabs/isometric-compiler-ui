@@ -332,6 +332,9 @@ export class HullBasedLayoutManager extends BaseLayoutManager {
                 Math.pow(b.y - componentBound.center.y, 2);
             return distA - distB;
         });
+        if (component.componentId === 'shape-1734530526265-ety5wgdmz') {
+            console.log('... sorted vertices:',sortedVertices);
+        }
 
         let lastTriedVertex = sortedVertices[0];
 
@@ -345,11 +348,15 @@ export class HullBasedLayoutManager extends BaseLayoutManager {
                 const occupiedVertex = this.vertices[occupiedIndex];
                 const dx = Math.abs(vertex.x - occupiedVertex.x);
                 const dy = Math.abs(vertex.y - occupiedVertex.y);
+                const distance = Math.sqrt(dx * dx + dy * dy);
                 // updated logic - instead of distance, check dx and dy
                 if (dy < this.config.minYSpacing && dx < this.config.minSpacing) {
+                //if (Math.abs(occupiedIndex-vertex.index) < 3 && dx < this.config.minSpacing) {
+                //if (distance < this.config.minSpacing) {
+                //if (Math.abs(occupiedIndex-vertex.index) < 2) {
                     meetsMinimumSpacing = false;
                     break;
-                }
+               }
            }
 
             if (meetsMinimumSpacing) {

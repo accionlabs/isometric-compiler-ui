@@ -31,17 +31,22 @@ import { Point, DiagramComponent, CanvasSize } from "@/Types";
 import SVGNode, {
     ComponentBounds,
     ComponentBoundsMap,
-    HandlePosition
+    HandlePosition,
+    SVGLayout,
+    convertSVGToContainerCoords
 } from "@/components/flow/SVGNode";
-import LabelNode from "@/components/flow/LabelNode";
 import CustomEdge, { CustomEdgeProps } from "@/components/flow/CustomEdge";
 import MetadataNode, { MetadataNodeData } from "@/components/flow/MetadataNode";
+import IsometricTextNode, {
+    IsometricTextNodeData
+} from "./components/flow/IsometricTextNode";
 import {
     BaseLayoutManager,
     LayoutManagerFactory,
     RectangularLayoutConfig,
     HullBasedLayoutConfig
 } from "@/lib/layoutUtils";
+import { getGlobalAttachmentPoints } from "./lib/diagramComponentsLib";
 
 interface FlowSVGDisplayProps {
     svgContent: string;
@@ -81,9 +86,9 @@ const MarkerNode: React.FC<NodeProps<MarkerNodeType>> = ({ data }) => {
 
 const nodeTypes = {
     svgNode: SVGNode,
-    label: LabelNode,
     metadata: MetadataNode,
-    marker: MarkerNode
+    marker: MarkerNode,
+    isometricText: IsometricTextNode
 };
 
 const edgeTypes = {
@@ -102,7 +107,7 @@ const LAYOUT_CONFIG = {
     "hull-based": {
         padding: 150,
         minSpacing: 200,
-        minYSpacing: 30,
+        minYSpacing: 17,
         smoothingAngle: Math.PI / 4, // 45 degrees
         placementDistance: 100,
         stepSize: 20
@@ -128,6 +133,7 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
     const [componentBounds, setComponentBounds] = useState<ComponentBoundsMap>(
         {}
     );
+    const [svgLayout, setSVGLayout] = useState<SVGLayout>();
     const [layoutManager, setLayoutManager] =
         useState<BaseLayoutManager | null>(null);
 
@@ -138,6 +144,14 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
             setComponentBounds(bounds);
         },
         [setComponentBounds]
+    );
+
+    const handleSVGLayoutUpdate = useCallback(
+        (layout: SVGLayout) => {
+            setSVGLayout(layout);
+            //console.log("Svg Layout:", layout);
+        },
+        [setSVGLayout]
     );
 
     // Update layout manager when component bounds change
@@ -343,7 +357,8 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
                 setSelectedAttachmentPoint,
                 isConnecting,
                 isInteractive,
-                onComponentBoundsUpdate: handleComponentBoundsUpdate
+                onComponentBoundsUpdate: handleComponentBoundsUpdate,
+                onSVGLayoutUpdate: handleSVGLayoutUpdate
             },
             draggable: false,
             selectable: false,
@@ -353,9 +368,11 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
 
         // Filter components with metadata
         const componentsWithMetadata = diagramComponents.filter(
-            (component) => component.type && component.metadata
+            (component) =>
+                component.type &&
+                component.type !== "layer" &&
+                component.metadata
         );
-
         // Calculate all metadata node positions
         const nodePositions = calculateMetadataNodePositions(
             componentsWithMetadata
@@ -422,6 +439,55 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
               })
             : [];
 
+            const layerComponents = diagramComponents.filter(
+                (component) =>
+                    component.type &&
+                    component.type === "layer" &&
+                    component.metadata &&
+                    component.metadata.name && 
+                    component.metadata.labelPosition
+            );
+            const isoTextNodes: Node[] = layerComponents.map((layer) => {
+            const metadata = layer.metadata;
+            let position = { x: 100, y: 100 };
+            let textString = metadata?.name;
+            let attachment = metadata?.labelPosition;
+            const attachmentPoints = getGlobalAttachmentPoints(layer);
+            if (
+                svgLayout &&
+                attachmentPoints[`attach-${attachment}`]
+            ) {
+                position = convertSVGToContainerCoords(
+                    svgLayout,
+                    attachmentPoints[`attach-${attachment}`]
+                );
+            }
+            return {
+                id: `label-${layer.id}`,
+                type: "isometricText",
+                position: position as Point,
+                data: {
+                    text: textString,
+                    attachment: attachment,
+                    width: 200,
+                    scale:svgLayout?.scale,
+                    isInteractive: true
+                } as IsometricTextNodeData
+            } as Node;
+        });
+        //("Layer Nodes:", isoTextNodes);
+        const isoTextNode: Node<IsometricTextNodeData> = {
+            id: "1",
+            type: "isometricText",
+            position: { x: 100, y: 100 },
+            data: {
+                text: "Hello World, here I come! Now wrap me in at least two lines.",
+                attachment: "front-right",
+                width: 200,
+                isInteractive: true
+            }
+        };
+
         const edges: FlowEdge[] = metadataNodes
             .map((metadataNode) => {
                 const metaData = metadataNode.data as MetadataNodeData;
@@ -468,7 +534,10 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
             })
             .filter((edge): edge is FlowEdge => edge !== null);
 
-        return { nodes: [mainNode, ...metadataNodes], edges };
+        return {
+            nodes: [...isoTextNodes, mainNode, ...metadataNodes], //, ...markerNodes],
+            edges
+        };
     };
 
     const isInteractive = useStore(

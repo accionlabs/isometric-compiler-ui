@@ -103,7 +103,6 @@ const App: React.FC = () => {
                     selectedComponent
                 );
             setAvailableAttachmentPoints(updatedAttachmentPoints);
-            console.log(`App: set selected ${selectedComponent.id}`);
         } else {
             console.log("App: cannot select", selectedComponent);
             setAvailableAttachmentPoints([]);
@@ -112,8 +111,6 @@ const App: React.FC = () => {
 
     const handleSelect3DShape = useCallback(
         (id: string | null) => {
-            console.log(`App: Select component ${id}`);
-            console.log("App: diagram components", diagramComponents);
             if (!id) {
                 setSelected3DShape(null);
                 setAvailableAttachmentPoints([]);
@@ -131,7 +128,6 @@ const App: React.FC = () => {
     const handleSelectedPosition = useCallback(
         (position: string | null) => {
             if (position) {
-                console.log(`App: position: ${position}`);
                 setSelectedPosition(position);
             }
         },
@@ -141,7 +137,6 @@ const App: React.FC = () => {
     const handleSelectedAttachmentPoint = useCallback(
         (point: string | null) => {
             if (point) {
-                console.log(`App: atttachment point: ${point}`);
                 setSelectedAttachmentPoint(point);
             }
         },
@@ -150,9 +145,6 @@ const App: React.FC = () => {
 
     const handleAdd3DShape = useCallback(
         (shapeName: string) => {
-            console.log(
-                `App: add3DShape ${selectedPosition} ${selectedAttachmentPoint}`
-            );
             const result = diagramComponentsLib.add3DShape(
                 diagramComponents,
                 svgLibrary,
@@ -163,7 +155,6 @@ const App: React.FC = () => {
             );
 
             if (result.newComponent) {
-                console.log(`App: added 3D Shape ${result.newComponent.id}`);
                 setDiagramComponents(result.updatedComponents);
                 updateSelected3DShape(result.newComponent);
             } else {
@@ -181,11 +172,6 @@ const App: React.FC = () => {
 
     const handleAddComponent = useCallback(
         (componentId: string) => {
-            console.log(
-                `App: add component ${componentId}`,
-                selectedPosition,
-                selectedAttachmentPoint
-            );
             const result = diagramComponentsLib.addComponentToScene(
                 diagramComponents,
                 componentId,
@@ -194,7 +180,6 @@ const App: React.FC = () => {
                 selected3DShape
             );
             if (result.newComponent) {
-                console.log(`App: added component ${result.newComponent.id}`);
                 setDiagramComponents(result.updatedComponents);
                 updateSelected3DShape(result.newComponent);
             } else {
@@ -381,9 +366,6 @@ const App: React.FC = () => {
 
     const handleLoadDiagram = useCallback(
         async (fileOrPath?: File) => {
-            console.log("handleLoadDiagram called with:", fileOrPath); // Debug log
-            console.log("Current storage type:", storageType); // Debug log
-
             try {
                 let loadedData: string;
 
@@ -428,7 +410,6 @@ const App: React.FC = () => {
     const handleLoadDiagramFromJSON = (
         loadedComponents: DiagramComponent[]
     ) => {
-        console.log("Load From JSON", loadedComponents);
         const { svgContent, processedComponents } =
             diagramComponentsLib.compileDiagram(
                 loadedComponents,
@@ -567,7 +548,6 @@ const App: React.FC = () => {
                             parentId
                         );
                         if (result.newComponent) {
-                            console.log(`App: replaced component ${result.newComponent.id}`);
                             setDiagramComponents(result.updatedComponents);
                             updateSelected3DShape(result.newComponent);
                         } else {

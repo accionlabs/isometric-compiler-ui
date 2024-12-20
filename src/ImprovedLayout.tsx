@@ -151,7 +151,6 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
 
     const handleSelect3DShape = useCallback(
         (id: string | null) => {
-            console.log(`Improved Layout: selected 3D Shape ${id}`);
             onSelect3DShape(id);
         },
         [onSelect3DShape]
@@ -170,7 +169,6 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     const handleSelectedAttachmentPoint = useCallback(
         (point: string | null) => {
             onSelectedAttachmentPoint(point);
-            console.log("Improved Layout: attachment point", point);
         },
         [onSelectedAttachmentPoint]
     );

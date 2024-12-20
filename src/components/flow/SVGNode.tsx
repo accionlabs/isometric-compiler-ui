@@ -15,7 +15,6 @@ import {
     extractGlobalAttachmentPoints
 } from "@/lib/diagramComponentsLib";
 import {
-    calculateSVGBoundingBox,
     calculateViewBox,
     DEFAULT_MARGIN
 } from "@/lib/svgUtils";
@@ -31,6 +30,27 @@ export interface ComponentBounds {
         y: number;
         width: number;
         height: number;
+    };
+}
+
+export interface SVGLayout {
+    viewBox: {
+        x: number;
+        y: number;
+        width: number;
+        height: number;
+    };
+    scale: number;
+    offset: {
+        x: number;
+        y: number;
+    };
+};
+
+export function convertSVGToContainerCoords (layout: SVGLayout, svgCoords: Point): Point {
+    return {
+        x: layout.offset.x + (svgCoords.x - layout.viewBox.x) * layout.scale,
+        y: layout.offset.y + (svgCoords.y - layout.viewBox.y) * layout.scale
     };
 }
 
@@ -51,6 +71,7 @@ type SVGNodeData = Node<{
     isConnecting: boolean;
     isInteractive: boolean;
     onComponentBoundsUpdate?: (bounds: ComponentBoundsMap) => void;
+    onSVGLayoutUpdate?: (layout: SVGLayout) => void;
 }>;
 
 export interface HandlePosition {
@@ -61,20 +82,6 @@ export interface HandlePosition {
     y: number;
     componentId: string;
     pointName: string;
-}
-
-interface SVGLayout {
-    viewBox: {
-        x: number;
-        y: number;
-        width: number;
-        height: number;
-    };
-    scale: number;
-    offset: {
-        x: number;
-        y: number;
-    };
 }
 
 const styles = {
@@ -144,8 +151,12 @@ const SVGNode = ({ id, data }: NodeProps<SVGNodeData>) => {
             y: (containerHeight - newViewBox.height * newScale) / 2
         };
 
-        return { viewBox: newViewBox, scale: newScale, offset: newOffset };
-    }, [zoom]);
+        const layout = { viewBox: newViewBox, scale: newScale, offset: newOffset };
+
+        if (data.onSVGLayoutUpdate) data.onSVGLayoutUpdate(layout);
+
+        return layout;
+    }, [zoom, data.diagramComponents]);
 
     const containerToSvgCoords = useCallback(
         (containerX: number, containerY: number): Point => ({
@@ -208,7 +219,7 @@ const SVGNode = ({ id, data }: NodeProps<SVGNodeData>) => {
         });
 
         return componentBoundsMap;
-    }, [data.diagramComponents, zoom, scale, offset, viewBox]);
+    }, [data.diagramComponents, scale, offset, viewBox]);
 
     // Update bounds when relevant properties change
     useEffect(() => {
@@ -217,7 +228,7 @@ const SVGNode = ({ id, data }: NodeProps<SVGNodeData>) => {
         const bounds = calculateComponentBounds();
         //console.log("component bounds:", bounds, data.onComponentBoundsUpdate);
         data.onComponentBoundsUpdate?.(bounds);
-    }, [isReady, data.diagramComponents, calculateComponentBounds, data.onComponentBoundsUpdate]);
+    }, [isReady, data.diagramComponents, data.onComponentBoundsUpdate]);
 
     useEffect(() => {
         if (!svgRef.current) return;
