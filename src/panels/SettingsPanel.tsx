@@ -1,11 +1,11 @@
-import React from 'react';
-import { Button } from '../components/ui/Button';
-import { Input } from '../components/ui/Input';
-import { Checkbox } from '../components/ui/Checkbox';
-import LibraryManager from './LibraryManager';
-import { Shape } from '../Types';
-import { StorageType } from '../lib/fileOperations';
-import { ToggleGroup, ToggleGroupOption } from '../components/ui/ToggleGroup';
+import React from "react";
+import { Button } from "../components/ui/Button";
+import { Input } from "../components/ui/Input";
+import { Checkbox } from "../components/ui/Checkbox";
+import LibraryManager from "./LibraryManager";
+import { Shape } from "../Types";
+import { StorageType } from "../lib/fileOperations";
+import { ToggleGroup, ToggleGroupOption } from "../components/ui/ToggleGroup";
 
 interface SettingsPanelProps {
     canvasSize: { width: number; height: number };
@@ -42,11 +42,11 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
     setShowAttachmentPoints,
     onUpdateShapes,
     storageType,
-    onStorageTypeChange,
+    onStorageTypeChange
 }) => {
     const storageOptions: ToggleGroupOption[] = [
-        { value: StorageType.Local, label: 'Local File' },
-        { value: StorageType.GoogleDrive, label: 'Google Drive' }
+        { value: StorageType.Local, label: "Local File" },
+        { value: StorageType.GoogleDrive, label: "Google Drive" }
     ];
 
     const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -64,7 +64,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
         if (file) {
             onLoadDiagram(file);
             // Clear the input so the same file can be selected again if needed
-            event.target.value = '';
+            event.target.value = "";
         }
     };
 
@@ -78,7 +78,12 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                         <input
                             type="number"
                             value={canvasSize.width}
-                            onChange={(e) => onSetCanvasSize({ ...canvasSize, width: parseInt(e.target.value) })}
+                            onChange={(e) =>
+                                onSetCanvasSize({
+                                    ...canvasSize,
+                                    width: parseInt(e.target.value)
+                                })
+                            }
                             className="w-full bg-gray-700 text-white p-2 rounded"
                         />
                     </div>
@@ -87,7 +92,12 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                         <input
                             type="number"
                             value={canvasSize.height}
-                            onChange={(e) => onSetCanvasSize({ ...canvasSize, height: parseInt(e.target.value) })}
+                            onChange={(e) =>
+                                onSetCanvasSize({
+                                    ...canvasSize,
+                                    height: parseInt(e.target.value)
+                                })
+                            }
                             className="w-full bg-gray-700 text-white p-2 rounded"
                         />
                     </div>
@@ -97,10 +107,14 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                             <Checkbox
                                 id="show-attachment-points"
                                 checked={showAttachmentPoints}
-                                onCheckedChange={(checked) => setShowAttachmentPoints(checked as boolean)}
+                                onCheckedChange={(checked) =>
+                                    setShowAttachmentPoints(checked as boolean)
+                                }
                                 className="mr-2"
                             />
-                            <label htmlFor="show-attachment-points">{showAttachmentPoints ? "Show" : "Hide"}</label>
+                            <label htmlFor="show-attachment-points">
+                                {showAttachmentPoints ? "Show" : "Hide"}
+                            </label>
                         </div>
                     </div>
                 </div>
@@ -127,8 +141,10 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 </div>
 
                 {storageType === StorageType.GoogleDrive && (
-                <div className="mb-4">
-                        <label className="block mb-2">Google Drive Folder Path:</label>
+                    <div className="mb-4">
+                        <label className="block mb-2">
+                            Google Drive Folder Path:
+                        </label>
                         <Input
                             type="text"
                             value={folderPath}
@@ -145,7 +161,10 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                     </Button>
                     {storageType === StorageType.Local ? (
                         <>
-                            <Button onClick={handleFileSelect} className="flex-1">
+                            <Button
+                                onClick={handleFileSelect}
+                                className="flex-1"
+                            >
                                 Load Diagram
                             </Button>
                             <input
@@ -157,10 +176,14 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                             />
                         </>
                     ) : (
-                        <Button onClick={() => onLoadDiagram()} className="flex-1">
+                        <Button
+                            onClick={() => onLoadDiagram()}
+                            className="flex-1"
+                        >
                             Load Diagram
                         </Button>
-                    )}                    <Button onClick={onDownloadSVG} className="flex-1">
+                    )}{" "}
+                    <Button onClick={onDownloadSVG} className="flex-1">
                         Download SVG
                     </Button>
                 </div>

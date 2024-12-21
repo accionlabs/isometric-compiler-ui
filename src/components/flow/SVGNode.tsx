@@ -219,7 +219,7 @@ const SVGNode = ({ id, data }: NodeProps<SVGNodeData>) => {
         });
 
         return componentBoundsMap;
-    }, [data.diagramComponents, scale, offset, viewBox]);
+    }, [data.diagramComponents, data.svgContent, scale, offset, viewBox]);
 
     // Update bounds when relevant properties change
     useEffect(() => {
@@ -228,7 +228,7 @@ const SVGNode = ({ id, data }: NodeProps<SVGNodeData>) => {
         const bounds = calculateComponentBounds();
         //console.log("component bounds:", bounds, data.onComponentBoundsUpdate);
         data.onComponentBoundsUpdate?.(bounds);
-    }, [isReady, data.diagramComponents, data.onComponentBoundsUpdate]);
+    }, [isReady, data.diagramComponents, data.svgContent, data.onComponentBoundsUpdate]);
 
     useEffect(() => {
         if (!svgRef.current) return;

@@ -44,7 +44,7 @@ const App: React.FC = () => {
         const stored = localStorage.getItem("activeLibrary");
         return stored || "default";
     });
-    const [schemaUrl] = useState("/schemas/component-types.yaml"); // URL to your schema file
+    const [schemaUrl] = useState("./schemas/component-types.yaml"); // URL to your schema file
     const [storageType, setStorageType] = useState<StorageType>(
         StorageType.Local
     );

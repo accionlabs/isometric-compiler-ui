@@ -105,12 +105,11 @@ const LAYOUT_CONFIG = {
     } as RectangularLayoutConfig,
 
     "hull-based": {
-        padding: 150,
-        minSpacing: 200,
-        minYSpacing: 17,
-        smoothingAngle: Math.PI / 4, // 45 degrees
-        placementDistance: 100,
-        stepSize: 20
+        padding: 100,   // padding to expand hull
+        minSpacing: 200,    // minimum X spacing between metadata labels
+        minYSpacing: 17,    // minimum Y spacing between metadata labels
+        smoothingAngle: Math.PI * 2 / 3, // hull smoothing angle 120 degrees
+        stepSize: 20    // distance between metadata label positions
     } as HullBasedLayoutConfig
 };
 
