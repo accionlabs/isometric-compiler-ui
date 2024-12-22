@@ -161,7 +161,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     const handleSelectedPosition = useCallback(
         (position: string | null) => {
             if (position) {
-                console.log(`Improved Layout: position ${position}`);
+                //console.log(`Improved Layout: position ${position}`);
                 onSelectedPosition(position);
             }
         },

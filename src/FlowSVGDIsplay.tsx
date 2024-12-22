@@ -4,6 +4,7 @@ import React, {
     useState,
     useCallback,
     useEffect,
+    useRef,
     MouseEvent as ReactMouseEvent,
     useMemo
 } from "react";
@@ -131,6 +132,10 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
     const [isConnecting, setIsConnecting] = useState(false);
     const store = useStoreApi();
     const { fitView } = useReactFlow();
+    const [pendingEdgeUpdates, setPendingEdgeUpdates] = useState<FlowEdge[]>(
+        []
+    );
+    const edgeUpdateTimeoutRef = useRef<NodeJS.Timeout>();
     const [areComponentBoundsReady, setAreComponentBoundsReady] =
         useState(false);
     const [componentBounds, setComponentBounds] = useState<ComponentBoundsMap>(
@@ -140,6 +145,49 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
     const [layoutManager, setLayoutManager] =
         useState<BaseLayoutManager | null>(null);
     const [initialLayoutComplete, setInitialLayoutComplete] = useState(false);
+    const prevDiagramComponentsRef = useRef<DiagramComponent[]>([]);
+
+    // Debug: Log state changes
+    useEffect(() => {
+        console.log("State Change Debug:", {
+            nodesCount: nodes.length,
+            edgesCount: edges.length,
+            diagramComponentsCount: diagramComponents.length,
+            areComponentBoundsReady,
+            hasLayoutManager: !!layoutManager,
+            componentBoundsCount: Object.keys(componentBounds).length
+        });
+    }, [
+        nodes.length,
+        edges.length,
+        diagramComponents.length,
+        areComponentBoundsReady,
+        layoutManager,
+        componentBounds
+    ]);
+
+    // Debug: Track diagram component changes
+    useEffect(() => {
+        const prevComponents = prevDiagramComponentsRef.current;
+        const changedComponents = diagramComponents.filter(
+            (comp) =>
+                !prevComponents.find(
+                    (prev) => prev.id === comp.id && prev.type === comp.type
+                )
+        );
+
+        if (changedComponents.length > 0) {
+            console.log("Diagram Components Changed:", {
+                changed: changedComponents,
+                total: diagramComponents.length,
+                hasMetadata: diagramComponents.filter(
+                    (c) => c.type && c.metadata
+                ).length
+            });
+        }
+
+        prevDiagramComponentsRef.current = diagramComponents;
+    }, [diagramComponents]);
 
     // Handler for component bounds updates
     const handleComponentBoundsUpdate = useCallback(
@@ -209,100 +257,129 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
 
             return layoutManager.calculateLayout(componentPositions);
         },
-        [layoutManager, componentBounds, areComponentBoundsReady]
+        [layoutManager, componentBounds]
     );
 
-    const getHandlesForConnection = (
-        metadataNode: Node,
-        componentBounds: ComponentBounds,
-        handles: HandlePosition[]
-    ): {
-        sourceHandle: string;
-        targetHandle: string;
-        sourcePosition: Position;
-    } => {
-        const metadataCenter = {
-            x: metadataNode.position.x,
-            y: metadataNode.position.y
-        };
+    const getHandlesForConnection = useCallback(
+        (
+            metadataNode: Node,
+            componentBounds: ComponentBounds,
+            handles: HandlePosition[]
+        ): {
+            sourceHandle: string;
+            targetHandle: string;
+            sourcePosition: Position;
+        } => {
+            const metadataCenter = {
+                x: metadataNode.position.x,
+                y: metadataNode.position.y
+            };
 
-        // Calculate relative position to component
-        const dx = metadataCenter.x - componentBounds.center.x;
-        const dy = metadataCenter.y - componentBounds.center.y;
+            // Calculate relative position to component
+            const dx = metadataCenter.x - componentBounds.center.x;
+            const dy = metadataCenter.y - componentBounds.center.y;
 
-        // Find available handles for this component
-        const validHandles = handles.filter(
-            (h) => h.componentId === componentBounds.id
-        );
+            // Find available handles for this component
+            const validHandles = handles.filter(
+                (h) => h.componentId === componentBounds.id
+            );
 
-        // Choose appropriate target handle based on metadata node position
-        const isRight = dx > 0;
-        const isBelow = dy > 0;
+            // Choose appropriate target handle based on metadata node position
+            const isRight = dx > 0;
+            const isBelow = dy > 0;
 
-        // Select target handle - prefer front handles over back handles
-        const targetHandle =
-            validHandles.find((h) => {
-                if (isRight) {
-                    return (
-                        h.pointName ===
-                        (isBelow ? "attach-front-right" : "attach-back-right")
-                    );
+            // Select target handle - prefer front handles over back handles
+            const targetHandle =
+                validHandles.find((h) => {
+                    if (isRight) {
+                        return (
+                            h.pointName ===
+                            (isBelow
+                                ? "attach-front-right"
+                                : "attach-back-right")
+                        );
+                    } else {
+                        return (
+                            h.pointName ===
+                            (isBelow ? "attach-front-left" : "attach-back-left")
+                        );
+                    }
+                })?.id ||
+                validHandles[0]?.id ||
+                "";
+
+            // For metadata node, determine which handle to use
+            const metaData = metadataNode.data as MetadataNodeData;
+            const widthAdjustment = 200; // configured to approximate the width of the metadata node
+            const isVerticallyAligned =
+                Math.abs(dy) > Math.abs(dx - widthAdjustment);
+            let sourcePosition: Position;
+            let sourceHandle: string;
+
+            if (isVerticallyAligned) {
+                if (dy > 0) {
+                    sourcePosition = Position.Top;
+                    sourceHandle = `metadata-${metaData.componentId}-top`;
                 } else {
-                    return (
-                        h.pointName ===
-                        (isBelow ? "attach-front-left" : "attach-back-left")
-                    );
+                    sourcePosition = Position.Bottom;
+                    sourceHandle = `metadata-${metaData.componentId}-bottom`;
                 }
-            })?.id ||
-            validHandles[0]?.id ||
-            "";
-
-        // For metadata node, determine which handle to use
-        const metaData = metadataNode.data as MetadataNodeData;
-        const widthAdjustment = 200; // configured to approximate the width of the metadata node
-        const isVerticallyAligned =
-            Math.abs(dy) > Math.abs(dx - widthAdjustment);
-        let sourcePosition: Position;
-        let sourceHandle: string;
-
-        if (isVerticallyAligned) {
-            if (dy > 0) {
-                sourcePosition = Position.Top;
-                sourceHandle = `metadata-${metaData.componentId}-top`;
             } else {
-                sourcePosition = Position.Bottom;
-                sourceHandle = `metadata-${metaData.componentId}-bottom`;
+                if (dx > 0) {
+                    sourcePosition = Position.Left;
+                    sourceHandle = `metadata-${metaData.componentId}-left`;
+                } else {
+                    sourcePosition = Position.Right;
+                    sourceHandle = `metadata-${metaData.componentId}-right`;
+                }
             }
-        } else {
-            if (dx > 0) {
-                sourcePosition = Position.Left;
-                sourceHandle = `metadata-${metaData.componentId}-left`;
-            } else {
-                sourcePosition = Position.Right;
-                sourceHandle = `metadata-${metaData.componentId}-right`;
-            }
-        }
 
-        return {
-            sourceHandle,
-            targetHandle,
-            sourcePosition
-        };
-    };
+            return {
+                sourceHandle,
+                targetHandle,
+                sourcePosition
+            };
+        },
+        []
+    ); // Empty dependencies as this function doesn't depend on any external values
 
     // Update node positions when layout manager or components change
     useEffect(() => {
-        if (!layoutManager || !areComponentBoundsReady) return;
+        if (!layoutManager || !areComponentBoundsReady) {
+            console.log("Layout Update Skipped:", {
+                hasLayoutManager: !!layoutManager,
+                areComponentBoundsReady,
+                componentBoundsCount: Object.keys(componentBounds).length
+            });
+            return;
+        }
 
         const componentsWithMetadata = diagramComponents.filter(
             (component) => component.type && component.metadata
         );
 
+        console.log("Processing Components:", {
+            total: diagramComponents.length,
+            withMetadata: componentsWithMetadata.length,
+            componentBounds: Object.keys(componentBounds)
+        });
+
         const nodePositions = calculateMetadataNodePositions(
             componentsWithMetadata
         );
 
-        if (nodePositions.size === 0) return;
+        if (nodePositions.size === 0) {
+            console.log("No node positions calculated");
+            return;
+        }
+
+        console.log("Node Positions Calculated:", {
+            positionsCount: nodePositions.size,
+            positions: Array.from(nodePositions.entries()).map(([id, pos]) => ({
+                id,
+                position: pos.position
+            }))
+        });
 
         // Update both nodes and edges together to maintain synchronization
         setNodes((prevNodes) => {
@@ -325,6 +402,14 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
                 return node;
             });
 
+            // Debug node updates
+            console.log("Nodes Updated:", {
+                prevCount: prevNodes.length,
+                newCount: updatedNodes.length,
+                metadataNodes: updatedNodes.filter((n) => n.type === "metadata")
+                    .length
+            });
+
             // Create new edges for the updated node positions
             const newEdges: FlowEdge[] = updatedNodes
                 .filter(
@@ -336,12 +421,17 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
                     const componentId = metaData.componentId;
                     const componentBound = componentBounds[componentId];
 
-                    if (!componentBound) return null;
+                    if (!componentBound) {
+                        console.log(`No component bounds for: ${componentId}`);
+                        return null;
+                    }
 
                     // Extract global attachment points from diagram components
                     const globalAttachmentPoints = diagramComponents.flatMap(
-                        (component) =>
-                            (component.attachmentPoints || []).map((point) => ({
+                        (component) => {
+                            const points = (
+                                component.attachmentPoints || []
+                            ).map((point) => ({
                                 id: `${component.id}-${point.name}`,
                                 position: point.name.includes("left")
                                     ? Position.Left
@@ -351,7 +441,13 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
                                 y: point.y,
                                 componentId: component.id,
                                 pointName: point.name
-                            }))
+                            }));
+                            console.log(
+                                `Attachment points for ${component.id}:`,
+                                points
+                            );
+                            return points;
+                        }
                     );
 
                     const { sourceHandle, targetHandle, sourcePosition } =
@@ -361,7 +457,19 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
                             globalAttachmentPoints
                         );
 
-                    if (!sourceHandle || !targetHandle) return null;
+                    console.log("Edge Connection Details:", {
+                        nodeId: metadataNode.id,
+                        sourceHandle,
+                        targetHandle,
+                        sourcePosition
+                    });
+
+                    if (!sourceHandle || !targetHandle) {
+                        console.log(
+                            `Missing handles for node: ${metadataNode.id}`
+                        );
+                        return null;
+                    }
 
                     return {
                         id: `metadata-edge-${metadataNode.id}`,
@@ -371,13 +479,14 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
                         targetHandle,
                         type: "simplebezier",
                         deletable: false,
+                        selectable: false,
                         data: { permanent: true }
                     } as FlowEdge;
                 })
                 .filter((edge): edge is FlowEdge => edge !== null);
 
-            // Update edges
-            setEdges(newEdges);
+            // Queue edge updates
+            setPendingEdgeUpdates(newEdges);
 
             if (!initialLayoutComplete) {
                 setInitialLayoutComplete(true);
@@ -392,10 +501,29 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
         areComponentBoundsReady,
         initialLayoutComplete,
         componentBounds,
-        fitView,
         calculateMetadataNodePositions,
         getHandlesForConnection
     ]);
+
+    // Handle edge updates in a separate effect with a slight delay
+    useEffect(() => {
+        if (pendingEdgeUpdates.length > 0) {
+            if (edgeUpdateTimeoutRef.current) {
+                clearTimeout(edgeUpdateTimeoutRef.current);
+            }
+
+            edgeUpdateTimeoutRef.current = setTimeout(() => {
+                setEdges(pendingEdgeUpdates);
+                setPendingEdgeUpdates([]);
+            }, 50); // Small delay to ensure node updates are processed
+        }
+
+        return () => {
+            if (edgeUpdateTimeoutRef.current) {
+                clearTimeout(edgeUpdateTimeoutRef.current);
+            }
+        };
+    }, [pendingEdgeUpdates]);
 
     // Helper function to create initial nodes
     const createInitialNodes = (
@@ -487,7 +615,7 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
                         isInteractive,
                         isConnecting
                     } as MetadataNodeData,
-                    draggable: isInteractive,
+                    draggable: false,
                     style: { zIndex: 4 }
                 };
             }
@@ -597,6 +725,7 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
                     targetHandle,
                     type: "simplebezier",
                     deletable: false,
+                    selectable: false,
                     data: { permanent: true }
                 } as FlowEdge;
             })
