@@ -112,7 +112,7 @@ export class RectangularLayoutManager extends BaseLayoutManager {
 
     private projectToRectangle(angle: number): Point {
         const side = this.getSideFromAngle(angle);
-        console.log(" node side:", side);
+        //console.log(" node side:", side);
         const cos = Math.cos(angle);
         const sin = Math.sin(angle);
 
@@ -207,7 +207,7 @@ export class RectangularLayoutManager extends BaseLayoutManager {
         for (const component of sortedComponents) {
             // Calculate initial position on rectangle
             let position = this.projectToRectangle(component.angle);
-            console.log("node pos 1:", position);
+            //console.log("node pos 1:", position);
 
             // Adjust for overlaps
             position = this.adjustForOverlap(
@@ -215,7 +215,7 @@ export class RectangularLayoutManager extends BaseLayoutManager {
                 position,
                 this.config.minSpacing
             );
-            console.log("node pos 2:", position);
+            //console.log("node pos 2:", position);
 
             // Determine alignment based on position relative to center
             const alignment: "left" | "right" =
@@ -332,9 +332,6 @@ export class HullBasedLayoutManager extends BaseLayoutManager {
                 Math.pow(b.y - componentBound.center.y, 2);
             return distA - distB;
         });
-        if (component.componentId === 'shape-1734530526265-ety5wgdmz') {
-            console.log('... sorted vertices:',sortedVertices);
-        }
 
         let lastTriedVertex = sortedVertices[0];
 
