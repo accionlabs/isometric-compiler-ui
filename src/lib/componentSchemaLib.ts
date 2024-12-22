@@ -1,3 +1,5 @@
+// @/lib/componentSchemaLib.ts
+
 import {
     SchemaDefinition,
     ComponentType,

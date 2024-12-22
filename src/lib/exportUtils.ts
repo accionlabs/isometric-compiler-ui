@@ -1,4 +1,4 @@
-// lib/exportUtils.ts
+// @/lib/exportUtils.ts
 
 import { toPng, toSvg } from 'html-to-image';
 import { ReactFlowInstance } from '@xyflow/react';

@@ -1,4 +1,4 @@
-// errorUtils.ts
+// @/lib/errorUtils.ts
 
 /**
  * Gets a user-friendly error message from any type of error

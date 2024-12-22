@@ -1,3 +1,5 @@
+// @/components/flow/MetadataNode.tsx
+
 import React, { useState } from "react";
 import { Node, Handle, Position, NodeProps, useStore } from "@xyflow/react";
 import { schemaLoader } from "@/lib/componentSchemaLib";

@@ -1,3 +1,5 @@
+// @/components/ui/SVGPreview.tsx
+
 import React from 'react';
 
 interface SVGPreviewProps {

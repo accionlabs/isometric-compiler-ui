@@ -1,3 +1,5 @@
+// @/ImprovedLayout.tsx
+
 import React, { useState, useCallback, useEffect } from "react";
 import {
     Dialog,

@@ -1,3 +1,5 @@
+// @/lib/eventUtils.ts
+
 import React from 'react';
 
 export const handleWithStopPropagation = <T extends React.MouseEvent>(

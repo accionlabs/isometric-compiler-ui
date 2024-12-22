@@ -1,3 +1,5 @@
+// @/hooks/useCopyToClip.tsx
+
 "use client";
 
 import * as React from "react";

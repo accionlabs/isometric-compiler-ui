@@ -1,3 +1,5 @@
+// @/components/ui/AlertDialog.tsx
+
 "use client";
 
 import * as React from "react";

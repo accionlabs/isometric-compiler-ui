@@ -1,3 +1,5 @@
+// @/components/flow/IsometricTextNode.tsx
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Node, Handle, Position, NodeProps } from '@xyflow/react';
 import type { CSSProperties } from 'react';

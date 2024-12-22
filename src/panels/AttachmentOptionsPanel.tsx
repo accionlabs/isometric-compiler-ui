@@ -1,3 +1,5 @@
+// @/panels/AttachmentOptionsPanel.tsx
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { ToggleGroup, ToggleGroupOption } from '../components/ui/ToggleGroup';
 import { RadixSelect } from '../components/ui/Select';

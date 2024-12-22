@@ -1,3 +1,5 @@
+// @/KeyboardShortcuts.tsx
+
 import { DiagramComponent } from './Types';
 
 type ShortcutAction = {

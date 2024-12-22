@@ -1,3 +1,5 @@
+// @/panels/ShapesPanel.tsx
+
 import React, { useState, useMemo, useEffect } from "react";
 import { Button } from "../components/ui/Button";
 import { CanvasSize, DiagramComponent, Shape, Component } from "../Types";
@@ -242,7 +244,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                         <AccordionItem
                             key={item.value}
                             value={item.value}
-                            className="flex flex-col min-h-12 border-b border-gray-500"
+                            className="flex flex-col min-h-12 border-b border-gray-700"
                         >
                             <AccordionTrigger className="p-2 text-xl font-semibold">
                                 {item.name}

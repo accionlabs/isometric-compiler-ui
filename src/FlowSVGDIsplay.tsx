@@ -1,3 +1,5 @@
+// @/FlowSVGDisplay.tsx
+
 import React, {
     useState,
     useCallback,
@@ -105,11 +107,11 @@ const LAYOUT_CONFIG = {
     } as RectangularLayoutConfig,
 
     "hull-based": {
-        padding: 100,   // padding to expand hull
-        minSpacing: 200,    // minimum X spacing between metadata labels
-        minYSpacing: 17,    // minimum Y spacing between metadata labels
-        smoothingAngle: Math.PI * 2 / 3, // hull smoothing angle 120 degrees
-        stepSize: 20    // distance between metadata label positions
+        padding: 100, // padding to expand hull
+        minSpacing: 200, // minimum X spacing between metadata labels
+        minYSpacing: 17, // minimum Y spacing between metadata labels
+        smoothingAngle: (Math.PI * 2) / 3, // hull smoothing angle 120 degrees
+        stepSize: 20 // distance between metadata label positions
     } as HullBasedLayoutConfig
 };
 
@@ -129,18 +131,22 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
     const [isConnecting, setIsConnecting] = useState(false);
     const store = useStoreApi();
     const { fitView } = useReactFlow();
+    const [areComponentBoundsReady, setAreComponentBoundsReady] =
+        useState(false);
     const [componentBounds, setComponentBounds] = useState<ComponentBoundsMap>(
         {}
     );
     const [svgLayout, setSVGLayout] = useState<SVGLayout>();
     const [layoutManager, setLayoutManager] =
         useState<BaseLayoutManager | null>(null);
+    const [initialLayoutComplete, setInitialLayoutComplete] = useState(false);
 
     // Handler for component bounds updates
     const handleComponentBoundsUpdate = useCallback(
         (bounds: ComponentBoundsMap) => {
             //console.log("Component bounds updated:", bounds);
             setComponentBounds(bounds);
+            setAreComponentBoundsReady(true);
         },
         [setComponentBounds]
     );
@@ -156,7 +162,7 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
     // Update layout manager when component bounds change
     useEffect(() => {
         const rootBounds = componentBounds["root"];
-        if (!rootBounds) return;
+        if (!rootBounds || !areComponentBoundsReady) return;
 
         const svgCenter = {
             x: rootBounds.center.x,
@@ -203,49 +209,8 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
 
             return layoutManager.calculateLayout(componentPositions);
         },
-        [layoutManager, componentBounds]
+        [layoutManager, componentBounds, areComponentBoundsReady]
     );
-
-    // Add this effect after the existing useEffect hooks
-    useEffect(() => {
-        if (Object.keys(componentBounds).length > 0 && layoutManager) {
-            setNodes((prevNodes) => {
-                const componentsWithMetadata = diagramComponents.filter(
-                    (component) => component.type && component.metadata
-                );
-
-                const nodePositions = calculateMetadataNodePositions(
-                    componentsWithMetadata
-                );
-
-                return prevNodes.map((node) => {
-                    if (node.type === "metadata") {
-                        const metaData = node.data as MetadataNodeData;
-                        const position = nodePositions.get(
-                            metaData.componentId
-                        );
-
-                        if (position) {
-                            return {
-                                ...node,
-                                position: position.position,
-                                data: {
-                                    ...node.data,
-                                    alignment: position.alignment
-                                }
-                            };
-                        }
-                    }
-                    return node;
-                });
-            });
-        }
-    }, [
-        componentBounds,
-        layoutManager,
-        diagramComponents,
-        calculateMetadataNodePositions
-    ]);
 
     const getHandlesForConnection = (
         metadataNode: Node,
@@ -324,6 +289,113 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
             sourcePosition
         };
     };
+
+    // Update node positions when layout manager or components change
+    useEffect(() => {
+        if (!layoutManager || !areComponentBoundsReady) return;
+
+        const componentsWithMetadata = diagramComponents.filter(
+            (component) => component.type && component.metadata
+        );
+
+        const nodePositions = calculateMetadataNodePositions(
+            componentsWithMetadata
+        );
+
+        if (nodePositions.size === 0) return;
+
+        // Update both nodes and edges together to maintain synchronization
+        setNodes((prevNodes) => {
+            const updatedNodes = prevNodes.map((node) => {
+                if (node.type === "metadata") {
+                    const metaData = node.data as MetadataNodeData;
+                    const position = nodePositions.get(metaData.componentId);
+
+                    if (position) {
+                        return {
+                            ...node,
+                            position: position.position,
+                            data: {
+                                ...node.data,
+                                alignment: position.alignment
+                            }
+                        };
+                    }
+                }
+                return node;
+            });
+
+            // Create new edges for the updated node positions
+            const newEdges: FlowEdge[] = updatedNodes
+                .filter(
+                    (node): node is Node<MetadataNodeData> =>
+                        node.type === "metadata"
+                )
+                .map((metadataNode) => {
+                    const metaData = metadataNode.data;
+                    const componentId = metaData.componentId;
+                    const componentBound = componentBounds[componentId];
+
+                    if (!componentBound) return null;
+
+                    // Extract global attachment points from diagram components
+                    const globalAttachmentPoints = diagramComponents.flatMap(
+                        (component) =>
+                            (component.attachmentPoints || []).map((point) => ({
+                                id: `${component.id}-${point.name}`,
+                                position: point.name.includes("left")
+                                    ? Position.Left
+                                    : Position.Right,
+                                type: "target" as const,
+                                x: point.x,
+                                y: point.y,
+                                componentId: component.id,
+                                pointName: point.name
+                            }))
+                    );
+
+                    const { sourceHandle, targetHandle, sourcePosition } =
+                        getHandlesForConnection(
+                            metadataNode,
+                            componentBound,
+                            globalAttachmentPoints
+                        );
+
+                    if (!sourceHandle || !targetHandle) return null;
+
+                    return {
+                        id: `metadata-edge-${metadataNode.id}`,
+                        source: metadataNode.id,
+                        target: "svg-main",
+                        sourceHandle,
+                        targetHandle,
+                        type: "simplebezier",
+                        deletable: false,
+                        data: { permanent: true }
+                    } as FlowEdge;
+                })
+                .filter((edge): edge is FlowEdge => edge !== null);
+
+            // Update edges
+            setEdges(newEdges);
+
+            if (!initialLayoutComplete) {
+                setInitialLayoutComplete(true);
+                setTimeout(() => fitView({ padding: 0.2 }), 100);
+            }
+
+            return updatedNodes;
+        });
+    }, [
+        layoutManager,
+        diagramComponents,
+        areComponentBoundsReady,
+        initialLayoutComplete,
+        componentBounds,
+        fitView,
+        calculateMetadataNodePositions,
+        getHandlesForConnection
+    ]);
 
     // Helper function to create initial nodes
     const createInitialNodes = (
@@ -438,24 +510,21 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
               })
             : [];
 
-            const layerComponents = diagramComponents.filter(
-                (component) =>
-                    component.type &&
-                    component.type === "layer" &&
-                    component.metadata &&
-                    component.metadata.name && 
-                    component.metadata.labelPosition
-            );
-            const isoTextNodes: Node[] = layerComponents.map((layer) => {
+        const layerComponents = diagramComponents.filter(
+            (component) =>
+                component.type &&
+                component.type === "layer" &&
+                component.metadata &&
+                component.metadata.name &&
+                component.metadata.labelPosition
+        );
+        const isoTextNodes: Node[] = layerComponents.map((layer) => {
             const metadata = layer.metadata;
             let position = { x: 100, y: 100 };
             let textString = metadata?.name;
             let attachment = metadata?.labelPosition;
             const attachmentPoints = getGlobalAttachmentPoints(layer);
-            if (
-                svgLayout &&
-                attachmentPoints[`attach-${attachment}`]
-            ) {
+            if (svgLayout && attachmentPoints[`attach-${attachment}`]) {
                 position = convertSVGToContainerCoords(
                     svgLayout,
                     attachmentPoints[`attach-${attachment}`]
@@ -469,7 +538,7 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
                     text: textString,
                     attachment: attachment,
                     width: 200,
-                    scale:svgLayout?.scale,
+                    scale: svgLayout?.scale,
                     isInteractive: true
                 } as IsometricTextNodeData
             } as Node;

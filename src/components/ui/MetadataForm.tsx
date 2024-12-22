@@ -1,3 +1,5 @@
+// @/components/ui/MetadataForm.tsx
+
 import React from 'react';
 import { Input } from '@/components/ui/Input';
 import { RadixSelect } from '@/components/ui/Select';

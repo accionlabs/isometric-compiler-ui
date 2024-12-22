@@ -1,3 +1,5 @@
+// @/panels/DiagramComponentCard.tsx
+
 import React, { useState } from 'react';
 import { Button } from '../components/ui/Button';
 import { RadixSelect } from '../components/ui/Select';

@@ -1,3 +1,5 @@
+// @/lib/svgLibraryUtils.ts
+
 import { Shape, LibraryData } from '../Types';
 import { defaultShapesLibrary } from './defaultShapesLib';
 

@@ -1,3 +1,5 @@
+// @/lib/diagramComponentsLib.ts
+
 import {
     DiagramComponent,
     Point,

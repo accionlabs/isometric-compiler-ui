@@ -1,3 +1,5 @@
+// @/lib/componentLib.ts
+
 import {
     CanvasSize,
     Shape,

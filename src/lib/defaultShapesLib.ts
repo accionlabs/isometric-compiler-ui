@@ -1,3 +1,5 @@
+// @/lib/defaultShapesLib.ts
+
 import { Shape } from '../Types';
 
 export const defaultShapesLibrary: Shape[] = [

@@ -1,3 +1,5 @@
+// @/App.tsx
+
 import React, { useState, useEffect, useCallback } from "react";
 import { Shape, DiagramComponent, Component } from "./Types";
 import ImprovedLayout from "./ImprovedLayout";

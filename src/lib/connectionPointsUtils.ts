@@ -1,3 +1,5 @@
+// @/lib/connectionPointUtils.ts
+
 import { Position } from '@xyflow/react';
 import type { DiagramComponent, AttachmentPoint } from '../Types';
 

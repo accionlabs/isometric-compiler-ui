@@ -1,3 +1,5 @@
+// @/panels/LibraryManager.tsx
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../components/ui/Dialog';
 import { Input } from '../components/ui/Input';

@@ -1,3 +1,5 @@
+// @/panels/CompositionPanel.tsx
+
 import React, { useEffect, useRef, useMemo, useState } from 'react';
 import { CanvasSize, DiagramComponent, Shape, Component } from '@/Types';
 import DiagramComponentCard from './DiagramComponentCard';

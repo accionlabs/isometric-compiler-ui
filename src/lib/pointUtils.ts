@@ -1,3 +1,5 @@
+// @/lib/pointUtils.ts
+
 import {
     Point,
     AttachmentPoint,

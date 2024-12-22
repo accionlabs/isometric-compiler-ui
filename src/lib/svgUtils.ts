@@ -1,3 +1,5 @@
+// @/lib/svgUtils.ts
+
 import { Point, ViewBox, TransformationContext, CanvasSize } from '@/Types';
 
 export const DEFAULT_MARGIN = 20;

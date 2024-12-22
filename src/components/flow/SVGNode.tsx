@@ -1,3 +1,5 @@
+// @/components/flow/SVGNode.tsx
+
 import React, { useRef, useCallback, useEffect, useState } from "react";
 import {
     Node,
@@ -14,10 +16,7 @@ import {
     getClosestAttachmentPoint,
     extractGlobalAttachmentPoints
 } from "@/lib/diagramComponentsLib";
-import {
-    calculateViewBox,
-    DEFAULT_MARGIN
-} from "@/lib/svgUtils";
+import { calculateViewBox, DEFAULT_MARGIN } from "@/lib/svgUtils";
 
 export interface ComponentBounds {
     id: string;
@@ -45,9 +44,12 @@ export interface SVGLayout {
         x: number;
         y: number;
     };
-};
+}
 
-export function convertSVGToContainerCoords (layout: SVGLayout, svgCoords: Point): Point {
+export function convertSVGToContainerCoords(
+    layout: SVGLayout,
+    svgCoords: Point
+): Point {
     return {
         x: layout.offset.x + (svgCoords.x - layout.viewBox.x) * layout.scale,
         y: layout.offset.y + (svgCoords.y - layout.viewBox.y) * layout.scale
@@ -151,7 +153,11 @@ const SVGNode = ({ id, data }: NodeProps<SVGNodeData>) => {
             y: (containerHeight - newViewBox.height * newScale) / 2
         };
 
-        const layout = { viewBox: newViewBox, scale: newScale, offset: newOffset };
+        const layout = {
+            viewBox: newViewBox,
+            scale: newScale,
+            offset: newOffset
+        };
 
         if (data.onSVGLayoutUpdate) data.onSVGLayoutUpdate(layout);
 
@@ -181,8 +187,9 @@ const SVGNode = ({ id, data }: NodeProps<SVGNodeData>) => {
         const componentBoundsMap: ComponentBoundsMap = {};
 
         const getBounds = (
-            component:DiagramComponent | null,
-            element:SVGGraphicsElement) => {
+            component: DiagramComponent | null,
+            element: SVGGraphicsElement
+        ) => {
             const bbox = element.getBBox();
             if (component && component.absolutePosition) {
                 bbox.x = bbox.x + component.absolutePosition.x;
@@ -192,30 +199,26 @@ const SVGNode = ({ id, data }: NodeProps<SVGNodeData>) => {
                 bbox.x + bbox.width / 2,
                 bbox.y + bbox.height / 2
             );
-            const bounds = SvgToContainerCoords(
-                bbox.x,
-                bbox.y
-            ) as DOMRect;
+            const bounds = SvgToContainerCoords(bbox.x, bbox.y) as DOMRect;
             bounds.width = bbox.width * scale;
             bounds.height = bbox.height * scale;
             return {
-                id:component?component.id : 'root',
+                id: component ? component.id : "root",
                 center: center,
                 bounds: bounds
-            };    
-        } 
+            };
+        };
 
         const svg = svgRef.current;
         // Get bounding box of the entire svg
-        componentBoundsMap['root'] = getBounds(null,svgRef.current);
+        componentBoundsMap["root"] = getBounds(null, svgRef.current);
 
         // Get bounding box for each component in the diagram
         data.diagramComponents.forEach((component) => {
             const element = svg.getElementById(component.id);
 
             if (!(element instanceof SVGGraphicsElement)) return;
-            componentBoundsMap[component.id] = getBounds(component,element);
-
+            componentBoundsMap[component.id] = getBounds(component, element);
         });
 
         return componentBoundsMap;
@@ -228,7 +231,11 @@ const SVGNode = ({ id, data }: NodeProps<SVGNodeData>) => {
         const bounds = calculateComponentBounds();
         //console.log("component bounds:", bounds, data.onComponentBoundsUpdate);
         data.onComponentBoundsUpdate?.(bounds);
-    }, [isReady, data.diagramComponents, data.svgContent, data.onComponentBoundsUpdate]);
+    }, [
+        isReady,
+        data.diagramComponents,
+        data.onComponentBoundsUpdate
+    ]);
 
     useEffect(() => {
         if (!svgRef.current) return;
@@ -277,7 +284,7 @@ const SVGNode = ({ id, data }: NodeProps<SVGNodeData>) => {
                 }
             });
         }
-    }, [data.selected3DShape, data.diagramComponents, data.svgContent]);
+    }, [data.selected3DShape, data.diagramComponents]);
 
     // Monitor container size
     useEffect(() => {
@@ -302,35 +309,7 @@ const SVGNode = ({ id, data }: NodeProps<SVGNodeData>) => {
         if (!containerRef.current || !dimensions.width || !dimensions.height)
             return;
 
-        const svg = document.createElementNS(
-            "http://www.w3.org/2000/svg",
-            "svg"
-        );
-        svg.innerHTML = data.svgContent;
-        svg.setAttribute("width", "100%");
-        svg.setAttribute("height", "100%");
-        svg.setAttribute("class", "svg-content");
-        svg.setAttribute("style", "display: block;");
-
-        const svgWrapper = containerRef.current.querySelector(".svg-wrapper");
-        if (svgWrapper) {
-            svgWrapper.innerHTML = "";
-            svgWrapper.appendChild(svg);
-            svgRef.current = svg;
-
-            const layout = calculateSvgLayout();
-            if (layout) {
-                svg.setAttribute(
-                    "viewBox",
-                    `${layout.viewBox.x} ${layout.viewBox.y} ${layout.viewBox.width} ${layout.viewBox.height}`
-                );
-                setViewBox(layout.viewBox);
-                setScale(layout.scale);
-                setOffset(layout.offset);
-
-                requestAnimationFrame(() => setIsReady(true));
-            }
-
+        const initializeComponents = (svg:SVGSVGElement) => {
             // Apply reduced opacity to cut objects
             data.diagramComponents.forEach((component) => {
                 const element = svgRef.current?.getElementById(component.id);
@@ -352,9 +331,55 @@ const SVGNode = ({ id, data }: NodeProps<SVGNodeData>) => {
                     selectedElement.classList.add("highlighted-shape");
                 }
             }
-        }
+        };
+
+        const initializeSVG = () => {
+            const svg = document.createElementNS(
+                "http://www.w3.org/2000/svg",
+                "svg"
+            );
+            svg.innerHTML = data.svgContent;
+            svg.setAttribute("width", "100%");
+            svg.setAttribute("height", "100%");
+            svg.setAttribute("class", "svg-content");
+            svg.setAttribute("style", "display: block;");
+
+            const svgWrapper =
+                containerRef.current?.querySelector(".svg-wrapper");
+            if (!svgWrapper) return;
+
+            svgWrapper.innerHTML = "";
+            svgWrapper.appendChild(svg);
+            svgRef.current = svg;
+
+            // Ensure SVG is loaded before calculating layout
+            requestAnimationFrame(() => {
+                const layout = calculateSvgLayout();
+                if (layout) {
+                    svg.setAttribute(
+                        "viewBox",
+                        `${layout.viewBox.x} ${layout.viewBox.y} ${layout.viewBox.width} ${layout.viewBox.height}`
+                    );
+                    setViewBox(layout.viewBox);
+                    setScale(layout.scale);
+                    setOffset(layout.offset);
+
+                    // Calculate bounds after layout is set
+                    const bounds = calculateComponentBounds();
+                    if (data.onComponentBoundsUpdate) {
+                        data.onComponentBoundsUpdate(bounds);
+                    }
+
+                    setIsReady(true);
+                    initializeComponents(svg);
+                }
+            });
+        };
+
+        initializeSVG();
 
         return () => {
+            const svgWrapper = containerRef.current?.querySelector(".svg-wrapper");
             if (svgWrapper) {
                 svgWrapper.innerHTML = "";
             }

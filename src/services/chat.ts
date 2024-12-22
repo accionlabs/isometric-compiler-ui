@@ -1,3 +1,5 @@
+// @/services/chat.ts
+
 import { v4 as uuidv4 } from "uuid";
 const newUUID = uuidv4();
 

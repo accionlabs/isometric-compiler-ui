@@ -1,3 +1,5 @@
+// @/SVGDisplay.tsx
+
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { DiagramComponent } from './Types';
 import { Button } from './components/ui/Button';

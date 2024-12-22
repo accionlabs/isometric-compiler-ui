@@ -1,3 +1,5 @@
+// @/hooks/useChatProvider.tsx
+
 import React, {
   ReactNode,
   useContext,

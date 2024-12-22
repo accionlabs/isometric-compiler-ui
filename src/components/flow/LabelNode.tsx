@@ -1,3 +1,5 @@
+// @/components/flow/LabelNode.tsx
+
 import React from 'react';
 import { Node, Handle, Position, NodeProps } from '@xyflow/react';
 import type { HandleType } from '@xyflow/react';

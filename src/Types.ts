@@ -1,3 +1,5 @@
+// @/Types.ts
+
 // CanvasSize type
 export interface CanvasSize {
     width: number;
