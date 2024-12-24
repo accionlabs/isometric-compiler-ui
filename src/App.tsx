@@ -57,11 +57,11 @@ const App: React.FC = () => {
 
     // Update Canvas Settings
     const handleUpdateCanvasSettings = useCallback((settings: CanvasSettings) => {
-        if (settings.canvasSize) {
-            setCanvasSize(settings.canvasSize);
+        if (settings.canvas.canvasSize) {
+            setCanvasSize(settings.canvas.canvasSize);
         }
-        if (settings.showAttachmentPoints) {
-            setShowAttachmentPoints(settings.showAttachmentPoints);
+        if (settings.canvas.showAttachmentPoints) {
+            setShowAttachmentPoints(settings.canvas.showAttachmentPoints);
         }
         setCanvasSettings(settings);
         console.log('Updated Settings:',settings);
