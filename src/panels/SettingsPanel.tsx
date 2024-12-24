@@ -3,15 +3,17 @@
 import React from "react";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
-import { Checkbox } from "../components/ui/Checkbox";
 import LibraryManager from "./LibraryManager";
-import { Shape } from "../Types";
+import { Shape, CanvasSettings } from "../Types";
 import { StorageType } from "../lib/fileOperations";
 import { ToggleGroup, ToggleGroupOption } from "../components/ui/ToggleGroup";
+import { AdvancedCanvasSettings } from "./AdvancedCanvasSettingsPanel";
+
 
 interface SettingsPanelProps {
     canvasSize: { width: number; height: number };
     onSetCanvasSize: (size: { width: number; height: number }) => void;
+    onSetCanvasSettings: (settings: CanvasSettings) => void;
     fileName: string;
     setFileName: (name: string) => void;
     activeLibrary: string;
@@ -31,6 +33,7 @@ interface SettingsPanelProps {
 const SettingsPanel: React.FC<SettingsPanelProps> = ({
     canvasSize,
     onSetCanvasSize,
+    onSetCanvasSettings,
     fileName,
     setFileName,
     activeLibrary,
@@ -70,56 +73,26 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
         }
     };
 
+    const handleSaveCanvasSettings = (settings: CanvasSettings) => {
+        onSetCanvasSize(settings.canvas.canvasSize);
+        setShowAttachmentPoints(settings.canvas.showAttachmentPoints);
+        // Store other settings in localStorage - they will be used by other components
+        onSetCanvasSettings(settings);
+    };
+
     return (
         <div className="flex flex-col h-full p-4 overflow-y-auto">
             <div className="mb-6">
-                <h3 className="text-lg font-semibold mb-2">Canvas Settings</h3>
-                <div className="flex space-x-4">
-                    <div className="flex-1">
-                        <label className="block mb-2">Width:</label>
-                        <input
-                            type="number"
-                            value={canvasSize.width}
-                            onChange={(e) =>
-                                onSetCanvasSize({
-                                    ...canvasSize,
-                                    width: parseInt(e.target.value)
-                                })
-                            }
-                            className="w-full bg-gray-700 text-white p-2 rounded"
-                        />
-                    </div>
-                    <div className="flex-1">
-                        <label className="block mb-2">Height:</label>
-                        <input
-                            type="number"
-                            value={canvasSize.height}
-                            onChange={(e) =>
-                                onSetCanvasSize({
-                                    ...canvasSize,
-                                    height: parseInt(e.target.value)
-                                })
-                            }
-                            className="w-full bg-gray-700 text-white p-2 rounded"
-                        />
-                    </div>
-                    <div className="flex-1">
-                        <div className="block mb-2">Attachment Points:</div>
-                        <div className="block">
-                            <Checkbox
-                                id="show-attachment-points"
-                                checked={showAttachmentPoints}
-                                onCheckedChange={(checked) =>
-                                    setShowAttachmentPoints(checked as boolean)
-                                }
-                                className="mr-2"
-                            />
-                            <label htmlFor="show-attachment-points">
-                                {showAttachmentPoints ? "Show" : "Hide"}
-                            </label>
-                        </div>
-                    </div>
-                </div>
+                <h3 className="text-lg font-semibold mb-2">Display Settings</h3>
+                <AdvancedCanvasSettings
+                    initialSettings={{
+                        canvas: {
+                            canvasSize,
+                            showAttachmentPoints
+                        }
+                    }}
+                    onSaveSettings={handleSaveCanvasSettings}
+                />
             </div>
 
             <div className="mb-6">

@@ -14,7 +14,7 @@ import ShapesPanel from "./panels/ShapesPanel";
 import CompositionPanel from "./panels/CompositionPanel";
 import SettingsPanel from "./panels/SettingsPanel";
 import AttachmentOptionsPanel from "./panels/AttachmentOptionsPanel";
-import { DiagramComponent, Shape, Component } from "./Types";
+import { DiagramComponent, Shape, Component, CanvasSettings } from "./Types";
 import ChatPanel from "./panels/ChatPanel";
 import { ChatProvider } from "./hooks/useChatProvider";
 import { StorageType } from "./lib/fileOperations";
@@ -27,6 +27,8 @@ interface ImprovedLayoutProps {
     isCopied: boolean;
     canvasSize: { width: number; height: number };
     onSetCanvasSize: (size: { width: number; height: number }) => void;
+    settings: CanvasSettings | null;
+    onSetCanvasSettings: (settings: CanvasSettings) => void;
     composedSVG: string;
     onAdd3DShape: (shapeName: string) => void;
     onAdd2DShape: (shapeName: string, attachTo: string) => void;
@@ -96,6 +98,8 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     selectedAttachmentPoint,
     onSelectedAttachmentPoint,
     onSetCanvasSize,
+    settings,
+    onSetCanvasSettings,
     onUpdateSvgLibrary,
     onDownloadSVG,
     fileName,
@@ -317,6 +321,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                 <SettingsPanel
                                     canvasSize={canvasSize}
                                     onSetCanvasSize={onSetCanvasSize}
+                                    onSetCanvasSettings = {onSetCanvasSettings}
                                     fileName={fileName}
                                     setFileName={setFileName}
                                     onSaveDiagram={handleSaveDiagram}
@@ -361,6 +366,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                             isCopied={isCopied}
                             onSelect3DShape={handleSelect3DShape}
                             canvasSize={canvasSize}
+                            settings={settings}
                             setSelectedPosition={handleSelectedPosition}
                             setSelectedAttachmentPoint={
                                 handleSelectedAttachmentPoint

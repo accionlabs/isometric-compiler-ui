@@ -1,7 +1,7 @@
 // @/App.tsx
 
 import React, { useState, useEffect, useCallback } from "react";
-import { Shape, DiagramComponent, Component } from "./Types";
+import { Shape, DiagramComponent, Component, CanvasSettings } from "./Types";
 import ImprovedLayout from "./ImprovedLayout";
 import {
     calculateSVGBoundingBox,
@@ -21,6 +21,7 @@ const App: React.FC = () => {
         DiagramComponent[]
     >([]);
     const [canvasSize, setCanvasSize] = useState({ width: 1000, height: 1000 });
+    const [canvasSettings, setCanvasSettings] = useState<CanvasSettings | null>(null);
     const [composedSVG, setComposedSVG] = useState<string>("");
     const [selected3DShape, setSelected3DShape] = useState<string | null>(null);
     const [selectedPosition, setSelectedPosition] = useState<string>("top");
@@ -53,6 +54,18 @@ const App: React.FC = () => {
 
     // Add state for component library
     const [components, setComponents] = useState<Component[]>([]);
+
+    // Update Canvas Settings
+    const handleUpdateCanvasSettings = useCallback((settings: CanvasSettings) => {
+        if (settings.canvasSize) {
+            setCanvasSize(settings.canvasSize);
+        }
+        if (settings.showAttachmentPoints) {
+            setShowAttachmentPoints(settings.showAttachmentPoints);
+        }
+        setCanvasSettings(settings);
+        console.log('Updated Settings:',settings);
+    }, []);
 
     // Update shapes when active library changes
     const handleLibraryChange = useCallback((libraryId: string) => {
@@ -732,6 +745,8 @@ const App: React.FC = () => {
             onPaste3DShape={handlePaste3DShape}
             canvasSize={canvasSize}
             onSetCanvasSize={handleSetCanvasSize}
+            settings={canvasSettings}
+            onSetCanvasSettings={handleUpdateCanvasSettings}
             onUpdateSvgLibrary={setSvgLibrary}
             onDownloadSVG={handleDownloadSVG}
             fileName={fileName}

@@ -191,3 +191,30 @@ export enum Direction {
     W = "W",
     E = "E"
 }
+
+export interface CanvasSizeSettings {
+    canvasSize: CanvasSize;
+    showAttachmentPoints: boolean;
+}
+
+export interface MetadataLabelSettings {
+    minSpacing: number;     // minimum X spacing between metadata labels
+    minYSpacing: number;    // minimum Y spacing between metadata labels
+    smoothingAngle: number; // hull smoothing angle in radians
+    stepSize: number;       // distance between metadata label positions
+}
+
+export interface LayerLabelSettings {
+    width: number;
+    lineSpacing: number;
+    fontFamily: string;
+    fontSize: number;
+    fontWeight: string;
+}
+
+export interface CanvasSettings {
+    canvas: CanvasSizeSettings;
+    metadataLabel: MetadataLabelSettings;
+    layerLabel: LayerLabelSettings;
+    showAttachmentPoints: boolean;
+}

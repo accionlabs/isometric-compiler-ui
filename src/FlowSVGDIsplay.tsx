@@ -30,7 +30,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 
-import { Point, DiagramComponent, CanvasSize } from "@/Types";
+import { Point, DiagramComponent, CanvasSize, CanvasSettings } from "@/Types";
 import SVGNode, {
     ComponentBounds,
     ComponentBoundsMap,
@@ -58,6 +58,7 @@ interface FlowSVGDisplayProps {
     isCopied: boolean;
     onSelect3DShape: (id: string | null) => void;
     canvasSize: { width: number; height: number };
+    settings: CanvasSettings | null;
     setSelectedPosition: (position: string) => void;
     setSelectedAttachmentPoint: (point: string) => void;
 }
@@ -124,12 +125,12 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
     isCopied,
     onSelect3DShape,
     canvasSize,
+    settings,
     setSelectedPosition,
     setSelectedAttachmentPoint
 }) => {
     const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
-    const [isConnecting, setIsConnecting] = useState(false);
     const store = useStoreApi();
     const { fitView } = useReactFlow();
     const [pendingEdgeUpdates, setPendingEdgeUpdates] = useState<FlowEdge[]>(
@@ -218,7 +219,10 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
         };
 
         const layoutType = "hull-based";
-        const config = LAYOUT_CONFIG[layoutType];
+        let config = LAYOUT_CONFIG[layoutType];
+        if (settings && settings.metadataLabel) {
+            config = {...config, ...settings.metadataLabel};
+        }
 
         // Need to update LayoutManagerFactory to support smart layouts
         setLayoutManager(
@@ -501,6 +505,7 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
         areComponentBoundsReady,
         initialLayoutComplete,
         componentBounds,
+        settings,
         calculateMetadataNodePositions,
         getHandlesForConnection
     ]);
@@ -535,7 +540,6 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
         onSelect3DShape: (id: string | null) => void,
         setSelectedPosition: (position: string) => void,
         setSelectedAttachmentPoint: (point: string) => void,
-        isConnecting: boolean,
         isInteractive: boolean
     ): { nodes: Node[]; edges: Edge[] } => {
         // Create main SVG node at the center
@@ -554,7 +558,6 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
                 onSelect3DShape,
                 setSelectedPosition,
                 setSelectedAttachmentPoint,
-                isConnecting,
                 isInteractive,
                 onComponentBoundsUpdate: handleComponentBoundsUpdate,
                 onSVGLayoutUpdate: handleSVGLayoutUpdate
@@ -595,8 +598,7 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
                             type: component.type,
                             metadata: component.metadata,
                             alignment: "right",
-                            isInteractive,
-                            isConnecting
+                            isInteractive
                         },
                         draggable: isInteractive,
                         style: { zIndex: 4 }
@@ -612,8 +614,7 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
                         type: component.type,
                         metadata: component.metadata,
                         alignment: nodePosition.alignment,
-                        isInteractive,
-                        isConnecting
+                        isInteractive
                     } as MetadataNodeData,
                     draggable: false,
                     style: { zIndex: 4 }
@@ -658,31 +659,21 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
                     attachmentPoints[`attach-${attachment}`]
                 );
             }
+            const isoNodeData = { ...{
+                text: textString,
+                attachment: attachment,
+                width: 200,
+                scale: svgLayout?.scale,
+                isInteractive: true,
+            }, ...settings?.layerLabel} as IsometricTextNodeData;
             return {
                 id: `label-${layer.id}`,
                 type: "isometricText",
                 position: position as Point,
-                data: {
-                    text: textString,
-                    attachment: attachment,
-                    width: 200,
-                    scale: svgLayout?.scale,
-                    isInteractive: true
-                } as IsometricTextNodeData
+                data: isoNodeData
             } as Node;
         });
         //("Layer Nodes:", isoTextNodes);
-        const isoTextNode: Node<IsometricTextNodeData> = {
-            id: "1",
-            type: "isometricText",
-            position: { x: 100, y: 100 },
-            data: {
-                text: "Hello World, here I come! Now wrap me in at least two lines.",
-                attachment: "front-right",
-                width: 200,
-                isInteractive: true
-            }
-        };
 
         const edges: FlowEdge[] = metadataNodes
             .map((metadataNode) => {
@@ -762,7 +753,6 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
                 onSelect3DShape,
                 setSelectedPosition,
                 setSelectedAttachmentPoint,
-                isConnecting,
                 isInteractive
             );
 
@@ -786,22 +776,15 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
         selected3DShape,
         diagramComponents,
         canvasSize,
+        settings,
         isCopied,
         onSelect3DShape,
         setSelectedPosition,
         setSelectedAttachmentPoint,
-        isConnecting,
         isInteractive,
-        componentBounds
+        componentBounds,
+        svgLayout
     ]);
-
-    // Track connection state
-    useEffect(() => {
-        const subscription = store.subscribe((state: ReactFlowState) => {
-            setIsConnecting(state.connectionClickStartHandle !== null);
-        });
-        return () => subscription();
-    }, [store]);
 
     // Fit view after nodes are updated
     useEffect(() => {
