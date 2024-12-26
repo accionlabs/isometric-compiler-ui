@@ -1,6 +1,6 @@
 import { toPng, toSvg } from 'html-to-image';
 import { ReactFlowInstance } from '@xyflow/react';
-import { cleanSvg } from './svgUtils';
+import { cleanSVG } from './svgUtils';
 
 interface ExportOptions {
     fileName?: string;
@@ -65,7 +65,7 @@ export const exportToImage = async (
                 // Convert data URL to SVG string
                 const svgString = decodeURIComponent(dataUrl.split(',')[1]);
                 // Clean the SVG
-                const cleanedSvgString = await cleanSvg(svgString);
+                const cleanedSvgString = await cleanSVG(svgString);
                 // Convert back to data URL
                 dataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(cleanedSvgString)}`;
             } catch (cleanError) {
