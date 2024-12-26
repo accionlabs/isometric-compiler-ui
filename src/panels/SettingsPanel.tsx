@@ -1,6 +1,6 @@
 // @/panels/SettingsPanel.tsx
 
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import LibraryManager from "./LibraryManager";
@@ -8,6 +8,8 @@ import { Shape, CanvasSettings } from "../Types";
 import { StorageType } from "../lib/fileOperations";
 import { ToggleGroup, ToggleGroupOption } from "../components/ui/ToggleGroup";
 import { AdvancedCanvasSettings } from "./AdvancedCanvasSettingsPanel";
+import ProgressDialog from "./ProgressDialog";
+import { Node, useReactFlow } from "@xyflow/react";
 
 
 interface SettingsPanelProps {
@@ -49,6 +51,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
     storageType,
     onStorageTypeChange
 }) => {
+    const [isDownloading, setIsDownloading] = useState(false);
     const storageOptions: ToggleGroupOption[] = [
         { value: StorageType.Local, label: "Local File" },
         { value: StorageType.GoogleDrive, label: "Google Drive" }
@@ -78,6 +81,19 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
         setShowAttachmentPoints(settings.canvas.showAttachmentPoints);
         // Store other settings in localStorage - they will be used by other components
         onSetCanvasSettings(settings);
+    };
+
+    const handleDownloadSVG = async () => {
+        console.log('Starting Image download...');
+        setIsDownloading(true);
+        try {
+            await onDownloadSVG();
+            console.log('Image download completed');
+        } catch (error) {
+            console.error('Error downloading Image:', error);
+        } finally {
+            setIsDownloading(false);
+        }
     };
 
     return (
@@ -158,8 +174,8 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                             Load Diagram
                         </Button>
                     )}{" "}
-                    <Button onClick={onDownloadSVG} className="flex-1">
-                        Download SVG
+                    <Button onClick={handleDownloadSVG} className="flex-1">
+                        Download Image
                     </Button>
                 </div>
             </div>
@@ -171,6 +187,11 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                     onUpdateShapes={onUpdateShapes}
                 />
             </div>
+
+            <ProgressDialog
+                open={isDownloading}
+                message="Processing SVG for download..."
+            />
         </div>
     );
 };

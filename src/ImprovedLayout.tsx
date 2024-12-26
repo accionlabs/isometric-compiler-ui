@@ -1,6 +1,7 @@
 // @/ImprovedLayout.tsx
 
 import React, { useState, useCallback, useEffect } from "react";
+import { Node } from "@xyflow/react";
 import {
     Dialog,
     DialogContent,
@@ -47,7 +48,7 @@ interface ImprovedLayoutProps {
     onCancelCut3DShape: (id: string) => void;
     onPaste3DShape: (id: string) => void;
     onUpdateSvgLibrary: (newLibrary: Shape[]) => void;
-    onDownloadSVG: () => void;
+    onDownloadSVG: () => Promise<void>;
     fileName: string;
     setFileName: (name: string) => void;
 
@@ -70,6 +71,7 @@ interface ImprovedLayoutProps {
     storageType: StorageType;
     onStorageTypeChange: (type: StorageType) => void;
     onSaveAsComponent: (name: string, description: string) => void;
+    onSetFlowNodes: (nodes:Node[]) => void;
 }
 
 const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
@@ -117,7 +119,8 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     onUpdateMetadata,
     storageType,
     onStorageTypeChange,
-    onSaveAsComponent
+    onSaveAsComponent,
+    onSetFlowNodes
 }) => {
     const params = new URLSearchParams(window.location.search);
     const isReadModeEnabled = params.get("mode") === "read";
@@ -363,6 +366,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                             svgContent={composedSVG}
                             selected3DShape={selected3DShape}
                             diagramComponents={diagramComponents}
+                            onSetFlowNodes = {onSetFlowNodes}
                             isCopied={isCopied}
                             onSelect3DShape={handleSelect3DShape}
                             canvasSize={canvasSize}

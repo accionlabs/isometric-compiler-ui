@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { Shape, DiagramComponent, Component, CanvasSettings } from "./Types";
+import { Node } from "@xyflow/react";
 import ImprovedLayout from "./ImprovedLayout";
 import {
     calculateSVGBoundingBox,
@@ -14,6 +15,7 @@ import { createKeyboardShortcuts } from "./KeyboardShortcuts";
 import { SVGLibraryManager } from "./lib/svgLibraryUtils";
 import { schemaLoader } from "./lib/componentSchemaLib";
 import { StorageType, loadFile, saveFile } from "./lib/fileOperations";
+import { exportAsPNG, exportAsSVG } from "./lib/exportUtils";
 
 const App: React.FC = () => {
     const [svgLibrary, setSvgLibrary] = useState<Shape[]>([]);
@@ -21,7 +23,9 @@ const App: React.FC = () => {
         DiagramComponent[]
     >([]);
     const [canvasSize, setCanvasSize] = useState({ width: 1000, height: 1000 });
-    const [canvasSettings, setCanvasSettings] = useState<CanvasSettings | null>(null);
+    const [canvasSettings, setCanvasSettings] = useState<CanvasSettings | null>(
+        null
+    );
     const [composedSVG, setComposedSVG] = useState<string>("");
     const [selected3DShape, setSelected3DShape] = useState<string | null>(null);
     const [selectedPosition, setSelectedPosition] = useState<string>("top");
@@ -55,24 +59,29 @@ const App: React.FC = () => {
     // Add state for component library
     const [components, setComponents] = useState<Component[]>([]);
 
+    const [flowNodes, setFlowNodes] = useState<Node[]>([]);
+
     // Update Canvas Settings
-    const handleUpdateCanvasSettings = useCallback((settings: CanvasSettings) => {
-        if (settings.canvas.canvasSize) {
-            setCanvasSize(settings.canvas.canvasSize);
-        }
-        if (settings.canvas.showAttachmentPoints) {
-            setShowAttachmentPoints(settings.canvas.showAttachmentPoints);
-        }
-        setCanvasSettings(settings);
-        console.log('Updated Settings:',settings);
-    }, []);
+    const handleUpdateCanvasSettings = useCallback(
+        (settings: CanvasSettings) => {
+            if (settings.canvas.canvasSize) {
+                setCanvasSize(settings.canvas.canvasSize);
+            }
+            if (settings.canvas.showAttachmentPoints) {
+                setShowAttachmentPoints(settings.canvas.showAttachmentPoints);
+            }
+            setCanvasSettings(settings);
+            console.log("Updated Settings:", settings);
+        },
+        []
+    );
 
     // Update shapes when active library changes
-    const handleLibraryChange = useCallback((libraryId: string) => {
+    const handleLibraryChange = useCallback(async (libraryId: string) => {
         setActiveLibrary(libraryId);
         localStorage.setItem("activeLibrary", libraryId);
 
-        const library = SVGLibraryManager.getLibrary(libraryId);
+        const library = await SVGLibraryManager.getCleanLibrary(libraryId);
         if (library) {
             setSvgLibrary(library.shapes);
             // render all components, if any
@@ -221,7 +230,12 @@ const App: React.FC = () => {
             );
             setDiagramComponents(updatedComponents);
         },
-        [diagramComponents, selected3DShape, selectedPosition, selectedAttachmentPoint]
+        [
+            diagramComponents,
+            selected3DShape,
+            selectedPosition,
+            selectedAttachmentPoint
+        ]
     );
 
     const handleRemove3DShape = useCallback(
@@ -343,6 +357,10 @@ const App: React.FC = () => {
         [selected3DShape, isCopied, selectedPosition, selectedAttachmentPoint]
     );
 
+    const handleSetFlowNodes = useCallback((nodes: Node[]) => {
+        setFlowNodes(nodes);
+    }, []);
+
     const getJsonFileName = useCallback((svgFileName: string) => {
         return svgFileName.replace(/\.svg$/, ".json");
     }, []);
@@ -350,6 +368,7 @@ const App: React.FC = () => {
     const handleSetFolderPath = useCallback((newPath: string) => {
         setFolderPath(newPath);
     }, []);
+
     const handleSaveDiagram = useCallback(async () => {
         try {
             const jsonFileName = getJsonFileName(fileName);
@@ -453,7 +472,13 @@ const App: React.FC = () => {
         localStorage.setItem("fileName", newFileName);
     }, []);
 
-    const handleDownloadSVG = useCallback(() => {
+    const handleDownloadImage = useCallback(async () => {
+        const adjustedFileName = fileName.replace(/\.[^/.]+$/, "");
+
+        await exportAsPNG({ fileName: adjustedFileName });
+    }, []);
+
+    const handleDownloadSVGOld = useCallback(() => {
         const boundingBox = calculateSVGBoundingBox(
             composedSVG,
             canvasSize
@@ -523,7 +548,10 @@ const App: React.FC = () => {
                 let selectedShapes = diagramComponents;
                 // if a shape is selected, then copy those shapes that are selected for saving as component
                 if (selected3DShape) {
-                    selectedShapes = diagramComponentsLib.copy3DShape(diagramComponents,selected3DShape);
+                    selectedShapes = diagramComponentsLib.copy3DShape(
+                        diagramComponents,
+                        selected3DShape
+                    );
                 }
                 // Pass true for overwrite since user has already confirmed in dialog
                 const newComponent = componentLibraryManager.createComponent(
@@ -549,12 +577,15 @@ const App: React.FC = () => {
                             diagramComponents,
                             selected3DShape
                         );
-                        const position = selectedShape?.position || 'top';
-                        const parentId = selectedShape?.relativeToId || diagramComponents[0].id;
-                        const updatedComponents = diagramComponentsLib.remove3DShape(
-                            diagramComponents,
-                            selected3DShape
-                        );
+                        const position = selectedShape?.position || "top";
+                        const parentId =
+                            selectedShape?.relativeToId ||
+                            diagramComponents[0].id;
+                        const updatedComponents =
+                            diagramComponentsLib.remove3DShape(
+                                diagramComponents,
+                                selected3DShape
+                            );
                         const result = diagramComponentsLib.addComponentToScene(
                             updatedComponents,
                             newComponent.id,
@@ -568,7 +599,6 @@ const App: React.FC = () => {
                         } else {
                             console.error("Failed to replace new component");
                         }
-            
                     }
                     return newComponent;
                 }
@@ -748,7 +778,7 @@ const App: React.FC = () => {
             settings={canvasSettings}
             onSetCanvasSettings={handleUpdateCanvasSettings}
             onUpdateSvgLibrary={setSvgLibrary}
-            onDownloadSVG={handleDownloadSVG}
+            onDownloadSVG={handleDownloadImage}
             fileName={fileName}
             setFileName={handleSetFileName}
             availableAttachmentPoints={availableAttachmentPoints}
@@ -767,6 +797,7 @@ const App: React.FC = () => {
             onSaveAsComponent={handleSaveAsComponent}
             onAddComponent={handleAddComponent}
             onDeleteComponent={handleDeleteComponent}
+            onSetFlowNodes={handleSetFlowNodes}
         />
     );
 };

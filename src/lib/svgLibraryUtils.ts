@@ -2,6 +2,7 @@
 
 import { Shape, LibraryData } from '../Types';
 import { defaultShapesLibrary } from './defaultShapesLib';
+import { cleanSvg } from './svgUtils';
 
 export interface LibrarySource {
   type: 'googledrive' | 'local';
@@ -103,6 +104,20 @@ export class SVGLibraryManager {
   static getLibrary(libraryId: string): ExtendedLibraryData | null {
     const libraries = this.getLibraries();
     return libraries.find(lib => lib.id === libraryId) || null;
+  }
+
+  static async getCleanLibrary(libraryId: string): Promise<ExtendedLibraryData | null> {
+    const library = this.getLibrary(libraryId);
+    if (library && library.shapes) {
+      for (let i = 0; i < library.shapes.length; i++) {
+        try {
+          library.shapes[i].svgContent = await cleanSvg(library.shapes[i].svgContent);
+        } catch (error) {
+          console.error(`Error cleaning shape ${library.shapes[i].name}:`, error);
+        }
+      }
+    }
+    return library;
   }
 
   static createLibrary(

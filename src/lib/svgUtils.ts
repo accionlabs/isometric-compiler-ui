@@ -1,6 +1,7 @@
 // @/lib/svgUtils.ts
 
 import { Point, ViewBox, TransformationContext, CanvasSize } from '@/Types';
+import { optimize, Config, PluginConfig, CustomPlugin } from 'svgo';
 
 export const DEFAULT_MARGIN = 20;
 
@@ -325,3 +326,119 @@ export const clipSVGToContents = (
 export const generateSVGId = (prefix: string): string => {
     return `${prefix}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 };
+
+interface CleanSvgOptions {
+  removeInkscapeData?: boolean;
+  preserveAspectRatio?: boolean;
+  removeComments?: boolean;
+  prettify?: boolean;
+}
+
+/**
+ * Pre-processes SVG string to handle namespace-related issues
+ */
+function preprocessSvg(svgString: string): string {
+  return svgString
+    // Remove namespace declarations
+    .replace(/xmlns:sodipodi="[^"]*"/g, '')
+    .replace(/xmlns:inkscape="[^"]*"/g, '')
+    // Remove elements with these namespaces
+    .replace(/<sodipodi:[^>]*>/g, '')
+    .replace(/<\/sodipodi:[^>]*>/g, '')
+    .replace(/<inkscape:[^>]*>/g, '')
+    .replace(/<\/inkscape:[^>]*>/g, '')
+    // Remove attributes with these namespaces
+    .replace(/\s+sodipodi:[^\s>]+="[^"]*"/g, '')
+    .replace(/\s+inkscape:[^\s>]+="[^"]*"/g, '')
+    // Preserve XML declaration if present
+    .replace(/<\?xml[^>]*\?>\s*/, (match) => {
+      // Store XML declaration to add back later
+      return match;
+    });
+}
+
+/**
+ * Cleans an SVG string by removing Inkscape-specific and other non-standard elements
+ * @param svgString The input SVG string to clean
+ * @param options Configuration options for cleaning
+ * @returns A promise that resolves to the cleaned SVG string
+ */
+export async function cleanSvg(
+  svgString: string, 
+  options: CleanSvgOptions = {}
+): Promise<string> {
+  const {
+    removeInkscapeData = true,
+    preserveAspectRatio = true,
+    removeComments = true,
+    prettify = true,
+  } = options;
+
+  // Pre-process SVG to handle namespaces
+  const preprocessedSvg = preprocessSvg(svgString);
+
+  // Build plugins array based on options
+  const plugins: (PluginConfig | CustomPlugin)[] = [
+    {
+      name: 'preset-default',
+      params: {
+        overrides: {
+          removeViewBox: false, // Keep viewBox attribute
+        },
+      },
+    } as PluginConfig,
+    {
+      name: 'removeXMLProcInst',
+    } as PluginConfig
+  ];
+
+  if (removeComments) {
+    plugins.push({
+      name: 'removeComments',
+    } as PluginConfig);
+  }
+
+  // Add standard optimization plugins
+  plugins.push(
+    {
+      name: 'cleanupIds',
+    } as PluginConfig,
+    {
+      name: 'mergePaths',
+    } as PluginConfig,
+    {
+      name: 'removeEmptyAttrs',
+    } as PluginConfig,
+    {
+      name: 'removeEmptyContainers',
+    } as PluginConfig,
+    {
+      name: 'removeUselessStrokeAndFill',
+      params: {
+        removeNone: false,
+      },
+    } as PluginConfig
+  );
+
+  // SVGO configuration
+  const config: Config = {
+    plugins,
+    js2svg: {
+      indent: prettify ? 2 : 0,
+      pretty: prettify,
+    },
+  };
+
+  try {
+    const result = optimize(preprocessedSvg, config);
+    
+    if ('data' in result) {
+      return result.data;
+    } else {
+      throw new Error('SVG optimization failed: No data returned');
+    }
+  } catch (error) {
+    console.error('SVG cleaning error:', error);
+    throw new Error(`Failed to clean SVG: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
