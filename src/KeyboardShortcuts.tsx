@@ -20,7 +20,7 @@ const isEditableElement = (element: HTMLElement | null): boolean => {
 };
 
 export const createKeyboardShortcuts = (
-    saveDiagram: () => Promise<void>,
+    saveDiagram: () => void,
     remove3DShape: (id: string | null) => void,
     cut3DShape: (id: string | null) => void,
     copy3DShape: (id: string | null) => void,

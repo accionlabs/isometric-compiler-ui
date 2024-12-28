@@ -216,5 +216,4 @@ export interface CanvasSettings {
     canvas: CanvasSizeSettings;
     metadataLabel: MetadataLabelSettings;
     layerLabel: LayerLabelSettings;
-    showAttachmentPoints: boolean;
 }

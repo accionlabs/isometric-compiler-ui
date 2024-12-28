@@ -1,26 +1,35 @@
 // @/panels/CanvasSettingsTab.tsx
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback } from 'react';
 import { Input } from '@/components/ui/Input';
 import { Checkbox } from '@/components/ui/Checkbox';
 import { CanvasSize, CanvasSizeSettings } from '@/Types';
- 
+
 interface CanvasSettingsTabProps {
     canvas: CanvasSizeSettings;
-    onChange: (key: keyof CanvasSizeSettings, value: boolean|CanvasSize) => void;
-    onShowAttachmentPointsChange: (value: boolean) => void;
+    onChange: {
+        (key: 'canvasSize', value: CanvasSize): void;
+        (key: 'showAttachmentPoints', value: boolean): void;
+    };
 }
 
 export const CanvasSettingsTab: React.FC<CanvasSettingsTabProps> = ({
     canvas,
     onChange,
-    onShowAttachmentPointsChange
 }) => {
-    const [canvasSize, setCanvasSize] = useState(canvas.canvasSize);
-    const handleCanvasSizeChange = useCallback((sizePartial:Partial<CanvasSize>):void => {
-        setCanvasSize({...canvasSize, ...sizePartial});
-        onChange('canvasSize',canvasSize);
-    },[]);
+    const handleCanvasSizeChange = useCallback((sizePartial: Partial<CanvasSize>): void => {
+        console.log('sizePartial', sizePartial);
+        const newCanvasSize = { ...canvas.canvasSize, ...sizePartial };
+        console.log('canvasSize', canvas.canvasSize, newCanvasSize);
+        onChange('canvasSize', newCanvasSize);
+    }, [canvas.canvasSize, onChange]);
+
+    const handleAttachmentPointsChange = useCallback((checked: boolean | 'indeterminate') => {
+        if (typeof checked === 'boolean') {
+            onChange('showAttachmentPoints', checked);
+        }
+    }, [onChange]);
+
     return (
         <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
@@ -31,7 +40,7 @@ export const CanvasSettingsTab: React.FC<CanvasSettingsTabProps> = ({
                     <Input
                         type="number"
                         value={canvas.canvasSize.width}
-                        onChange={(e) => {handleCanvasSizeChange({'width': parseInt(e.target.value)})}}
+                        onChange={(e) => handleCanvasSizeChange({ width: parseInt(e.target.value) })}
                         min={1}
                         className="bg-gray-700 text-white"
                     />
@@ -43,7 +52,7 @@ export const CanvasSettingsTab: React.FC<CanvasSettingsTabProps> = ({
                     <Input
                         type="number"
                         value={canvas.canvasSize.height}
-                        onChange={(e) => {handleCanvasSizeChange({'height': parseInt(e.target.value)})}}
+                        onChange={(e) => handleCanvasSizeChange({ height: parseInt(e.target.value) })}
                         min={1}
                         className="bg-gray-700 text-white"
                     />
@@ -53,10 +62,10 @@ export const CanvasSettingsTab: React.FC<CanvasSettingsTabProps> = ({
                 <Checkbox
                     id="show-attachment-points"
                     checked={canvas.showAttachmentPoints}
-                    onCheckedChange={(checked) => onChange('showAttachmentPoints',checked as boolean)}
-                    className="mr-2"
+                    onCheckedChange={handleAttachmentPointsChange}
+                    className="mr-2 text-white"
                 />
-                <label htmlFor="show-attachment-points" className="text-sm">
+                <label htmlFor="show-attachment-points" className="text-sm text-white">
                     Show Attachment Points
                 </label>
             </div>

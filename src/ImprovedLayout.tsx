@@ -1,6 +1,6 @@
 // @/ImprovedLayout.tsx
 
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import { Node } from "@xyflow/react";
 import {
     Dialog,
@@ -19,6 +19,20 @@ import { DiagramComponent, Shape, Component, CanvasSettings } from "./Types";
 import ChatPanel from "./panels/ChatPanel";
 import { ChatProvider } from "./hooks/useChatProvider";
 import { StorageType } from "./lib/fileOperations";
+import SaveDiagramDialog from "@/panels/SaveDiagramDialog";
+import SaveComponentDialog from "@/panels/SaveComponentDialog";
+import SettingsDialog from "@/panels/SettingsDialog";
+import LibraryManagerDialog from "@/panels/LibraryManagerDialog";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuGroup,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger
+} from "@/components/ui/DropDownMenu";
+import { MoreHorizontal } from "lucide-react";
+import { set } from "yaml/dist/schema/yaml-1.1/set";
 
 interface ImprovedLayoutProps {
     svgLibrary: Shape[];
@@ -48,14 +62,13 @@ interface ImprovedLayoutProps {
     onCancelCut3DShape: (id: string) => void;
     onPaste3DShape: (id: string) => void;
     onUpdateSvgLibrary: (newLibrary: Shape[]) => void;
-    onDownloadSVG: () => Promise<void>;
+    onDownloadSVG: (type: "svg" | "png") => Promise<void>;
     fileName: string;
     setFileName: (name: string) => void;
-
     availableAttachmentPoints: string[];
     errorMessage: string | null;
     setErrorMessage: (message: string | null) => void;
-    onSaveDiagram: () => Promise<void>;
+    onSaveDiagram: (fileName: string, onComplete: () => void) => Promise<void>;
     onLoadDiagram: (file?: File) => Promise<void>;
     handleLoadDiagramFromJSON: (loadedComponents: DiagramComponent[]) => void;
     folderPath: string;
@@ -71,7 +84,8 @@ interface ImprovedLayoutProps {
     storageType: StorageType;
     onStorageTypeChange: (type: StorageType) => void;
     onSaveAsComponent: (name: string, description: string) => void;
-    onSetFlowNodes: (nodes:Node[]) => void;
+    isSaveDiagramDialogOpen: boolean;
+    setIsSaveDiagramDialogOpen: (open: boolean) => void;
 }
 
 const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
@@ -120,7 +134,8 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     storageType,
     onStorageTypeChange,
     onSaveAsComponent,
-    onSetFlowNodes
+    isSaveDiagramDialogOpen,
+    setIsSaveDiagramDialogOpen,
 }) => {
     const params = new URLSearchParams(window.location.search);
     const isReadModeEnabled = params.get("mode") === "read";
@@ -130,6 +145,12 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     >("shapes");
     const [isLoadingDialogOpen, setIsLoadingDialogOpen] = useState(false);
     const [isSaveLoadDialogOpen, setIsSaveLoadDialogOpen] = useState(false);
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [isSaveComponentDialogOpen, setIsSaveComponentDialogOpen] =
+        useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
+    const [isLibraryDialogOpen, setIsLibraryDialogOpen] = useState(false);
     const [loadingProgress, setLoadingProgress] = useState<{
         currentFile: string;
         loadedFiles: number;
@@ -203,19 +224,6 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
         [onPaste3DShape]
     );
 
-    const handleSaveDiagram = async () => {
-        setIsSaveLoadDialogOpen(true);
-        setSaveLoadMessage("Saving diagram...");
-        try {
-            await onSaveDiagram();
-            setSaveLoadMessage("Diagram saved successfully!");
-        } catch (error) {
-            setSaveLoadMessage("Failed to save diagram. Please try again.");
-        } finally {
-            setTimeout(() => setIsSaveLoadDialogOpen(false), 5000);
-        }
-    };
-
     const handleLoadDiagram = useCallback(
         async (file?: File) => {
             setIsSaveLoadDialogOpen(true);
@@ -236,6 +244,69 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
         [onLoadDiagram]
     );
 
+    const handleMenuSelect = React.useCallback(
+        (action: () => void | Promise<void>) => async (e: Event) => {
+            e.preventDefault();
+            // Close the dropdown immediately
+            setIsDropdownOpen(false);
+
+            if (document.activeElement instanceof HTMLElement) {
+                document.activeElement.blur();
+            }
+            // Wait a tick for the dropdown to close
+            await new Promise((resolve) => setTimeout(resolve, 0));
+            // Then execute the action
+            await action();
+        },
+        []
+    );
+
+    const handleOpenSaveComponentDialog = useCallback(() => {
+        setIsDropdownOpen(false);
+        setIsSaveComponentDialogOpen(true);
+    }, []);
+
+    const handleSetFileName = useCallback((name: string) => { 
+        setFileName(name); 
+    }, [setFileName]);
+
+    const handleFileSelect = () => {
+        fileInputRef.current?.click();
+    };
+
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            onLoadDiagram(file);
+            event.target.value = "";
+        }
+    };
+
+    const handleOpenSaveDialog = () => {
+        setIsSaveDiagramDialogOpen(true);
+    }
+
+    const handleSaveDiagram = async () => {
+        console.log("CompositionPanel handleSaveDiagram started:", {
+            fileName
+        });
+        if (fileName.trim()) {
+            console.log("Setting filename");
+            setFileName(fileName);
+        }
+        try {
+            setIsSaveDiagramDialogOpen(false);
+            console.log("Starting onSaveDiagram");
+            await onSaveDiagram(fileName, () => {
+                console.log("Save completed, closing dialog");
+            });
+            console.log("onSaveDiagram completed");
+        } catch (error) {
+            console.error("Error in handleSaveDiagram:", error);
+            // Could show an error notification here
+        }
+    };
+
     return (
         <ChatProvider>
             <div className="flex flex-row h-screen w-screen bg-gray-900 text-white">
@@ -244,6 +315,79 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                     <div className="flex flex-col border-r border-gray-700 w-1/3">
                         {/* Tab buttons */}
                         <div className="flex flex-row h-14 px-2 pt-2 space-x-2 border-b border-gray-700">
+                            <DropdownMenu
+                                open={isDropdownOpen}
+                                onOpenChange={setIsDropdownOpen}
+                            >
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="outline" className="px-2">
+                                        <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent
+                                    align="end"
+                                    className="w-[200px]"
+                                >
+                                    <DropdownMenuGroup>
+                                        <DropdownMenuItem
+                                            onSelect={handleMenuSelect(
+                                                handleFileSelect
+                                            )}
+                                        >
+                                            Load Diagram
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                            onSelect={handleMenuSelect(
+                                                handleOpenSaveDialog
+                                            )}
+                                        >
+                                            Save Diagram
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                            onSelect={handleMenuSelect(
+                                                handleOpenSaveComponentDialog
+                                            )}
+                                            disabled={
+                                                diagramComponents.length === 0
+                                            }
+                                        >
+                                            Save as Component
+                                        </DropdownMenuItem>
+                                    </DropdownMenuGroup>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuGroup>
+                                        <DropdownMenuItem
+                                            onSelect={handleMenuSelect(() =>
+                                                onDownloadSVG("svg")
+                                            )}
+                                        >
+                                            Download SVG
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                            onSelect={handleMenuSelect(() =>
+                                                onDownloadSVG("png")
+                                            )}
+                                        >
+                                            Download PNG
+                                        </DropdownMenuItem>
+                                    </DropdownMenuGroup>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                        onSelect={handleMenuSelect(() =>
+                                            setIsSettingsDialogOpen(true)
+                                        )}
+                                    >
+                                        Display Settings
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                        onSelect={handleMenuSelect(() =>
+                                            setIsLibraryDialogOpen(true)
+                                        )}
+                                    >
+                                        Library Settings
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>{" "}
                             <button
                                 className={`flex-col h-12 w-1/3 py-2 ${
                                     activePanel === "shapes"
@@ -266,16 +410,6 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                             </button>
                             <button
                                 className={`flex-col h-12 w-1/3 py-2 ${
-                                    activePanel === "settings"
-                                        ? "bg-blue-600"
-                                        : "bg-gray-800"
-                                }`}
-                                onClick={() => setActivePanel("settings")}
-                            >
-                                Settings
-                            </button>
-                            <button
-                                className={`flex-col h-12 w-1/3 py-2 ${
                                     activePanel === "chat"
                                         ? "bg-blue-600"
                                         : "bg-gray-800"
@@ -284,6 +418,13 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                             >
                                 AI Model
                             </button>
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept=".json"
+                                onChange={handleFileChange}
+                                className="hidden"
+                            />{" "}
                         </div>
 
                         {/* Panel content */}
@@ -320,29 +461,6 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                     onSaveAsComponent={onSaveAsComponent}
                                 />
                             )}
-                            {activePanel === "settings" && (
-                                <SettingsPanel
-                                    canvasSize={canvasSize}
-                                    onSetCanvasSize={onSetCanvasSize}
-                                    onSetCanvasSettings = {onSetCanvasSettings}
-                                    fileName={fileName}
-                                    setFileName={setFileName}
-                                    onSaveDiagram={handleSaveDiagram}
-                                    onLoadDiagram={handleLoadDiagram}
-                                    activeLibrary={activeLibrary}
-                                    onLibraryChange={onLibraryChange}
-                                    folderPath={folderPath}
-                                    setFolderPath={setFolderPath}
-                                    onDownloadSVG={onDownloadSVG}
-                                    showAttachmentPoints={showAttachmentPoints}
-                                    setShowAttachmentPoints={
-                                        setShowAttachmentPoints
-                                    }
-                                    onUpdateShapes={onUpdateSvgLibrary}
-                                    storageType={storageType}
-                                    onStorageTypeChange={onStorageTypeChange}
-                                />
-                            )}
                             {activePanel === "chat" && (
                                 <ChatPanel
                                     handleLoadDiagramFromJSON={
@@ -366,7 +484,6 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                             svgContent={composedSVG}
                             selected3DShape={selected3DShape}
                             diagramComponents={diagramComponents}
-                            onSetFlowNodes = {onSetFlowNodes}
                             isCopied={isCopied}
                             onSelect3DShape={handleSelect3DShape}
                             canvasSize={canvasSize}
@@ -456,6 +573,36 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                         )}
                     </DialogContent>
                 </Dialog>
+
+                <SettingsDialog
+                    isOpen={isSettingsDialogOpen}
+                    onClose={() => setIsSettingsDialogOpen(false)}
+                    settings={settings}
+                    canvasSize={canvasSize}
+                    onSetCanvasSize={onSetCanvasSize}
+                    onSetCanvasSettings={onSetCanvasSettings}
+                    showAttachmentPoints={showAttachmentPoints}
+                    setShowAttachmentPoints={setShowAttachmentPoints}
+                />
+                <LibraryManagerDialog
+                    isOpen={isLibraryDialogOpen}
+                    onClose={() => setIsLibraryDialogOpen(false)}
+                    activeLibrary={activeLibrary}
+                    onLibraryChange={onLibraryChange}
+                    onUpdateShapes={onUpdateSvgLibrary}
+                />
+                <SaveDiagramDialog
+                    isOpen={isSaveDiagramDialogOpen}
+                    onClose={() => setIsSaveDiagramDialogOpen(false)}
+                    onSave={handleSaveDiagram}
+                    fileName={fileName}
+                    setFileName={handleSetFileName}
+                />
+                <SaveComponentDialog
+                    isOpen={isSaveComponentDialogOpen}
+                    onClose={() => setIsSaveComponentDialogOpen(false)}
+                    onSave={onSaveAsComponent}
+                />
 
                 {/* Save/Load Diagram Dialog */}
                 <Dialog

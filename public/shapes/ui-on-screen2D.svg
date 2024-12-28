@@ -91,8 +91,10 @@
      style="fill:none;stroke:#000000;stroke-width:0.264583;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
      d="m 4.379844,4.8804 5.981584,3.45808"
      id="path1056" />
-  <path
+  <circle
+     style="fill:#d40000;fill-opacity:0.539474;stroke:none;stroke-width:0.396875;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1"
      id="attach-point"
-     style="fill:#ff0000;stroke-width:0.529168;stroke-linecap:round;stroke-miterlimit:4.1"
-     d="m 13.663424,10.201563 a 0.83869553,0.83869553 0 0 1 -0.838695,0.838695 0.83869553,0.83869553 0 0 1 -0.838696,-0.838695 0.83869553,0.83869553 0 0 1 0.838696,-0.8386956 0.83869553,0.83869553 0 0 1 0.838695,0.8386956 z" />
+     cx="12.844876"
+     cy="10.265584"
+     r="0.67061603" />
 </svg>

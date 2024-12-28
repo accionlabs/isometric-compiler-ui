@@ -38,7 +38,9 @@ export const exportToImage = async (
             const exclude = [
                 'react-flow__controls',
                 'react-flow__minimap',
-                'react-flow__panel'
+                'react-flow__panel',
+                'react-flow__background',
+                'react-flow__handle'
             ];
             return !exclude.some(className => 
                 node.classList?.contains(className)

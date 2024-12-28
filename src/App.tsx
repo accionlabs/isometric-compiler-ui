@@ -55,11 +55,10 @@ const App: React.FC = () => {
     const [storageType, setStorageType] = useState<StorageType>(
         StorageType.Local
     );
-
     // Add state for component library
     const [components, setComponents] = useState<Component[]>([]);
-
-    const [flowNodes, setFlowNodes] = useState<Node[]>([]);
+    const [isSaveDiagramDialogOpen, setIsSaveDiagramDialogOpen] =
+        useState(false);
 
     // Update Canvas Settings
     const handleUpdateCanvasSettings = useCallback(
@@ -357,10 +356,6 @@ const App: React.FC = () => {
         [selected3DShape, isCopied, selectedPosition, selectedAttachmentPoint]
     );
 
-    const handleSetFlowNodes = useCallback((nodes: Node[]) => {
-        setFlowNodes(nodes);
-    }, []);
-
     const getJsonFileName = useCallback((svgFileName: string) => {
         return svgFileName.replace(/\.svg$/, ".json");
     }, []);
@@ -369,34 +364,52 @@ const App: React.FC = () => {
         setFolderPath(newPath);
     }, []);
 
-    const handleSaveDiagram = useCallback(async () => {
-        try {
-            const jsonFileName = getJsonFileName(fileName);
-            const serializedDiagramComponents =
-                diagramComponentsLib.serializeDiagramComponents(
-                    diagramComponents
+    const handleSaveDialogOpen = useCallback(() => {
+        setIsSaveDiagramDialogOpen(true);
+    }, []);
+    
+    const handleLoadDiagramCtrlL = useCallback(() => {
+        console.log("Loading diagram...");
+        handleLoadDiagram()
+    }, []);
+
+    const handleSaveDiagramCtrlS = useCallback(() => {
+        console.log("Saving diagram...");
+        handleSaveDialogOpen();
+    }, [handleSaveDialogOpen])
+
+    const handleSaveDiagram = useCallback(
+        async (fileName: string, onComplete: () => void) => {
+            try {
+                const jsonFileName = getJsonFileName(fileName);
+                const serializedDiagramComponents =
+                    diagramComponentsLib.serializeDiagramComponents(
+                        diagramComponents
+                    );
+                const serializedComponentLib =
+                    componentLibraryManager.serializeComponentLib();
+                await saveFile(
+                    storageType,
+                    jsonFileName,
+                    JSON.stringify(
+                        {
+                            serializedDiagramComponents,
+                            serializedComponentLib
+                        },
+                        null,
+                        2
+                    ),
+                    folderPath
                 );
-            const serializedComponentLib =
-                componentLibraryManager.serializeComponentLib();
-            await saveFile(
-                storageType,
-                jsonFileName,
-                JSON.stringify(
-                    {
-                        serializedDiagramComponents,
-                        serializedComponentLib
-                    },
-                    null,
-                    2
-                ),
-                folderPath
-            );
-            setErrorMessage(null);
-        } catch (error) {
-            console.error("Error saving diagram:", error);
-            setErrorMessage("Failed to save diagram. Please try again.");
-        }
-    }, [diagramComponents, fileName, folderPath, storageType]);
+                setErrorMessage(null);
+                setTimeout(() => onComplete(), 5000);
+            } catch (error) {
+                console.error("Error saving diagram:", error);
+                setErrorMessage("Failed to save diagram. Please try again.");
+            }
+        },
+        [diagramComponents, fileName, folderPath, storageType]
+    );
 
     const handleLoadDiagram = useCallback(
         async (fileOrPath?: File) => {
@@ -472,10 +485,12 @@ const App: React.FC = () => {
         localStorage.setItem("fileName", newFileName);
     }, []);
 
-    const handleDownloadImage = useCallback(async () => {
+    const handleDownloadImage = useCallback(async (type: "svg" | "png") => {
         const adjustedFileName = fileName.replace(/\.[^/.]+$/, "");
 
-        await exportAsPNG({ fileName: adjustedFileName });
+        type === "png"
+            ? await exportAsPNG({ fileName: adjustedFileName })
+            : await exportAsSVG({ fileName: adjustedFileName });
     }, []);
 
     const handleDownloadSVGOld = useCallback(() => {
@@ -519,7 +534,7 @@ const App: React.FC = () => {
 
     const handleKeyboardShortcuts = useCallback(() => {
         return createKeyboardShortcuts(
-            handleSaveDiagram,
+            handleSaveDiagramCtrlS,
             handleRemove3DShape,
             handleCut3DShape,
             handleCopy3DShape,
@@ -797,7 +812,8 @@ const App: React.FC = () => {
             onSaveAsComponent={handleSaveAsComponent}
             onAddComponent={handleAddComponent}
             onDeleteComponent={handleDeleteComponent}
-            onSetFlowNodes={handleSetFlowNodes}
+            isSaveDiagramDialogOpen={isSaveDiagramDialogOpen}
+            setIsSaveDiagramDialogOpen={setIsSaveDiagramDialogOpen}
         />
     );
 };

@@ -1,11 +1,13 @@
 // @/panels/AdvancedCanvasSettings.tsx
-import React, { useState, useEffect } from 'react';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs';
-import { Button } from '@/components/ui/Button';
-import { CanvasSettingsTab } from './CanvasSettingsTab';
-import { MetadataSettingsTab } from './MetadataSettingsTab';
-import { LayerSettingsTab } from './LayerSettingsTab';
-import { CanvasSize,MetadataLabelSettings,LayerLabelSettings, CanvasSettings } from '@/Types';
+
+import React, { useState, useEffect } from "react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/Tabs";
+import { Button } from "@/components/ui/Button";
+import { CanvasSettingsTab } from "./CanvasSettingsTab";
+import { MetadataSettingsTab } from "./MetadataSettingsTab";
+import { LayerSettingsTab } from "./LayerSettingsTab";
+import { CanvasSize, CanvasSettings } from "@/Types";
+import styles from "@/styles/AdvancedCanvasSettings.module.css";
 
 export const DEFAULT_SETTINGS: CanvasSettings = {
     canvas: {
@@ -24,11 +26,10 @@ export const DEFAULT_SETTINGS: CanvasSettings = {
     layerLabel: {
         width: 200,
         lineSpacing: 1.2,
-        fontFamily: 'sans-serif',
+        fontFamily: "sans-serif",
         fontSize: 21,
-        fontWeight: 'bold'
-    },
-    showAttachmentPoints: false
+        fontWeight: "bold"
+    }
 };
 
 interface AdvancedCanvasSettingsProps {
@@ -43,14 +44,12 @@ export const AdvancedCanvasSettings: React.FC<AdvancedCanvasSettingsProps> = ({
     initialSettings = {}
 }) => {
     const [settings, setSettings] = useState<CanvasSettings>(() => {
-        //const savedSettings = localStorage.getItem(STORAGE_KEY);
-        const savedSettings = undefined;
+        const savedSettings = localStorage.getItem(STORAGE_KEY);
         if (savedSettings) {
             return JSON.parse(savedSettings);
         }
         return { ...DEFAULT_SETTINGS, ...initialSettings };
     });
-
     const [hasChanges, setHasChanges] = useState(false);
 
     const updateSettings = (
@@ -58,80 +57,102 @@ export const AdvancedCanvasSettings: React.FC<AdvancedCanvasSettingsProps> = ({
         key: string,
         value: number | string | boolean | CanvasSize
     ) => {
-        setSettings(prev => {
-            if (category === 'canvas') {
+        console.log("category", category, "key", key, "value", value);
+        const newSettings = function () {
+            if (category === "canvas") {
                 return {
-                    ...prev,
+                    ...settings,
                     canvas: {
-                        ...prev.canvas,
+                        ...settings.canvas,
                         [key]: value
                     }
                 };
-            } else if (category === 'metadataLabel') {
+            } else if (category === "metadataLabel") {
                 return {
-                    ...prev,
+                    ...settings,
                     metadataLabel: {
-                        ...prev.metadataLabel,
+                        ...settings.metadataLabel,
                         [key]: value
                     }
                 };
-            } else if (category === 'layerLabel') {
+            } else if (category === "layerLabel") {
                 return {
-                    ...prev,
+                    ...settings,
                     layerLabel: {
-                        ...prev.layerLabel,
+                        ...settings.layerLabel,
                         [key]: value
                     }
                 };
             }
-            return prev;
-        });
+            return settings;
+        }
+        console.log(newSettings());
+        setSettings(newSettings());
         setHasChanges(true);
     };
 
     const handleSave = () => {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
         onSaveSettings(settings);
+        localStorage.setItem(STORAGE_KEY,JSON.stringify(settings));
         setHasChanges(false);
     };
 
+    useEffect(() => {
+        console.log("Settings updated:", settings);
+    }, [settings]);
+
     return (
-        <div className="space-y-4">
-            <Tabs defaultValue="canvas">
-                <TabsList>
-                    <TabsTrigger value="canvas">Canvas</TabsTrigger>
-                    <TabsTrigger value="metadata">Metadata Labels</TabsTrigger>
-                    <TabsTrigger value="layer">Layer Labels</TabsTrigger>
+        <div className={styles.settingsContainer}>
+            <Tabs defaultValue="canvas" className={styles.tabs}>
+                <TabsList className={styles.tabList}>
+                    <TabsTrigger value="canvas" className={styles.tabTrigger}>
+                        Canvas
+                    </TabsTrigger>
+                    <TabsTrigger value="metadata" className={styles.tabTrigger}>
+                        Metadata Labels
+                    </TabsTrigger>
+                    <TabsTrigger value="layer" className={styles.tabTrigger}>
+                        Layer Labels
+                    </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="canvas">
-                    <CanvasSettingsTab
-                        canvas={settings.canvas}
-                        onChange={(key, value) => updateSettings('canvas', key, value)}
-                        onShowAttachmentPointsChange={(value) => 
-                            setSettings(prev => ({ ...prev, showAttachmentPoints: value }))
-                        }
-                    />
+                <TabsContent value="canvas" className={styles.tabContent}>
+                    <div className={styles.tabPanel}>
+                        <CanvasSettingsTab
+                            canvas={settings.canvas}
+                            onChange={(key, value) =>
+                                updateSettings("canvas", key, value)
+                            }
+                        />
+                    </div>
                 </TabsContent>
 
-                <TabsContent value="metadata">
-                    <MetadataSettingsTab
-                        settings={settings.metadataLabel}
-                        onChange={(key, value) => updateSettings('metadataLabel', key, value)}
-                    />
+                <TabsContent value="metadata" className={styles.tabContent}>
+                    <div className={styles.tabPanel}>
+                        <MetadataSettingsTab
+                            settings={settings.metadataLabel}
+                            onChange={(key, value) =>
+                                updateSettings("metadataLabel", key, value)
+                            }
+                        />
+                    </div>
                 </TabsContent>
 
-                <TabsContent value="layer">
-                    <LayerSettingsTab
-                        settings={settings.layerLabel}
-                        onChange={(key, value) => updateSettings('layerLabel', key, value)}
-                    />
+                <TabsContent value="layer" className={styles.tabContent}>
+                    <div className={styles.tabPanel}>
+                        <LayerSettingsTab
+                            settings={settings.layerLabel}
+                            onChange={(key, value) =>
+                                updateSettings("layerLabel", key, value)
+                            }
+                        />
+                    </div>
                 </TabsContent>
             </Tabs>
 
             {hasChanges && (
-                <div className="flex justify-end">
-                    <Button 
+                <div className="flex justify-end mt-4">
+                    <Button
                         onClick={handleSave}
                         className="bg-blue-600 hover:bg-blue-700"
                     >

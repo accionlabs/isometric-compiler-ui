@@ -1,0 +1,26 @@
+/* @/styles/AdvancedCanvasSettings.module.css */
+
+.settingsContainer {
+    @apply w-full h-full flex flex-col overflow-hidden;
+}
+
+.tabList {
+    @apply flex w-full bg-gray-700/50 rounded-lg p-1 mb-4 shrink-0;
+}
+
+.tabTrigger {
+    @apply flex-1 py-2 px-3 text-sm font-medium text-gray-300 rounded-md transition-colors
+    data-[state=active]:bg-gray-600 data-[state=active]:text-white;
+}
+
+.tabsContent {
+    @apply text-white flex-1 min-h-0 overflow-auto;
+}
+
+.tabPanel {
+    @apply p-4 space-y-4;
+}
+
+.saveButton {
+    @apply flex justify-end mt-4;
+}

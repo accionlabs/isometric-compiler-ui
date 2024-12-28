@@ -61,7 +61,6 @@ interface FlowSVGDisplayProps {
     settings: CanvasSettings | null;
     setSelectedPosition: (position: string) => void;
     setSelectedAttachmentPoint: (point: string) => void;
-    onSetFlowNodes: (nodes:Node[]) => void;
 }
 
 type FlowEdge = Edge<CustomEdgeProps["data"]>;
@@ -128,8 +127,7 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
     canvasSize,
     settings,
     setSelectedPosition,
-    setSelectedAttachmentPoint,
-    onSetFlowNodes
+    setSelectedAttachmentPoint
 }) => {
     const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
@@ -415,8 +413,6 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
                 metadataNodes: updatedNodes.filter((n) => n.type === "metadata")
                     .length
             });
-            // Set Flow Nodes in App so that we can pass it to download SVG
-            onSetFlowNodes(updatedNodes);
             // Create new edges for the updated node positions
             const newEdges: FlowEdge[] = updatedNodes
                 .filter(
