@@ -96,19 +96,18 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
     ) => (
         <HoverCard key={element.name}>
             <HoverCardTrigger asChild>
-                <Card className="transform transition-all duration-300 hover:scale-105 hover:shadow-lg cursor-pointer">
-                    <button
-                        disabled={
-                            isAddDisabled[
-                                "type" in element ? element.type : "component"
-                            ]
-                        }
-                        onClick={() => onAdd(element)}
-                        className={`flex items-center justify-center p-1 bg-gray-700 rounded-lg relative aspect-[3/2] transition-all hover:scale-105 focus:outline-none disabled:opacity-80 disabled:cursor-not-allowed`}
-                    >
-                        {renderPreview(element)}
-                    </button>
-                </Card>
+                <button
+                    disabled={
+                        isAddDisabled[
+                            "type" in element ? element.type : "component"
+                        ]
+                    }
+                    onClick={() => onAdd(element)}
+                    className={`flex items-center justify-center p-1 rounded-lg relative aspect-[3/2] transition-all hover:scale-105 focus:outline-none disabled:opacity-80 disabled:cursor-not-allowed`}
+                >
+                    {renderPreview(element)}
+                    {/* //opacity-50 */}
+                </button>
             </HoverCardTrigger>
             <HoverCardContent className="w-80">
                 <Card key={element.name} className="group overflow-hidden">
@@ -170,7 +169,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
         <div className="space-y-4">
             <span className="font-bold">{title}</span>
             {items.length > 0 ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 ">
                     {items.map((element) =>
                         renderElement(element, onAdd, onEdit, onDelete)
                     )}
@@ -182,9 +181,13 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
     );
 
     return (
-        <div className="container mx-auto p-6 pb-20 h-screen overflow-y-scroll flex flex-col gap-4">
-            {/* {AllElementsRender.map((ele) => ele.render)}
-             */}
+        <div className="container mx-auto p-6 pb-20 h-screen overflow-y-scroll flex flex-col gap-1">
+            {renderSection(
+                "Components",
+                components,
+                (component: Component) => onAddComponent(component.id),
+                (component: Component) => handleDeleteComponent(component.id)
+            )}
             {renderSection(
                 "3D Shapes",
                 svgLibrary.filter((shape) => shape.type === "3D"),
@@ -194,12 +197,6 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                 "2D Shapes",
                 svgLibrary.filter((shape) => shape.type === "2D"),
                 (shape: Shape) => onAdd2DShape(shape.name, shape.attachTo ?? "")
-            )}
-            {renderSection(
-                "Components",
-                components,
-                (component: Component) => onAddComponent(component.id),
-                (component: Component) => handleDeleteComponent(component.id)
             )}
         </div>
     );
