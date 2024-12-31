@@ -1,0 +1,314 @@
+{
+    "categories": [
+        {
+            "_id": "676e47091c723eac3675eb12",
+            "createdAt": "2024-12-27T06:19:53.363Z",
+            "updatedAt": "2024-12-27T06:19:53.363Z",
+            "status": "active",
+            "name": "new parent",
+            "description": null,
+            "parent": null,
+            "path": "new parent",
+            "metadata": {
+                "displayOrder": 2,
+                "icon": "<svg>...</svg>",
+                "customProperties": {
+                    "color": "black",
+                    "size": "large"
+                }
+            },
+            "ancestors": [],
+            "children": []
+        },
+        {
+            "_id": "676e471a1c723eac3675eb13",
+            "createdAt": "2024-12-27T06:20:10.529Z",
+            "updatedAt": "2024-12-27T06:20:10.529Z",
+            "status": "active",
+            "name": "new parent 2",
+            "description": null,
+            "parent": null,
+            "path": "new parent 2",
+            "metadata": {
+                "displayOrder": 2,
+                "icon": "<svg>...</svg>",
+                "customProperties": {
+                    "color": "black",
+                    "size": "large"
+                }
+            },
+            "ancestors": [],
+            "children": [
+                {
+                    "_id": "676e47361c723eac3675eb14",
+                    "createdAt": "2024-12-27T06:20:38.226Z",
+                    "updatedAt": "2024-12-27T06:20:38.226Z",
+                    "status": "active",
+                    "name": "child in 1",
+                    "description": null,
+                    "parent": "676e471a1c723eac3675eb13",
+                    "path": "new parent 2/child in 1",
+                    "metadata": {
+                        "displayOrder": 2,
+                        "icon": "<svg>...</svg>",
+                        "customProperties": {
+                            "color": "black",
+                            "size": "large"
+                        }
+                    },
+                    "ancestors": ["676e471a1c723eac3675eb13"],
+                    "children": [
+                        {
+                            "_id": "676e47361c723eac3675eb1423",
+                            "createdAt": "2024-12-27T06:20:38.226Z",
+                            "updatedAt": "2024-12-27T06:20:38.226Z",
+                            "status": "active",
+                            "name": "child in 11",
+                            "description": null,
+                            "parent": "676e47361c723eac3675eb14",
+                            "path": "new parent 2/child in 1",
+                            "metadata": {
+                                "displayOrder": 2,
+                                "icon": "<svg>...</svg>",
+                                "customProperties": {
+                                    "color": "black",
+                                    "size": "large"
+                                }
+                            },
+                            "ancestors": ["676e47361c723eac3675eb14"],
+                            "children": []
+                        }
+                    ]
+                },
+                {
+                    "_id": "676e473d1c723eac3675eb15",
+                    "createdAt": "2024-12-27T06:20:45.224Z",
+                    "updatedAt": "2024-12-27T06:20:45.224Z",
+                    "status": "active",
+                    "name": "child in 2",
+                    "description": null,
+                    "parent": "676e471a1c723eac3675eb13",
+                    "path": "new parent 2/child in 2",
+                    "metadata": {
+                        "displayOrder": 2,
+                        "icon": "<svg>...</svg>",
+                        "customProperties": {
+                            "color": "black",
+                            "size": "large"
+                        }
+                    },
+                    "ancestors": ["676e471a1c723eac3675eb13"],
+                    "children": [
+                        {
+                            "_id": "676e474b1c723eac3675eb16",
+                            "createdAt": "2024-12-27T06:20:59.738Z",
+                            "updatedAt": "2024-12-27T06:20:59.738Z",
+                            "status": "active",
+                            "name": "child in 3",
+                            "description": null,
+                            "parent": "676e473d1c723eac3675eb15",
+                            "path": "new parent 2/child in 2/child in 3",
+                            "metadata": {
+                                "displayOrder": 2,
+                                "icon": "<svg>...</svg>",
+                                "customProperties": {
+                                    "color": "black",
+                                    "size": "large"
+                                }
+                            },
+                            "ancestors": [
+                                "676e473d1c723eac3675eb15",
+                                "676e471a1c723eac3675eb13"
+                            ],
+                            "children": [
+                                {
+                                    "_id": "676e47551c723eac3675eb17",
+                                    "createdAt": "2024-12-27T06:21:09.802Z",
+                                    "updatedAt": "2024-12-27T06:21:09.802Z",
+                                    "status": "active",
+                                    "name": "child in 4",
+                                    "description": null,
+                                    "parent": "676e474b1c723eac3675eb16",
+                                    "path": "new parent 2/child in 2/child in 3/child in 4",
+                                    "metadata": {
+                                        "displayOrder": 2,
+                                        "icon": "<svg>...</svg>",
+                                        "customProperties": {
+                                            "color": "black",
+                                            "size": "large"
+                                        }
+                                    },
+                                    "ancestors": [
+                                        "676e474b1c723eac3675eb16",
+                                        "676e473d1c723eac3675eb15",
+                                        "676e471a1c723eac3675eb13"
+                                    ],
+                                    "children": [
+                                        {
+                                            "_id": "676e47631c723eac3675eb18",
+                                            "createdAt": "2024-12-27T06:21:23.909Z",
+                                            "updatedAt": "2024-12-27T06:21:23.909Z",
+                                            "status": "active",
+                                            "name": "child in 5",
+                                            "description": null,
+                                            "parent": "676e47551c723eac3675eb17",
+                                            "path": "new parent 2/child in 2/child in 3/child in 4/child in 5",
+                                            "metadata": {
+                                                "displayOrder": 2,
+                                                "icon": "<svg>...</svg>",
+                                                "customProperties": {
+                                                    "color": "black",
+                                                    "size": "large"
+                                                }
+                                            },
+                                            "ancestors": [
+                                                "676e47551c723eac3675eb17",
+                                                "676e474b1c723eac3675eb16",
+                                                "676e473d1c723eac3675eb15",
+                                                "676e471a1c723eac3675eb13"
+                                            ],
+                                            "children": [
+                                                {
+                                                    "_id": "676e47631c723eac3675eb18d",
+                                                    "createdAt": "2024-12-27T06:21:23.909Z",
+                                                    "updatedAt": "2024-12-27T06:21:23.909Z",
+                                                    "status": "active",
+                                                    "name": "child in 6",
+                                                    "description": null,
+                                                    "parent": "676e47631c723eac3675eb18",
+                                                    "path": "new parent 2/child in 2/child in 3/child in 4/child in 5",
+                                                    "metadata": {
+                                                        "displayOrder": 2,
+                                                        "icon": "<svg>...</svg>",
+                                                        "customProperties": {
+                                                            "color": "black",
+                                                            "size": "large"
+                                                        }
+                                                    },
+                                                    "ancestors": [
+                                                        "676e47631c723eac3675eb18",
+                                                        "676e47551c723eac3675eb17",
+                                                        "676e474b1c723eac3675eb16",
+                                                        "676e473d1c723eac3675eb15",
+                                                        "676e471a1c723eac3675eb13"
+                                                    ],
+                                                    "children": [
+                                                        {
+                                                            "_id": "676e47631c723eac3675eb18dd",
+                                                            "createdAt": "2024-12-27T06:21:23.909Z",
+                                                            "updatedAt": "2024-12-27T06:21:23.909Z",
+                                                            "status": "active",
+                                                            "name": "child in 6",
+                                                            "description": null,
+                                                            "parent": "676e47631c723eac3675eb18d",
+                                                            "path": "new parent 2/child in 2/child in 3/child in 4/child in 5",
+                                                            "metadata": {
+                                                                "displayOrder": 2,
+                                                                "icon": "<svg>...</svg>",
+                                                                "customProperties": {
+                                                                    "color": "black",
+                                                                    "size": "large"
+                                                                }
+                                                            },
+                                                            "ancestors": [
+                                                                "676e47631c723eac3675eb18d",
+                                                                "676e47631c723eac3675eb18",
+                                                                "676e47551c723eac3675eb17",
+                                                                "676e474b1c723eac3675eb16",
+                                                                "676e473d1c723eac3675eb15",
+                                                                "676e471a1c723eac3675eb13"
+                                                            ],
+                                                            "children": []
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "_id": "676e47731c723eac3675eb19",
+            "createdAt": "2024-12-27T06:21:39.104Z",
+            "updatedAt": "2024-12-27T06:21:39.104Z",
+            "status": "active",
+            "name": "parent 3",
+            "description": null,
+            "parent": null,
+            "path": "parent 3",
+            "metadata": {
+                "displayOrder": 2,
+                "icon": "<svg>...</svg>",
+                "customProperties": {
+                    "color": "black",
+                    "size": "large"
+                }
+            },
+            "ancestors": [],
+            "children": [
+                {
+                    "_id": "676e478c1c723eac3675eb1a",
+                    "createdAt": "2024-12-27T06:22:04.361Z",
+                    "updatedAt": "2024-12-27T06:22:04.361Z",
+                    "status": "active",
+                    "name": "child 31",
+                    "description": null,
+                    "parent": "676e47731c723eac3675eb19",
+                    "path": "parent 3/child 31",
+                    "metadata": {
+                        "displayOrder": 2,
+                        "icon": "<svg>...</svg>",
+                        "customProperties": {
+                            "color": "black",
+                            "size": "large"
+                        }
+                    },
+                    "ancestors": ["676e47731c723eac3675eb19"],
+                    "children": [
+                        {
+                            "_id": "676e47971c723eac3675eb1b",
+                            "createdAt": "2024-12-27T06:22:15.153Z",
+                            "updatedAt": "2024-12-27T06:22:15.153Z",
+                            "status": "active",
+                            "name": "child 32",
+                            "description": null,
+                            "parent": "676e478c1c723eac3675eb1a",
+                            "path": "parent 3/child 31/child 32",
+                            "metadata": {
+                                "displayOrder": 2,
+                                "icon": "<svg>...</svg>",
+                                "customProperties": {
+                                    "color": "black",
+                                    "size": "large"
+                                }
+                            },
+                            "ancestors": [
+                                "676e478c1c723eac3675eb1a",
+                                "676e47731c723eac3675eb19"
+                            ],
+                            "children": []
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "_id": "6773b07f7719e344d32b9e0c",
+            "createdAt": "2024-12-31T08:51:11.470Z",
+            "updatedAt": "2024-12-31T08:51:11.470Z",
+            "status": "active",
+            "name": "Default",
+            "description": null,
+            "parent": null,
+            "path": "Default",
+            "metadata": null,
+            "ancestors": [],
+            "children": []
+        }
+    ]
+}

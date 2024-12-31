@@ -12,6 +12,7 @@ import {
 import SVGPreview from "../components/ui/SVGPreview";
 import { SVGLibraryManager } from "../lib/svgLibraryUtils";
 import { componentLibraryManager } from "../lib/componentLib";
+import CategoryMapper from "@/components/ui/Catergories";
 
 interface ShapesPanelProps {
     svgLibrary: Shape[];
@@ -232,7 +233,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
     ];
     return (
         <div className="flex flex-col h-full">
-            <Accordion
+            {/* <Accordion
                 type="single"
                 collapsible
                 value={openPanels}
@@ -255,7 +256,8 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                         </AccordionItem>
                     ))}
                 </div>
-            </Accordion>
+            </Accordion> */}
+            <CategoryMapper />
         </div>
     );
 };
