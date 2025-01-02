@@ -1,6 +1,12 @@
 // @/panels/CompositionPanel.tsx
 
-import React, { useEffect, useRef, useMemo, useState, useCallback } from "react";
+import React, {
+    useEffect,
+    useRef,
+    useMemo,
+    useState,
+    useCallback
+} from "react";
 import { CanvasSize, DiagramComponent, Shape, Component } from "@/Types";
 import DiagramComponentCard from "./DiagramComponentCard";
 import SVGPreview from "@/components/ui/SVGPreview";

@@ -78,7 +78,7 @@ const MetadataNode: React.FC<NodeProps<MetadataNodeType>> = ({
                 onMouseEnter={(e) => {
                     const tooltip = document.createElement("div");
                     tooltip.className =
-                        "fixed bg-gray-900 text-white p-3 rounded text-sm z-50 max-w-xs";
+                        "fixed bg-customGray text-white p-3 rounded text-sm z-50 max-w-xs";
                     tooltip.style.left = `${e.clientX + 10}px`;
                     tooltip.style.top = `${e.clientY + 10}px`;
                     tooltip.id = "metadata-tooltip";

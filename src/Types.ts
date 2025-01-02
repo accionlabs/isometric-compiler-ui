@@ -198,10 +198,10 @@ export interface CanvasSizeSettings {
 }
 
 export interface MetadataLabelSettings {
-    minSpacing: number;     // minimum X spacing between metadata labels
-    minYSpacing: number;    // minimum Y spacing between metadata labels
+    minSpacing: number; // minimum X spacing between metadata labels
+    minYSpacing: number; // minimum Y spacing between metadata labels
     smoothingAngle: number; // hull smoothing angle in radians
-    stepSize: number;       // distance between metadata label positions
+    stepSize: number; // distance between metadata label positions
 }
 
 export interface LayerLabelSettings {
@@ -216,4 +216,25 @@ export interface CanvasSettings {
     canvas: CanvasSizeSettings;
     metadataLabel: MetadataLabelSettings;
     layerLabel: LayerLabelSettings;
+}
+
+export interface Category {
+    _id: string;
+    createdAt: string;
+    updatedAt: string;
+    status: string;
+    name: string;
+    description: string | null;
+    parent: string | null;
+    path: string;
+    metadata: {
+        displayOrder: number;
+        icon: string;
+        customProperties: {
+            color: string;
+            size: string;
+        };
+    } | null;
+    ancestors: string[];
+    children: Category[];
 }

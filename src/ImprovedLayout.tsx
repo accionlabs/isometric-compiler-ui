@@ -135,7 +135,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     onStorageTypeChange,
     onSaveAsComponent,
     isSaveDiagramDialogOpen,
-    setIsSaveDiagramDialogOpen,
+    setIsSaveDiagramDialogOpen
 }) => {
     const params = new URLSearchParams(window.location.search);
     const isReadModeEnabled = params.get("mode") === "read";
@@ -266,9 +266,12 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
         setIsSaveComponentDialogOpen(true);
     }, []);
 
-    const handleSetFileName = useCallback((name: string) => { 
-        setFileName(name); 
-    }, [setFileName]);
+    const handleSetFileName = useCallback(
+        (name: string) => {
+            setFileName(name);
+        },
+        [setFileName]
+    );
 
     const handleFileSelect = () => {
         fileInputRef.current?.click();
@@ -284,7 +287,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
 
     const handleOpenSaveDialog = () => {
         setIsSaveDiagramDialogOpen(true);
-    }
+    };
 
     const handleSaveDiagram = async () => {
         console.log("CompositionPanel handleSaveDiagram started:", {
@@ -309,18 +312,21 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
 
     return (
         <ChatProvider>
-            <div className="flex flex-row h-screen w-screen bg-gray-900 text-white">
+            <div className="flex flex-row h-screen w-screen  text-white">
                 {/* Left side control panels */}
                 {!isReadModeEnabled && (
-                    <div className="flex flex-col border-r border-gray-700 w-1/3">
+                    <div className="flex flex-col border-r bg-customGray border-gray-700 w-1/3">
                         {/* Tab buttons */}
-                        <div className="flex flex-row h-14 px-2 pt-2 space-x-2 border-b border-gray-700">
+                        <div className="flex flex-row h-16 px-2 pt-2 space-x-2 border-b border-gray-700 items-center">
                             <DropdownMenu
                                 open={isDropdownOpen}
                                 onOpenChange={setIsDropdownOpen}
                             >
                                 <DropdownMenuTrigger asChild>
-                                    <Button variant="outline" className="px-2">
+                                    <Button
+                                        variant="outline"
+                                        className="px-2 h-7"
+                                    >
                                         <MoreHorizontal className="h-4 w-4" />
                                     </Button>
                                 </DropdownMenuTrigger>
@@ -387,32 +393,33 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                         Library Settings
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
-                            </DropdownMenu>{" "}
+                            </DropdownMenu>
                             <button
-                                className={`flex-col h-12 w-1/3 py-2 ${
+                                className={`rounded px-2 py-1
+                                ${
                                     activePanel === "shapes"
-                                        ? "bg-blue-600"
-                                        : "bg-gray-800"
-                                }`}
+                                        ? "bg-customLightGray"
+                                        : "bg-customGray"
+                                } `}
                                 onClick={() => setActivePanel("shapes")}
                             >
                                 Shapes
                             </button>
                             <button
-                                className={`flex-col h-12 w-1/3 py-2 ${
+                                className={`rounded px-2 py-1 ${
                                     activePanel === "composition"
-                                        ? "bg-blue-600"
-                                        : "bg-gray-800"
+                                        ? "bg-customLightGray"
+                                        : "bg-customGray"
                                 }`}
                                 onClick={() => setActivePanel("composition")}
                             >
                                 Composition
                             </button>
                             <button
-                                className={`flex-col h-12 w-1/3 py-2 ${
+                                className={`rounded px-2 py-1 ${
                                     activePanel === "chat"
-                                        ? "bg-blue-600"
-                                        : "bg-gray-800"
+                                        ? "bg-customLightGray"
+                                        : "bg-customGray"
                                 }`}
                                 onClick={() => setActivePanel("chat")}
                             >
@@ -471,9 +478,9 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                         </div>
                     </div>
                 )}
-                <div className="flex-grow flex flex-col relative">
+                <div className="flex-grow flex flex-col mx-2  relative">
                     {/* Heading */}
-                    <h2 className="text-xl h-14 font-semibold p-4 bg-gray-800 z-10">
+                    <h2 className="text-xl h-14 font-semibold bg-customGray rounded p-4 z-10">
                         Composed SVG
                     </h2>
 
