@@ -367,16 +367,16 @@ const App: React.FC = () => {
     const handleSaveDialogOpen = useCallback(() => {
         setIsSaveDiagramDialogOpen(true);
     }, []);
-    
+
     const handleLoadDiagramCtrlL = useCallback(() => {
         console.log("Loading diagram...");
-        handleLoadDiagram()
+        handleLoadDiagram();
     }, []);
 
     const handleSaveDiagramCtrlS = useCallback(() => {
         console.log("Saving diagram...");
         handleSaveDialogOpen();
-    }, [handleSaveDialogOpen])
+    }, [handleSaveDialogOpen]);
 
     const handleSaveDiagram = useCallback(
         async (fileName: string, onComplete: () => void) => {
@@ -567,6 +567,20 @@ const App: React.FC = () => {
                         diagramComponents,
                         selected3DShape
                     );
+                }
+                // check if the selectedShapes already has a component with the same name, and disallow saving
+                const existingComponent = selectedShapes.find((component) => {
+                    return (
+                        component.source === "component" &&
+                        component.shape === name
+                    );
+                });
+                if (existingComponent) {
+                    console.error("Cannot save a diagram as a component containing the same component");
+                    setErrorMessage(
+                        "Cannot save a diagram as a component containing the same component"
+                    );
+                    return null;
                 }
                 // Pass true for overwrite since user has already confirmed in dialog
                 const newComponent = componentLibraryManager.createComponent(
