@@ -1,7 +1,7 @@
-// @/services/categories.ts
+// @/services/shapes.ts
 import { config } from "@/config";
 
-export async function getCategories() {
+export async function getShapesByCaterory() {
     const url = `${config.isometricApiUrl}/categories`;
 
     try {

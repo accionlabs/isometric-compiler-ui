@@ -1,10 +1,11 @@
 // @/services/chat.ts
 
+import { config } from "@/config";
 import { v4 as uuidv4 } from "uuid";
 const newUUID = uuidv4();
 
 export async function sendChatRequest(query: string) {
-    const url = `https://connect-admin4-new.accionbreeze.com/connect-gateway/document/isometric?uuid=${newUUID}`;
+    const url = `${config.gatewayApiUrl}/document/isometric?uuid=${newUUID}`;
 
     try {
         const response = await fetch(url, {

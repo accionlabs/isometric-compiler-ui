@@ -2,13 +2,22 @@
 
 import React, { useState, useMemo, useEffect } from "react";
 import { Button } from "../components/ui/Button";
-import { CanvasSize, DiagramComponent, Shape, Component } from "../Types";
+import {
+    CanvasSize,
+    DiagramComponent,
+    Shape,
+    Component,
+    Category
+} from "../Types";
 import {
     Accordion,
     AccordionItem,
     AccordionTrigger,
     AccordionContent
 } from "../components/ui/Accordion";
+import { Folder, Grid, List } from "lucide-react";
+import categoriesData from "../assets/categories.json";
+
 import SVGPreview from "../components/ui/SVGPreview";
 import { SVGLibraryManager } from "../lib/svgLibraryUtils";
 import { componentLibraryManager } from "../lib/componentLib";
@@ -40,6 +49,13 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
     components,
     activeLibrary
 }) => {
+    const [layout, setLayout] = useState("list");
+    const [layoutShapes, setLayoutShapes] = useState("grid");
+
+    const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
+        new Set()
+    );
+
     const [openPanels, setOpenPanels] = useState<string>("3d-shapes");
 
     // Get active library details
@@ -70,6 +86,83 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
             );
         }
         return component.svgContent;
+    };
+
+    const toggleCategory = (id: string) => {
+        setExpandedCategories((prev) => {
+            const newExpanded = new Set(prev);
+            if (newExpanded.has(id)) {
+                newExpanded.delete(id);
+            } else {
+                newExpanded.add(id);
+            }
+            return newExpanded;
+        });
+    };
+
+    const renderCategories = (categories: Category[], level = 0) => {
+        return categories.map((category) => (
+            <div key={category._id}>
+                <div className="flex items-center justify-between bg-customGray text-white py-1 px-2">
+                    {/* Left Section: Icon and Text */}
+
+                    <div className="flex items-center space-x-1">
+                        {category.allDescendants?.length > 0 && (
+                            <button
+                                onClick={() => toggleCategory(category._id)}
+                                className="p-2 bg-customGray rounded hover:bg-gray-600"
+                            >
+                                {expandedCategories.has(category._id)
+                                    ? "▼"
+                                    : "▶"}
+                            </button>
+                        )}
+                        <div className="flex items-center space-x-3 hover:bg-customLightGray p-2 rounded-lg cursor-pointer">
+                            {/* Folder Icon */}
+                            <Folder className="p-2 rounded" size={"40px"} />
+
+                            {/* Title and Subtitle */}
+                            <div>
+                                <h3 className="text-base">{category.name}</h3>
+                                <p className="text-sm">54 shapes</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Right Section: view button */}
+
+                    {/* <button
+                            onClick={() => toggleCategory(category._id)}
+                            className="p-2 bg-gray-700 rounded hover:bg-gray-600"
+                        >
+                          view
+                        </button>
+                */}
+                </div>
+                {/* <div className="flex items-center p-2 rounded-lg hover:bg-customLightGray cursor-pointer shadow-sm mb-2">
+                    <span className="mr-2 text-white"></span>
+                    <span className="text-white font-medium flex-1"></span>
+                    <button
+                        className="ml-auto px-3 py-1 text-sm font-medium text-white bg-blue-500 rounded hover:bg-customLightGray"
+                        onClick={(e) => {
+                            e.stopPropagation(); // Prevents triggering category toggle
+                            alert(`Viewing category: ${category.name}`);
+                        }}
+                    >
+                        View
+                    </button>
+                </div> */}
+                {expandedCategories.has(category._id) &&
+                    category.allDescendants.length > 0 && (
+                        <div className="ml-6 mt-2 border-l-2 border-gray-300 pl-4">
+                            {renderCategories(
+                                category.allDescendants,
+                                level + 1
+                            )}
+                        </div>
+                    )}
+            </div>
+        ));
     };
 
     const render3DShapesContent = () => (
@@ -233,34 +326,103 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
         { name: "2D Shapes", value: "2d-shapes", render: render2DShapesContent }
     ];
     return (
-        <div className="">
-            {/* <Accordion
-                type="single"
-                collapsible
-                value={openPanels}
-                onValueChange={handleAccordionChange}
-                className="flex flex-col h-full"
-            >
-                <div className="flex flex-col h-full">
-                    {accordionItems.map((item) => (
-                        <AccordionItem
-                            key={item.value}
-                            value={item.value}
-                            className="flex flex-col min-h-12 border-b border-gray-700"
-                        >
-                            <AccordionTrigger className="p-2 text-xl font-semibold">
-                                {item.name}
-                            </AccordionTrigger>
-                            <AccordionContent className="flex-grow overflow-auto">
-                                <div className="p-2">{item.render()}</div>
-                            </AccordionContent>
-                        </AccordionItem>
-                    ))}
-                </div>
-            </Accordion> */}
+        <div>
+            <div className="border-t-2 border-customBorderColor">
+                <div className="flex items-center justify-between bg-customGray text-white p-4 rounded-lg ">
+                    <h1 className="text-lg text-white ">Categories</h1>
 
-            <CategoryMapper />
-            <ShapesMapper />
+                    <div className="flex items-center">
+                        <button
+                            onClick={() => setLayout("list")}
+                            className={`p-2 rounded hover:bg-customLightGray ${
+                                layout === "list"
+                                    ? "bg-customLightGray"
+                                    : "bg-customGray"
+                            }`}
+                        >
+                            <List />
+                        </button>
+
+                        <button
+                            onClick={() => setLayout("grid")}
+                            className={`p-2 rounded hover:bg-customLightGray ${
+                                layout === "grid"
+                                    ? "bg-customLightGray"
+                                    : "bg-customGray"
+                            }`}
+                        >
+                            <Grid />
+                        </button>
+                    </div>
+                </div>
+                <div className="mx-auto bg-customGray  rounded-lg shadow-lg ">
+                    <div className="h-[40vh] overflow-y-auto">
+                        {renderCategories(
+                            categoriesData.categories as Category[]
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            <div className="border-t-2 border-customBorderColor">
+                <div className="flex items-center justify-between bg-customGray text-white p-4 rounded-lg ">
+                    <h1 className="text-lg text-white ">Shapes</h1>
+
+                    <div className="flex items-center ">
+                        <button
+                            onClick={() => setLayoutShapes("list")}
+                            className={`p-2 rounded hover:bg-customLightGray ${
+                                layoutShapes === "list"
+                                    ? "bg-customLightGray"
+                                    : "bg-customGray"
+                            }`}
+                        >
+                            <List />
+                        </button>
+
+                        <button
+                            onClick={() => setLayoutShapes("grid")}
+                            className={`p-2 rounded hover:bg-customLightGray ${
+                                layoutShapes === "grid"
+                                    ? "bg-customLightGray"
+                                    : "bg-customGray"
+                            }`}
+                        >
+                            <Grid />
+                        </button>
+                    </div>
+                </div>
+                <div className="mx-auto bg-customGray  rounded-lg shadow-lg ">
+                    <div className="flex h-[40vh] overflow-y-auto flex-wrap">
+                        {/* <h2 className="text-white text-sm">
+                            Select any category to see shapes
+                        </h2> */}
+                        {svgLibrary
+                            .filter((shape) => shape.type === "3D")
+                            .map((shape) => (
+                                <tr key={shape.name}>
+                                    <td className="w-16">
+                                        <SVGPreview
+                                            svgContent={shape.svgContent}
+                                            className="w-12 h-12 mr-2"
+                                        />
+                                    </td>
+                                    <td>{shape.name}</td>
+                                    <td className="text-right">
+                                        <Button
+                                            onClick={() =>
+                                                onAdd3DShape(shape.name)
+                                            }
+                                            disabled={shouldDisable3DShapeButtons()}
+                                        >
+                                            Add
+                                        </Button>
+                                    </td>
+                                </tr>
+                            ))}
+                    </div>
+                </div>
+            </div>
         </div>
     );
 };

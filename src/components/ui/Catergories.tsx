@@ -2,8 +2,14 @@ import { useState } from "react";
 import categoriesData from "../../assets/categories.json";
 import { Category } from "@/Types";
 import { Folder, Grid, List } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { getCategories } from "@/services/categories";
 
 const CategoryMapper = () => {
+    // const { data: categories } = useQuery({
+    //     queryKey: ["categories_data"],
+    //     queryFn: getCategories
+    // });
     const [layout, setLayout] = useState("list");
     const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
         new Set()
@@ -28,7 +34,7 @@ const CategoryMapper = () => {
                     {/* Left Section: Icon and Text */}
 
                     <div className="flex items-center space-x-1">
-                        {category.children.length > 0 && (
+                        {category.allDescendants?.length > 0 && (
                             <button
                                 onClick={() => toggleCategory(category._id)}
                                 className="p-2 bg-customGray rounded hover:bg-gray-600"
@@ -38,7 +44,7 @@ const CategoryMapper = () => {
                                     : "▶"}
                             </button>
                         )}
-                        <div className="flex items-center space-x-3 hover:bg-customLightGray p-2 rounded-lg">
+                        <div className="flex items-center space-x-3 hover:bg-customLightGray p-2 rounded-lg cursor-pointer">
                             {/* Folder Icon */}
                             <Folder className="p-2 rounded" size={"40px"} />
 
@@ -74,9 +80,12 @@ const CategoryMapper = () => {
                     </button>
                 </div> */}
                 {expandedCategories.has(category._id) &&
-                    category.children.length > 0 && (
+                    category.allDescendants.length > 0 && (
                         <div className="ml-6 mt-2 border-l-2 border-gray-300 pl-4">
-                            {renderCategories(category.children, level + 1)}
+                            {renderCategories(
+                                category.allDescendants,
+                                level + 1
+                            )}
                         </div>
                     )}
             </div>
@@ -114,7 +123,7 @@ const CategoryMapper = () => {
             </div>
             <div className="mx-auto bg-customGray  rounded-lg shadow-lg ">
                 <div className="h-[40vh] overflow-y-auto">
-                    {renderCategories(categoriesData.categories)}
+                    {renderCategories(categoriesData.categories as Category[])}
                 </div>
             </div>
         </div>

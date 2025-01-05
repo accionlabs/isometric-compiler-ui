@@ -227,14 +227,8 @@ export interface Category {
     description: string | null;
     parent: string | null;
     path: string;
-    metadata: {
-        displayOrder: number;
-        icon: string;
-        customProperties: {
-            color: string;
-            size: string;
-        };
-    } | null;
+    metadata: any | null;
     ancestors: string[];
-    children: Category[];
+    allDescendants: Category[];
+    level?: number;
 }
