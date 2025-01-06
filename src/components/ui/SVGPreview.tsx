@@ -38,7 +38,7 @@ const SVGPreview: React.FC<SVGPreviewProps> = ({
 
     return (
         <div
-            className={`flex items-center justify-center p-1 bg-gray-700 rounded ${className}`}
+            className={`flex items-center justify-center p-1 rounded ${className}`}
         >
             <div
                 className="w-full h-full"
