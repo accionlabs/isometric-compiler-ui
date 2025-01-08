@@ -1,7 +1,6 @@
 // @/panels/ShapesPanel.tsx
 
-import React, { useState, useMemo, useEffect } from "react";
-import { Button } from "../components/ui/Button";
+import React, { useState } from "react";
 import {
     CanvasSize,
     DiagramComponent,
@@ -9,30 +8,19 @@ import {
     Component,
     Category
 } from "../Types";
-import {
-    Accordion,
-    AccordionItem,
-    AccordionTrigger,
-    AccordionContent
-} from "../components/ui/Accordion";
 import { Folder, Grid, List } from "lucide-react";
-import categoriesData from "../assets/categories.json";
 
 import SVGPreview from "../components/ui/SVGPreview";
-import { SVGLibraryManager } from "../lib/svgLibraryUtils";
 import { componentLibraryManager } from "../lib/componentLib";
-import CategoryMapper from "@/components/ui/Catergories";
-import ShapesMapper from "./ShapesMapper";
-import {
-    HoverCard,
-    HoverCardContent,
-    HoverCardTrigger
-} from "@/components/ui/HoverCard";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
+
+type ElementType = "3D" | "2D" | "COMPONENT";
 
 interface ShapesPanelProps {
     svgLibrary: Shape[];
     canvasSize: CanvasSize;
+    categories: Category[];
+    activeCategory: string;
+    onCategoryChange: (id: string) => void;
     onAdd3DShape: (shapeName: string) => void;
     onAdd2DShape: (shapeName: string, attachTo: string) => void;
     onAddComponent: (componentId: string) => void;
@@ -46,6 +34,9 @@ interface ShapesPanelProps {
 const ShapesPanel: React.FC<ShapesPanelProps> = ({
     svgLibrary,
     canvasSize,
+    categories,
+    activeCategory,
+    onCategoryChange,
     onAdd3DShape,
     onAdd2DShape,
     onAddComponent,
@@ -57,34 +48,23 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
 }) => {
     const [layout, setLayout] = useState("list");
     const [layoutShapes, setLayoutShapes] = useState("grid");
-
     const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
         new Set()
     );
-
-    const [openPanels, setOpenPanels] = useState<string>("3d-shapes");
-
-    // Get active library details
-    const activeLibraryData = useMemo(() => {
-        return SVGLibraryManager.getLibrary(activeLibrary);
-    }, [activeLibrary]);
 
     const shouldDisable3DShapeButtons = () => {
         return diagramComponents.length > 0 && selected3DShape === null;
     };
 
-    const handleAccordionChange = (value: string) => {
-        setOpenPanels(value);
-    };
-
-    const handleDeleteComponent = (componentId: string) => {
-        // TODO: check if this component is inserted in diagramComponents and do not allow delete
-        onDeleteComponent(componentId);
-    };
-    const isAddDisabled = {
+    const isAddDisabled: Record<ElementType, boolean> = {
         "3D": diagramComponents.length > 0 && selected3DShape === null,
         "2D": selected3DShape === null,
-        component: diagramComponents.length > 0 && selected3DShape === null
+        COMPONENT: diagramComponents.length > 0 && selected3DShape === null
+    };
+    const addActionFor: Record<ElementType, (arg: any) => void> = {
+        "3D": (shape: Shape) => onAdd3DShape(shape.name),
+        "2D": (shape: Shape) => onAdd2DShape(shape.name, shape.attachTo ?? ""),
+        COMPONENT: (component: Component) => onAddComponent(component.id)
     };
     // Temporary function to show SVG preview content for a component
     const getComponentPreview = (component: Component): string => {
@@ -120,6 +100,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
             className="w-full h-full object-cover bg-white"
         />
     );
+
     const renderCategories = (categories: Category[], level = 0) => {
         return categories.map((category) => (
             <div key={category._id}>
@@ -127,7 +108,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                     {/* Left Section: Icon and Text */}
 
                     <div className="flex items-center space-x-1">
-                        {category.allDescendants?.length > 0 && (
+                        {category.children?.length > 0 && (
                             <button
                                 onClick={() => toggleCategory(category._id)}
                                 className="p-2 bg-customGray rounded hover:bg-gray-600"
@@ -137,7 +118,14 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                                     : "▶"}
                             </button>
                         )}
-                        <div className="flex items-center space-x-3 hover:bg-customLightGray p-2 rounded-lg cursor-pointer">
+                        <div
+                            onClick={() => onCategoryChange(category._id)}
+                            className={`flex items-center space-x-3 hover:bg-customLightGray p-2 ${
+                                activeCategory === category._id
+                                    ? "bg-customLightGray"
+                                    : ""
+                            } rounded-lg cursor-pointer`}
+                        >
                             {/* Folder Icon */}
                             <Folder className="p-2 rounded" size={"40px"} />
 
@@ -148,140 +136,39 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                             </div>
                         </div>
                     </div>
-
-                    {/* Right Section: view button */}
-
-                    {/* <button
-                            onClick={() => toggleCategory(category._id)}
-                            className="p-2 bg-gray-700 rounded hover:bg-gray-600"
-                        >
-                          view
-                        </button>
-                */}
                 </div>
-                {/* <div className="flex items-center p-2 rounded-lg hover:bg-customLightGray cursor-pointer shadow-sm mb-2">
-                    <span className="mr-2 text-white"></span>
-                    <span className="text-white font-medium flex-1"></span>
-                    <button
-                        className="ml-auto px-3 py-1 text-sm font-medium text-white bg-blue-500 rounded hover:bg-customLightGray"
-                        onClick={(e) => {
-                            e.stopPropagation(); // Prevents triggering category toggle
-                            alert(`Viewing category: ${category.name}`);
-                        }}
-                    >
-                        View
-                    </button>
-                </div> */}
+
                 {expandedCategories.has(category._id) &&
-                    category.allDescendants.length > 0 && (
+                    category.children.length > 0 && (
                         <div className="ml-6 mt-2 border-l-2 border-gray-300 pl-4">
-                            {renderCategories(
-                                category.allDescendants,
-                                level + 1
-                            )}
+                            {renderCategories(category.children, level + 1)}
                         </div>
                     )}
             </div>
         ));
     };
 
-    const renderElement = (
-        element: Shape | Component,
-        onAdd: (element: Shape | Component) => void,
-        onEdit?: (element: Shape | Component) => void,
-        onDelete?: (element: Shape | Component) => void
-    ) => (
-        <HoverCard key={element.name}>
-            <HoverCardTrigger asChild>
-                <button
-                    disabled={
-                        isAddDisabled[
-                            "type" in element ? element.type : "component"
-                        ]
-                    }
-                    onClick={() => onAdd(element)}
-                    className="flex flex-col items-center justify-center p-1 rounded-lg relative aspect-[3/2] transition-all hover:scale-105 focus:outline-none disabled:opacity-80 disabled:cursor-not-allowed"
-                >
-                    {renderPreview(element)}
+    const renderElement = (element: Shape | Component) => {
+        const elementType = "type" in element ? element.type : "COMPONENT";
+        return (
+            <button
+                key={element.name}
+                disabled={isAddDisabled[elementType]}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    addActionFor[elementType](element);
+                }}
+                className="flex flex-col   p-1 rounded-lg hover:bg-customLightGray mb-2 relative aspect-[3/2] transition-all hover:scale-105 focus:outline-none disabled:opacity-80 disabled:cursor-not-allowed"
+            >
+                {renderPreview(element)}
 
-                    <div className="text-white text-sm overflow-hidden text-ellipsis whitespace-pre-line line-clamp-1">
-                        {element.name}
-                    </div>
-                    <div className="text-[#00BFFF] text-sm">
-                        {"type" in element ? element.type : "Component"}
-                    </div>
-                </button>
-            </HoverCardTrigger>
-            <HoverCardContent className="w-80">
-                <Card key={element.name} className="group overflow-hidden">
-                    {/* Image Container */}
-                    <div className="relative aspect-square overflow-hidden">
-                        {renderPreview(element)}
-                    </div>
-
-                    {/* Product Details */}
-                    <CardContent className="p-4">
-                        <div className="space-y-2">
-                            <h3 className="font-semibold text-lg truncate">
-                                {element.name}
-                            </h3>
-                            {"attachTo" in element && element.attachTo && (
-                                <span className="text-md ">
-                                    attached to - {element.attachTo}
-                                </span>
-                            )}
-                            {"description" in element && (
-                                <span className="text-sm ml-1">
-                                    {element.description}
-                                </span>
-                            )}
-                        </div>
-                    </CardContent>
-
-                    {/* Add to Cart Button */}
-                    <CardFooter className="p-4 pt-0">
-                        {onDelete && (
-                            <Button
-                                onClick={() => {
-                                    onDelete(element);
-                                }}
-                                className="mr-2"
-                            >
-                                Delete
-                                {"type" in element ? "Shape" : "Component"}
-                            </Button>
-                        )}
-                        {onEdit && (
-                            <Button disabled={shouldDisable3DShapeButtons()}>
-                                Edit {"type" in element ? "Shape" : "Component"}
-                            </Button>
-                        )}
-                    </CardFooter>
-                </Card>
-            </HoverCardContent>
-        </HoverCard>
-    );
-    const renderSection = (
-        title: string,
-        items: (Shape | Component)[],
-        onAdd: any,
-        onDelete?: any,
-        onEdit?: any
-    ) => (
-        <div className="space-5">
-            {items.length > 0 ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                    {items.map((element) =>
-                        renderElement(element, onAdd, onEdit, onDelete)
-                    )}
+                <div className="text-white text-sm overflow-hidden text-ellipsis whitespace-pre-line line-clamp-1">
+                    {element.name}
                 </div>
-            ) : (
-                <div className=" text-gray-400">No {title} available</div>
-            )}
-            <div className="h-4"></div>
-        </div>
-    );
-
+                <div className="text-[#00BFFF] text-[13px]">{elementType}</div>
+            </button>
+        );
+    };
     return (
         <div>
             <div className="border-t-2 border-customBorderColor">
@@ -314,9 +201,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                 </div>
                 <div className="mx-auto bg-customGray  rounded-lg shadow-lg ">
                     <div className="h-[40vh] overflow-y-auto">
-                        {renderCategories(
-                            categoriesData.categories as Category[]
-                        )}
+                        {renderCategories(categories ?? [])}
                     </div>
                 </div>
             </div>
@@ -354,10 +239,28 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                         {/* <h2 className="text-white text-sm">
                             Select any category to see shapes
                         </h2> */}
-                        {renderSection(
-                            "#D Shapes",
-                            svgLibrary.filter((shape) => shape.type === "3D"),
-                            (shape: Shape) => onAdd3DShape(shape.name)
+                        {!activeCategory ? (
+                            <h2 className="p-4 text-white text-sm">
+                                Select any category to see shapes
+                            </h2>
+                        ) : (
+                            <div className="space-5">
+                                {svgLibrary.length > 0 ? (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                                        {components.map((element) =>
+                                            renderElement(element)
+                                        )}
+                                        {svgLibrary.map((element) =>
+                                            renderElement(element)
+                                        )}
+                                    </div>
+                                ) : (
+                                    <div className="p-4 text-white text-sm">
+                                        No shapes available in this category
+                                    </div>
+                                )}
+                                <div className="h-4"></div>
+                            </div>
                         )}
                     </div>
                 </div>
@@ -367,3 +270,54 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
 };
 
 export default ShapesPanel;
+
+// <HoverCardContent className="w-80">
+// <Card key={element.name} className="group overflow-hidden">
+//     {/* Image Container */}
+//     <div className="relative aspect-square overflow-hidden">
+//         {renderPreview(element)}
+//     </div>
+
+//     {/* Product Details */}
+//     <CardContent className="p-4">
+//         <div className="space-y-2">
+//             <h3 className="font-semibold text-lg truncate">
+//                 {element.name}
+//             </h3>
+//             {"attachTo" in element && element.attachTo && (
+//                 <span className="text-md ">
+//                     attached to - {element.attachTo}
+//                 </span>
+//             )}
+//             {"description" in element && (
+//                 <span className="text-sm ml-1">
+//                     {element.description}
+//                 </span>
+//             )}
+//         </div>
+//     </CardContent>
+
+//     {/* Add to Cart Button */}
+//     <CardFooter className="p-4 pt-0">
+//         {/* {onDelete && (
+//             <Button
+//                 onClick={() => {
+//                     onDelete(element);
+//                 }}
+//                 className="mr-2"
+//             >
+//                 Delete
+//                 {"type" in element ? "Shape" : "Component"}
+//             </Button>
+//         )}
+//         {onEdit && (
+//             <Button
+//                 disabled={shouldDisable3DShapeButtons()}
+//             >
+//                 Edit{" "}
+//                 {"type" in element ? "Shape" : "Component"}
+//             </Button>
+//         )} */}
+//     </CardFooter>
+// </Card>
+// </HoverCardContent>

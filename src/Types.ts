@@ -73,6 +73,7 @@ export interface DiagramComponent {
 
 // New interfaces for Component Library
 export interface Component {
+    _id?: string;
     id: string;
     name: string;
     description: string;
@@ -82,7 +83,31 @@ export interface Component {
     created: Date;
     lastModified: Date;
 }
+type Metadata = {
+    description: string;
+    applicationTypes: string[];
+    customProperties: { [key: string]: string };
+    dependencies: { shapeId: string; version: string }[];
+};
 
+export type ShapeResponse = {
+    _id: string;
+    createdAt: string;
+    updatedAt: string;
+    status: string;
+    name: string;
+    type: string;
+    attachTo: string | null;
+    svgFile: string | null;
+    svgContent: string | null;
+    version: string;
+    category: string;
+    metadata: Metadata | null;
+    tags: string[] | null;
+    author: string | null;
+    diagram_components: DiagramComponent[];
+    attachment_points: AttachmentPoint[];
+};
 export interface ComponentLibrary {
     components: { [key: string]: Component };
     lastModified: Date;
@@ -229,6 +254,6 @@ export interface Category {
     path: string;
     metadata: any | null;
     ancestors: string[];
-    allDescendants: Category[];
+    children: Category[];
     level?: number;
 }

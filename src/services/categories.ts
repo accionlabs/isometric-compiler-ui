@@ -1,8 +1,9 @@
 // @/services/categories.ts
+import { Category } from "@/Types";
 import { config } from "@/config";
 
-export async function getCategories() {
-    const url = `${config.isometricApiUrl}/categories`;
+export async function getCategories(): Promise<Category[] | undefined> {
+    const url = `${config.isometricApiUrl}/categories?format=nested`;
 
     try {
         const response = await fetch(url);

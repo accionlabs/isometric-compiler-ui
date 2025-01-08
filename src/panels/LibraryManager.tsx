@@ -433,11 +433,12 @@ const LibraryManager: React.FC<LibraryManagerProps> = ({
         }
     }, [libraryForm, editingLibraryId, handleUpdateLibrary]);
 
-
     return (
         <div className="flex flex-col h-full">
             <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold text-white">Shape Libraries</h3>
+                <h3 className="text-lg font-semibold text-white">
+                    Shape Libraries
+                </h3>
                 <Button
                     onClick={() => setIsLibraryDialogOpen(true)}
                     className="bg-blue-600 hover:bg-blue-700"

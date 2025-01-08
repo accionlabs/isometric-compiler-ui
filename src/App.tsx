@@ -2,13 +2,8 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { Shape, DiagramComponent, Component, CanvasSettings } from "./Types";
-import { Node } from "@xyflow/react";
 import ImprovedLayout from "./ImprovedLayout";
-import {
-    calculateSVGBoundingBox,
-    cleanupSVG,
-    clipSVGToContents
-} from "./lib/svgUtils";
+import { calculateSVGBoundingBox } from "./lib/svgUtils";
 import * as diagramComponentsLib from "./lib/diagramComponentsLib";
 import { componentLibraryManager } from "./lib/componentLib";
 import { createKeyboardShortcuts } from "./KeyboardShortcuts";
@@ -16,6 +11,9 @@ import { SVGLibraryManager } from "./lib/svgLibraryUtils";
 import { schemaLoader } from "./lib/componentSchemaLib";
 import { StorageType, loadFile, saveFile } from "./lib/fileOperations";
 import { exportAsPNG, exportAsSVG } from "./lib/exportUtils";
+import { useQuery } from "@tanstack/react-query";
+import { getCategories } from "./services/categories";
+import { getShapesByCaterory } from "./services/shapes";
 
 const App: React.FC = () => {
     const [svgLibrary, setSvgLibrary] = useState<Shape[]>([]);
@@ -51,6 +49,8 @@ const App: React.FC = () => {
         const stored = localStorage.getItem("activeLibrary");
         return stored || "default";
     });
+    const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
+
     const [schemaUrl] = useState("./schemas/component-types.yaml"); // URL to your schema file
     const [storageType, setStorageType] = useState<StorageType>(
         StorageType.Local
@@ -60,6 +60,20 @@ const App: React.FC = () => {
     const [isSaveDiagramDialogOpen, setIsSaveDiagramDialogOpen] =
         useState(false);
 
+    const { data: categories } = useQuery({
+        queryKey: ["categories_data"],
+        queryFn: getCategories
+    });
+    const { data: shapesAndComponentsData } = useQuery({
+        queryKey: ["shapes_data", selectedCategoryId],
+        queryFn: () => getShapesByCaterory(selectedCategoryId),
+        enabled: !!selectedCategoryId
+    });
+
+    // on category change
+    const handleCategoryChange = useCallback((id: string) => {
+        setSelectedCategoryId(id);
+    }, []);
     // Update Canvas Settings
     const handleUpdateCanvasSettings = useCallback(
         (settings: CanvasSettings) => {
@@ -367,16 +381,16 @@ const App: React.FC = () => {
     const handleSaveDialogOpen = useCallback(() => {
         setIsSaveDiagramDialogOpen(true);
     }, []);
-    
+
     const handleLoadDiagramCtrlL = useCallback(() => {
         console.log("Loading diagram...");
-        handleLoadDiagram()
+        handleLoadDiagram();
     }, []);
 
     const handleSaveDiagramCtrlS = useCallback(() => {
         console.log("Saving diagram...");
         handleSaveDialogOpen();
-    }, [handleSaveDialogOpen])
+    }, [handleSaveDialogOpen]);
 
     const handleSaveDiagram = useCallback(
         async (fileName: string, onComplete: () => void) => {
@@ -671,24 +685,33 @@ const App: React.FC = () => {
         loadComponentSchema();
     }, [schemaUrl]);
 
+    useEffect(() => {
+        if (!shapesAndComponentsData) return;
+
+        const { shapes = [], components = [] } = shapesAndComponentsData;
+        setSvgLibrary((prev) =>
+            Array.from(new Set<Shape>([...prev, ...shapes]))
+        );
+
+        componentLibraryManager.deserializeComponentLib(components);
+        setComponents(componentLibraryManager.getAllComponents());
+    }, [shapesAndComponentsData]);
+
     // Load components and shapes library on mount
     useEffect(() => {
         // load components on mount
-        setComponents(componentLibraryManager.getAllComponents());
+        // setComponents(componentLibraryManager.getAllComponents());
         // initiatlize libraries
         const initializeLibraries = async () => {
             console.log("Initializing libraries...");
             // First make sure default library exists and is loaded
             await SVGLibraryManager.initializeDefaultLibrary();
-
             // Get the active library ID from localStorage or use default
             const activeLibraryId =
                 localStorage.getItem("activeLibrary") || "default";
             console.log("Active library ID:", activeLibraryId);
-
             // Get the active library
             const library = SVGLibraryManager.getLibrary(activeLibraryId);
-
             if (library) {
                 console.log("Setting active library:", library.id);
                 setActiveLibrary(library.id);
@@ -708,13 +731,11 @@ const App: React.FC = () => {
                 }
             }
         };
-
         initializeLibraries();
     }, []); // Empty dependency array - only run once on mount
 
     useEffect(() => {
         const { handleKeyDown } = handleKeyboardShortcuts();
-
         const keyDownListener = (event: KeyboardEvent) => {
             handleKeyDown(event);
         };
@@ -767,7 +788,10 @@ const App: React.FC = () => {
 
     return (
         <ImprovedLayout
-            svgLibrary={svgLibrary}
+            svgLibrary={shapesAndComponentsData?.shapes ?? []}
+            categories={categories ?? []}
+            activeCategory={selectedCategoryId}
+            onCategoryChange={handleCategoryChange}
             activeLibrary={activeLibrary}
             onLibraryChange={handleLibraryChange}
             diagramComponents={diagramComponents}

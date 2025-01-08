@@ -15,7 +15,13 @@ import ShapesPanel from "./panels/ShapesPanel";
 import CompositionPanel from "./panels/CompositionPanel";
 import SettingsPanel from "./panels/SettingsPanel";
 import AttachmentOptionsPanel from "./panels/AttachmentOptionsPanel";
-import { DiagramComponent, Shape, Component, CanvasSettings } from "./Types";
+import {
+    DiagramComponent,
+    Shape,
+    Component,
+    CanvasSettings,
+    Category
+} from "./Types";
 import ChatPanel from "./panels/ChatPanel";
 import { ChatProvider } from "./hooks/useChatProvider";
 import { StorageType } from "./lib/fileOperations";
@@ -36,11 +42,14 @@ import { set } from "yaml/dist/schema/yaml-1.1/set";
 
 interface ImprovedLayoutProps {
     svgLibrary: Shape[];
+    categories: Category[];
+    activeCategory: string;
     activeLibrary: string;
     diagramComponents: DiagramComponent[];
     components: Component[];
     isCopied: boolean;
     canvasSize: { width: number; height: number };
+    onCategoryChange: (id: string) => void;
     onSetCanvasSize: (size: { width: number; height: number }) => void;
     settings: CanvasSettings | null;
     onSetCanvasSettings: (settings: CanvasSettings) => void;
@@ -90,6 +99,9 @@ interface ImprovedLayoutProps {
 
 const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     svgLibrary,
+    categories,
+    activeCategory,
+    onCategoryChange,
     activeLibrary,
     onLibraryChange,
     diagramComponents,
@@ -439,6 +451,9 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                             {activePanel === "shapes" && (
                                 <ShapesPanel
                                     svgLibrary={svgLibrary}
+                                    categories={categories}
+                                    activeCategory={activeCategory}
+                                    onCategoryChange={onCategoryChange}
                                     canvasSize={canvasSize}
                                     activeLibrary={activeLibrary}
                                     onAdd3DShape={handleAdd3DShape}
