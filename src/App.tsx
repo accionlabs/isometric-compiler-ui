@@ -14,6 +14,7 @@ import { exportAsPNG, exportAsSVG } from "./lib/exportUtils";
 import { useQuery } from "@tanstack/react-query";
 import { getCategories } from "./services/categories";
 import { getShapesByCaterory } from "./services/shapes";
+import { mergeArrays } from "./lib/utils";
 
 const App: React.FC = () => {
     const [svgLibrary, setSvgLibrary] = useState<Shape[]>([]);
@@ -208,7 +209,10 @@ const App: React.FC = () => {
     );
 
     const handleAddComponent = useCallback(
-        (componentId: string) => {
+        (componentId: string, component?: Component) => {
+            if (!componentLibraryManager.getComponent(componentId) && component)
+                componentLibraryManager.deserializeComponentLib([component]);
+
             const result = diagramComponentsLib.addComponentToScene(
                 diagramComponents,
                 componentId,
@@ -689,18 +693,14 @@ const App: React.FC = () => {
         if (!shapesAndComponentsData) return;
 
         const { shapes = [], components = [] } = shapesAndComponentsData;
-        setSvgLibrary((prev) =>
-            Array.from(new Set<Shape>([...prev, ...shapes]))
-        );
-
-        componentLibraryManager.deserializeComponentLib(components);
-        setComponents(componentLibraryManager.getAllComponents());
+        setSvgLibrary((prev) => mergeArrays(prev, shapes, "name"));
+        setComponents(components);
     }, [shapesAndComponentsData]);
 
     // Load components and shapes library on mount
     useEffect(() => {
         // load components on mount
-        // setComponents(componentLibraryManager.getAllComponents());
+        setComponents(componentLibraryManager.getAllComponents());
         // initiatlize libraries
         const initializeLibraries = async () => {
             console.log("Initializing libraries...");
@@ -795,7 +795,7 @@ const App: React.FC = () => {
             activeLibrary={activeLibrary}
             onLibraryChange={handleLibraryChange}
             diagramComponents={diagramComponents}
-            components={components}
+            components={shapesAndComponentsData?.components ?? []}
             isCopied={isCopied}
             selected3DShape={selected3DShape}
             composedSVG={composedSVG}

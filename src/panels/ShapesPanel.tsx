@@ -23,7 +23,7 @@ interface ShapesPanelProps {
     onCategoryChange: (id: string) => void;
     onAdd3DShape: (shapeName: string) => void;
     onAdd2DShape: (shapeName: string, attachTo: string) => void;
-    onAddComponent: (componentId: string) => void;
+    onAddComponent: (componentId: string, component?: Component) => void;
     onDeleteComponent: (componentId: string) => void;
     selected3DShape: string | null;
     diagramComponents: DiagramComponent[];
@@ -64,7 +64,8 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
     const addActionFor: Record<ElementType, (arg: any) => void> = {
         "3D": (shape: Shape) => onAdd3DShape(shape.name),
         "2D": (shape: Shape) => onAdd2DShape(shape.name, shape.attachTo ?? ""),
-        COMPONENT: (component: Component) => onAddComponent(component.id)
+        COMPONENT: (component: Component) =>
+            onAddComponent(component.id, component)
     };
     // Temporary function to show SVG preview content for a component
     const getComponentPreview = (component: Component): string => {
@@ -72,7 +73,8 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
             return componentLibraryManager.renderComponent(
                 component.id,
                 canvasSize,
-                svgLibrary
+                svgLibrary,
+                component
             );
         }
         return component.svgContent;
@@ -127,7 +129,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                             } rounded-lg cursor-pointer`}
                         >
                             {/* Folder Icon */}
-                            <Folder className="p-2 rounded" size={"40px"} />
+                            {/* <Folder className="p-2 rounded" size={"40px"} /> */}
 
                             {/* Title and Subtitle */}
                             <div>

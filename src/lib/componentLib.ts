@@ -720,9 +720,11 @@ class ComponentLibraryManager {
     public renderComponent(
         id: string,
         canvasSize: CanvasSize,
-        svgLibrary: Shape[]
+        svgLibrary: Shape[],
+        fetchedComponent?: Component
     ): string {
-        const component = this.library.components[id];
+        const componentFromLib = this.library.components[id];
+        const component = componentFromLib || fetchedComponent;
         if (!component) {
             throw new Error(`Component with id ${id} not found`);
         }
@@ -785,7 +787,8 @@ class ComponentLibraryManager {
         const svgContent = serializer.serializeToString(svg);
 
         // Update the component with the new SVG content
-        this.updateComponent(id, { svgContent });
+        if (componentFromLib) this.updateComponent(id, { svgContent });
+
         return svgContent;
     }
 

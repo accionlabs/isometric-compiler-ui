@@ -56,7 +56,7 @@ interface ImprovedLayoutProps {
     composedSVG: string;
     onAdd3DShape: (shapeName: string) => void;
     onAdd2DShape: (shapeName: string, attachTo: string) => void;
-    onAddComponent: (componentId: string) => void;
+    onAddComponent: (componentId: string, component?: Component) => void;
     onDeleteComponent: (componentId: string) => void;
     onRemove3DShape: (id: string) => void;
     onRemove2DShape: (parentId: string, shapeIndex: number) => void;

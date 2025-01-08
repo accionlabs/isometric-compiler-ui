@@ -40,3 +40,23 @@ export const segregateShapesAndComponents = (response: ShapeResponse[]) => {
 
     return { shapes, components };
 };
+
+export const mergeArrays = <T extends Record<string, any>>(
+    array1: T[],
+    array2: T[],
+    key: keyof T
+): T[] => {
+    // Combine both arrays
+    const combined = [...array1, ...array2];
+
+    // Create a map to store unique items based on the dynamic key
+    const uniqueItemsMap = new Map<any, T>();
+
+    // Iterate over the combined array
+    for (const item of combined) {
+        uniqueItemsMap.set(item[key], item);
+    }
+
+    // Convert the map back to an array
+    return Array.from(uniqueItemsMap.values());
+};
