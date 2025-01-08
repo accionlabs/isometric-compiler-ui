@@ -586,6 +586,20 @@ const App: React.FC = () => {
                         selected3DShape
                     );
                 }
+                // check if the selectedShapes already has a component with the same name, and disallow saving
+                const existingComponent = selectedShapes.find((component) => {
+                    return (
+                        component.source === "component" &&
+                        component.shape === name
+                    );
+                });
+                if (existingComponent) {
+                    console.error("Cannot save a diagram as a component containing the same component");
+                    setErrorMessage(
+                        "Cannot save a diagram as a component containing the same component"
+                    );
+                    return null;
+                }
                 // Pass true for overwrite since user has already confirmed in dialog
                 const newComponent = componentLibraryManager.createComponent(
                     name,
