@@ -1,22 +1,33 @@
 // @/panels/ShapesPanel.tsx
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
     CanvasSize,
     DiagramComponent,
     Shape,
     Component,
-    Category
+    Category,
+    UnifiedElement
 } from "../Types";
-import { Folder, Grid, List } from "lucide-react";
+import { Grid, List, Search } from "lucide-react";
 
 import SVGPreview from "../components/ui/SVGPreview";
 import { componentLibraryManager } from "../lib/componentLib";
+import { useQueryClient } from "@tanstack/react-query";
 
-type ElementType = "3D" | "2D" | "COMPONENT";
+type ElementType = "3D" | "2D" | "LAYERS" | "COMPONENT";
 
 interface ShapesPanelProps {
     svgLibrary: Shape[];
+    shapesByCategory: Shape[];
+    searchQuery: string;
+    searchedData:
+        | {
+              data: UnifiedElement[];
+              total: number;
+          }
+        | undefined;
+    setSearchQuery: (newLibrary: string) => void;
     canvasSize: CanvasSize;
     categories: Category[];
     activeCategory: string;
@@ -30,9 +41,13 @@ interface ShapesPanelProps {
     components: Component[];
     activeLibrary: string;
 }
-
+const filterOptions = ["All", "2D", "3D", "Layers", "Component"];
 const ShapesPanel: React.FC<ShapesPanelProps> = ({
     svgLibrary,
+    shapesByCategory,
+    searchQuery,
+    searchedData,
+    setSearchQuery,
     canvasSize,
     categories,
     activeCategory,
@@ -46,8 +61,11 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
     components,
     activeLibrary
 }) => {
+    const queryclient = useQueryClient();
+    const [inputquery, setInputQuery] = useState("");
     const [layout, setLayout] = useState("list");
     const [layoutShapes, setLayoutShapes] = useState("grid");
+    const [selectedfilter, setSelectedFilter] = useState("All");
     const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
         new Set()
     );
@@ -58,11 +76,13 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
 
     const isAddDisabled: Record<ElementType, boolean> = {
         "3D": diagramComponents.length > 0 && selected3DShape === null,
+        LAYERS: diagramComponents.length > 0 && selected3DShape === null,
         "2D": selected3DShape === null,
         COMPONENT: diagramComponents.length > 0 && selected3DShape === null
     };
     const addActionFor: Record<ElementType, (arg: any) => void> = {
         "3D": (shape: Shape) => onAdd3DShape(shape.name),
+        LAYERS: (shape: Shape) => onAdd3DShape(shape.name),
         "2D": (shape: Shape) => onAdd2DShape(shape.name, shape.attachTo ?? ""),
         COMPONENT: (component: Component) =>
             onAddComponent(component.id, component)
@@ -91,6 +111,25 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
             return newExpanded;
         });
     };
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setSearchQuery(inputquery);
+    };
+
+    const isAllOrComponent =
+        selectedfilter === "All" ||
+        selectedfilter.toLocaleUpperCase() === "COMPONENT";
+    const filteredShapes = useMemo(() => {
+        const upperCaseFilter = selectedfilter.toLocaleUpperCase();
+        if (upperCaseFilter === "COMPONENT") return [];
+        const isShapeType = ["3D", "2D", "LAYERS"].includes(upperCaseFilter);
+
+        return isShapeType
+            ? shapesByCategory.filter(
+                  (shape) => shape.type.toLocaleUpperCase() === upperCaseFilter
+              )
+            : shapesByCategory;
+    }, [selectedfilter, shapesByCategory]);
     const renderPreview = (element: Shape | Component) => (
         <SVGPreview
             svgContent={
@@ -134,7 +173,9 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                             {/* Title and Subtitle */}
                             <div>
                                 <h3 className="text-base">{category.name}</h3>
-                                <p className="text-sm">54 shapes</p>
+                                <p className="text-sm">
+                                    {category.shapeCount} shapes
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -171,9 +212,82 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
             </button>
         );
     };
+
+    const SearchResults = ({ results }: { results: UnifiedElement[] }) => {
+        return (
+            <ul className="h-[72vh] overflow-y-scroll">
+                {results.map((result, index) => (
+                    <li
+                        className="flex items-center p-4 rounded-md gap-1 hover:bg-customLightGray cursor-pointer"
+                        key={index}
+                    >
+                        <div className="w-[76px] h-[76px]">
+                            {renderPreview(result as Shape | Component)}
+                        </div>
+                        <div>
+                            <h3 className="text-white font-semibold text-lg">
+                                {result.name}
+                            </h3>
+                            <p className="text-gray-400 text-sm">
+                                {result.path}
+                            </p>
+                            <span
+                                className={`mt-2 inline-block text-sm font-medium ${"text-blue-400"}`}
+                            >
+                                {"type" in result ? result.type : "Component"}
+                            </span>
+                        </div>
+                    </li>
+                ))}
+            </ul>
+        );
+    };
+
     return (
         <div>
             <div className="border-t-2 border-customBorderColor">
+                <div className="p-4 bg-customGray rounded-lg">
+                    <form
+                        onSubmit={handleSubmit}
+                        className="flex items-center bg-customLightGray rounded-md"
+                    >
+                        <input
+                            value={inputquery}
+                            onChange={(e) => setInputQuery(e.target.value)}
+                            type="text"
+                            name="search"
+                            placeholder="Search"
+                            className="w-full px-4 py-2 bg-customLightGray text-white placeholder-gray-400 rounded-l-md focus:outline-none"
+                        />
+                        <button type="submit" className="p-2">
+                            <Search className="text-white" />
+                        </button>
+                    </form>
+                    <div className="flex mt-4 space-x-4 flex-wrap">
+                        {filterOptions.map((item) => (
+                            <button
+                                key={item}
+                                className={`px-4 py-2 text-white rounded-md focus:outline-none ${
+                                    selectedfilter === item
+                                        ? "bg-customLightGray"
+                                        : "bg-customGray"
+                                }`}
+                                onClick={() => setSelectedFilter(item)}
+                            >
+                                {item}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+                {inputquery.length > 0 && searchedData?.data.length && (
+                    <div className="bg-customDarkGray p-4 rounded-lg">
+                        <h2 className="text-white text-lg mb-4">
+                            {searchedData?.total} Results found
+                        </h2>
+                        <SearchResults results={searchedData?.data ?? []} />
+                    </div>
+                )}
+
                 <div className="flex items-center justify-between bg-customGray text-white p-4 rounded-lg ">
                     <h1 className="text-lg text-white ">Categories</h1>
 
@@ -202,7 +316,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                     </div>
                 </div>
                 <div className="mx-auto bg-customGray  rounded-lg shadow-lg ">
-                    <div className="h-[40vh] overflow-y-auto">
+                    <div className="h-[25vh] overflow-y-auto">
                         {renderCategories(categories ?? [])}
                     </div>
                 </div>
@@ -238,9 +352,6 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                 </div>
                 <div className="mx-auto bg-customGray  rounded-lg shadow-lg ">
                     <div className="flex h-[40vh] overflow-y-auto ">
-                        {/* <h2 className="text-white text-sm">
-                            Select any category to see shapes
-                        </h2> */}
                         {!activeCategory ? (
                             <h2 className="p-4 text-white text-sm">
                                 Select any category to see shapes
@@ -249,12 +360,15 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                             <div className="space-5">
                                 {svgLibrary.length > 0 ? (
                                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                                        {components.map((element) =>
-                                            renderElement(element)
-                                        )}
-                                        {svgLibrary.map((element) =>
-                                            renderElement(element)
-                                        )}
+                                        {isAllOrComponent &&
+                                            components.map((element) =>
+                                                renderElement(element)
+                                            )}
+                                        {(selectedfilter === "All" ||
+                                            filteredShapes.length > 0) &&
+                                            filteredShapes.map((element) =>
+                                                renderElement(element)
+                                            )}
                                     </div>
                                 ) : (
                                     <div className="p-4 text-white text-sm">
@@ -272,54 +386,3 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
 };
 
 export default ShapesPanel;
-
-// <HoverCardContent className="w-80">
-// <Card key={element.name} className="group overflow-hidden">
-//     {/* Image Container */}
-//     <div className="relative aspect-square overflow-hidden">
-//         {renderPreview(element)}
-//     </div>
-
-//     {/* Product Details */}
-//     <CardContent className="p-4">
-//         <div className="space-y-2">
-//             <h3 className="font-semibold text-lg truncate">
-//                 {element.name}
-//             </h3>
-//             {"attachTo" in element && element.attachTo && (
-//                 <span className="text-md ">
-//                     attached to - {element.attachTo}
-//                 </span>
-//             )}
-//             {"description" in element && (
-//                 <span className="text-sm ml-1">
-//                     {element.description}
-//                 </span>
-//             )}
-//         </div>
-//     </CardContent>
-
-//     {/* Add to Cart Button */}
-//     <CardFooter className="p-4 pt-0">
-//         {/* {onDelete && (
-//             <Button
-//                 onClick={() => {
-//                     onDelete(element);
-//                 }}
-//                 className="mr-2"
-//             >
-//                 Delete
-//                 {"type" in element ? "Shape" : "Component"}
-//             </Button>
-//         )}
-//         {onEdit && (
-//             <Button
-//                 disabled={shouldDisable3DShapeButtons()}
-//             >
-//                 Edit{" "}
-//                 {"type" in element ? "Shape" : "Component"}
-//             </Button>
-//         )} */}
-//     </CardFooter>
-// </Card>
-// </HoverCardContent>

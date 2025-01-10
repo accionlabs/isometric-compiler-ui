@@ -13,7 +13,7 @@ import { StorageType, loadFile, saveFile } from "./lib/fileOperations";
 import { exportAsPNG, exportAsSVG } from "./lib/exportUtils";
 import { useQuery } from "@tanstack/react-query";
 import { getCategories } from "./services/categories";
-import { getShapesByCaterory } from "./services/shapes";
+import { getShapesByCaterory, getsearchedShapes } from "./services/shapes";
 import { mergeArrays } from "./lib/utils";
 
 const App: React.FC = () => {
@@ -21,6 +21,7 @@ const App: React.FC = () => {
     const [diagramComponents, setDiagramComponents] = useState<
         DiagramComponent[]
     >([]);
+    const [searchQuery, setSearchQuery] = useState("base");
     const [canvasSize, setCanvasSize] = useState({ width: 1000, height: 1000 });
     const [canvasSettings, setCanvasSettings] = useState<CanvasSettings | null>(
         null
@@ -65,6 +66,13 @@ const App: React.FC = () => {
         queryKey: ["categories_data"],
         queryFn: getCategories
     });
+
+    const { data: searchedData } = useQuery({
+        queryKey: ["searched_shapes_data", searchQuery],
+        queryFn: () => getsearchedShapes(searchQuery),
+        enabled: !!searchQuery
+    });
+
     const { data: shapesAndComponentsData } = useQuery({
         queryKey: ["shapes_data", selectedCategoryId],
         queryFn: () => getShapesByCaterory(selectedCategoryId),
@@ -75,6 +83,7 @@ const App: React.FC = () => {
     const handleCategoryChange = useCallback((id: string) => {
         setSelectedCategoryId(id);
     }, []);
+
     // Update Canvas Settings
     const handleUpdateCanvasSettings = useCallback(
         (settings: CanvasSettings) => {
@@ -594,7 +603,9 @@ const App: React.FC = () => {
                     );
                 });
                 if (existingComponent) {
-                    console.error("Cannot save a diagram as a component containing the same component");
+                    console.error(
+                        "Cannot save a diagram as a component containing the same component"
+                    );
                     setErrorMessage(
                         "Cannot save a diagram as a component containing the same component"
                     );
@@ -705,48 +716,55 @@ const App: React.FC = () => {
 
     useEffect(() => {
         if (!shapesAndComponentsData) return;
-
-        const { shapes = [], components = [] } = shapesAndComponentsData;
-        setSvgLibrary((prev) => mergeArrays(prev, shapes, "name"));
-        setComponents(components);
+        const { shapes = [], components: fetchedComps = [] } =
+            shapesAndComponentsData;
+        const mergedSvgLib: Shape[] = mergeArrays(svgLibrary, shapes, "name");
+        setSvgLibrary(mergedSvgLib);
+        const mergedLocalComponents: Component[] = mergeArrays(
+            components,
+            fetchedComps,
+            "name"
+        );
+        setComponents(mergedLocalComponents);
+        // componentLibraryManager.deserializeComponentLib(components);
     }, [shapesAndComponentsData]);
 
     // Load components and shapes library on mount
-    useEffect(() => {
-        // load components on mount
-        setComponents(componentLibraryManager.getAllComponents());
-        // initiatlize libraries
-        const initializeLibraries = async () => {
-            console.log("Initializing libraries...");
-            // First make sure default library exists and is loaded
-            await SVGLibraryManager.initializeDefaultLibrary();
-            // Get the active library ID from localStorage or use default
-            const activeLibraryId =
-                localStorage.getItem("activeLibrary") || "default";
-            console.log("Active library ID:", activeLibraryId);
-            // Get the active library
-            const library = SVGLibraryManager.getLibrary(activeLibraryId);
-            if (library) {
-                console.log("Setting active library:", library.id);
-                setActiveLibrary(library.id);
-                setSvgLibrary(library.shapes);
-                // render all components if any
-                componentLibraryManager.renderAllComponents(
-                    canvasSize,
-                    library.shapes
-                );
-            } else {
-                // Fallback to default library if active library not found
-                console.log("Falling back to default library");
-                const defaultLibrary = SVGLibraryManager.getLibrary("default");
-                if (defaultLibrary) {
-                    setActiveLibrary("default");
-                    setSvgLibrary(defaultLibrary.shapes);
-                }
-            }
-        };
-        initializeLibraries();
-    }, []); // Empty dependency array - only run once on mount
+    // useEffect(() => {
+    // load components on mount
+    // setComponents(componentLibraryManager.getAllComponents());
+    // // initiatlize libraries
+    // const initializeLibraries = async () => {
+    //     console.log("Initializing libraries...");
+    //     // First make sure default library exists and is loaded
+    //     await SVGLibraryManager.initializeDefaultLibrary();
+    //     // Get the active library ID from localStorage or use default
+    //     const activeLibraryId =
+    //         localStorage.getItem("activeLibrary") || "default";
+    //     console.log("Active library ID:", activeLibraryId);
+    //     // Get the active library
+    //     const library = SVGLibraryManager.getLibrary(activeLibraryId);
+    //     if (library) {
+    //         console.log("Setting active library:", library.id);
+    //         setActiveLibrary(library.id);
+    //         setSvgLibrary(library.shapes);
+    //         // render all components if any
+    //         componentLibraryManager.renderAllComponents(
+    //             canvasSize,
+    //             library.shapes
+    //         );
+    //     } else {
+    //         // Fallback to default library if active library not found
+    //         console.log("Falling back to default library");
+    //         const defaultLibrary = SVGLibraryManager.getLibrary("default");
+    //         if (defaultLibrary) {
+    //             setActiveLibrary("default");
+    //             setSvgLibrary(defaultLibrary.shapes);
+    //         }
+    //     }
+    // };
+    // initializeLibraries();
+    // }, []); // Empty dependency array - only run once on mount
 
     useEffect(() => {
         const { handleKeyDown } = handleKeyboardShortcuts();
@@ -802,14 +820,18 @@ const App: React.FC = () => {
 
     return (
         <ImprovedLayout
-            svgLibrary={shapesAndComponentsData?.shapes ?? []}
+            svgLibrary={svgLibrary}
+            shapesByCategory={shapesAndComponentsData?.shapes ?? []}
             categories={categories ?? []}
+            searchQuery={searchQuery}
+            searchedData={searchedData}
+            setSearchQuery={setSearchQuery}
             activeCategory={selectedCategoryId}
             onCategoryChange={handleCategoryChange}
             activeLibrary={activeLibrary}
             onLibraryChange={handleLibraryChange}
             diagramComponents={diagramComponents}
-            components={shapesAndComponentsData?.components ?? []}
+            components={[]}
             isCopied={isCopied}
             selected3DShape={selected3DShape}
             composedSVG={composedSVG}

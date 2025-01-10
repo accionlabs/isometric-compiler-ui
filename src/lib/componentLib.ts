@@ -11,7 +11,8 @@ import {
     AttachmentPointMap,
     ComponentAttachmentPointMap,
     GlobalAttachmentPoint,
-    Direction
+    Direction,
+    DependencyResult
 } from "../Types";
 import { v4 as uuidv4 } from "uuid";
 import {

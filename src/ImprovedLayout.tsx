@@ -20,7 +20,8 @@ import {
     Shape,
     Component,
     CanvasSettings,
-    Category
+    Category,
+    UnifiedElement
 } from "./Types";
 import ChatPanel from "./panels/ChatPanel";
 import { ChatProvider } from "./hooks/useChatProvider";
@@ -42,7 +43,16 @@ import { set } from "yaml/dist/schema/yaml-1.1/set";
 
 interface ImprovedLayoutProps {
     svgLibrary: Shape[];
+    shapesByCategory: Shape[];
     categories: Category[];
+    searchQuery: string;
+    searchedData:
+        | {
+              data: UnifiedElement[];
+              total: number;
+          }
+        | undefined;
+    setSearchQuery: (newLibrary: string) => void;
     activeCategory: string;
     activeLibrary: string;
     diagramComponents: DiagramComponent[];
@@ -99,7 +109,11 @@ interface ImprovedLayoutProps {
 
 const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     svgLibrary,
+    shapesByCategory,
     categories,
+    searchQuery,
+    searchedData,
+    setSearchQuery,
     activeCategory,
     onCategoryChange,
     activeLibrary,
@@ -443,7 +457,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                 accept=".json"
                                 onChange={handleFileChange}
                                 className="hidden"
-                            />{" "}
+                            />
                         </div>
 
                         {/* Panel content */}
@@ -451,7 +465,11 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                             {activePanel === "shapes" && (
                                 <ShapesPanel
                                     svgLibrary={svgLibrary}
+                                    shapesByCategory={shapesByCategory}
                                     categories={categories}
+                                    searchQuery={searchQuery}
+                                    searchedData={searchedData}
+                                    setSearchQuery={setSearchQuery}
                                     activeCategory={activeCategory}
                                     onCategoryChange={onCategoryChange}
                                     canvasSize={canvasSize}

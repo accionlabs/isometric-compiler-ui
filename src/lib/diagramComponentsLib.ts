@@ -150,8 +150,8 @@ export const getMatchingAttachmentPoints = (
     pointPattern: string
 ): AttachmentPoint[] | null => {
     if (component && component.attachmentPoints) {
-        return component.attachmentPoints.filter(
-            (p) => p.name.match(pointPattern)
+        return component.attachmentPoints.filter((p) =>
+            p.name.match(pointPattern)
         );
     }
     return null;
@@ -410,9 +410,15 @@ export const add2DShape = (
                     ...component,
                     attached2DShapes: [
                         ...component.attached2DShapes,
-                        { 
-                            name: shapeName, 
-                            attachedTo: (position && attachmentPoint && position === attachTo && attachmentPoint!== 'none')? attachmentPoint : attachTo 
+                        {
+                            name: shapeName,
+                            attachedTo:
+                                position &&
+                                attachmentPoint &&
+                                position === attachTo &&
+                                attachmentPoint !== "none"
+                                    ? attachmentPoint
+                                    : attachTo
                         }
                     ]
                 };
@@ -913,7 +919,6 @@ export const compileDiagram = (
     svgLibrary: Shape[],
     showAttachmentPoints: boolean
 ): { svgContent: string; processedComponents: DiagramComponent[] } => {
-
     // Standardize component IDs before processing
     const standardizedComponents = standardizeComponentIds(diagramComponents);
 
@@ -1236,13 +1241,12 @@ export const findClosestGlobalAttachmentPoint = (
 // Find all components that have no other components placed on top of them
 export const findTopMostComponents = (
     components: DiagramComponent[],
-    side: string = 'top'
+    side: string = "top"
 ): DiagramComponent[] => {
     return components.filter((component) => {
         return !components.some(
             (other) =>
-                other.relativeToId === component.id &&
-                other.position === side
+                other.relativeToId === component.id && other.position === side
         );
     });
 };
@@ -1250,16 +1254,12 @@ export const findTopMostComponents = (
 // Find all components that are not placed on top of any other components
 export const findBottomMostComponents = (
     components: DiagramComponent[],
-    side: string = 'top'
+    side: string = "top"
 ): DiagramComponent[] => {
     return components.filter((component) => {
-        return (
-            component.relativeToId === null ||
-            component.position !== side
-        );
+        return component.relativeToId === null || component.position !== side;
     });
 };
-
 
 export const getExtremeAttachmentPoints = (
     components: DiagramComponent[]
@@ -1279,13 +1279,13 @@ export const getExtremeAttachmentPoints = (
     const bottomPoints: AttachmentPoint[] = [];
 
     // Extract top attachment points from topmost components
-    topMostComponents.forEach(component => {
+    topMostComponents.forEach((component) => {
         if (component.attachmentPoints) {
-            const topAttachPoints = component.attachmentPoints.filter(point => 
-                point.name.startsWith('attach-top')
+            const topAttachPoints = component.attachmentPoints.filter((point) =>
+                point.name.startsWith("attach-top")
             );
             if (component.absolutePosition) {
-                topAttachPoints.forEach(point => {
+                topAttachPoints.forEach((point) => {
                     topPoints.push({
                         ...point,
                         x: point.x + component.absolutePosition!.x,
@@ -1297,13 +1297,13 @@ export const getExtremeAttachmentPoints = (
     });
 
     // Extract bottom attachment points from bottommost components
-    bottomMostComponents.forEach(component => {
+    bottomMostComponents.forEach((component) => {
         if (component.attachmentPoints) {
-            const bottomAttachPoints = component.attachmentPoints.filter(point =>
-                point.name.startsWith('attach-bottom')
+            const bottomAttachPoints = component.attachmentPoints.filter(
+                (point) => point.name.startsWith("attach-bottom")
             );
             if (component.absolutePosition) {
-                bottomAttachPoints.forEach(point => {
+                bottomAttachPoints.forEach((point) => {
                     bottomPoints.push({
                         ...point,
                         x: point.x + component.absolutePosition!.x,

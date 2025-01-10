@@ -39,12 +39,18 @@ export interface GlobalAttachmentPoint {
 // Shape interface
 export interface Shape {
     name: string;
-    type: "2D" | "3D"; // Changed to specific string literal types
+    type: "2D" | "3D" | "LAYERS"; // Changed to specific string literal types
     attachTo?: string;
     svgFile: string;
     svgContent: string;
+    description?: string;
+    path?: string;
 }
 
+export interface DependencyResult {
+    missingShapes: string[];
+    missingComponents: string[];
+}
 // Updated DiagramComponent interface
 export interface DiagramComponent {
     id: string;
@@ -80,6 +86,7 @@ export interface Component {
     diagramComponents: DiagramComponent[];
     attachmentPoints: AttachmentPoint[];
     svgContent?: string;
+    path?: string;
     created: Date;
     lastModified: Date;
 }
@@ -90,13 +97,28 @@ type Metadata = {
     dependencies: { shapeId: string; version: string }[];
 };
 
-export type ShapeResponse = {
+export interface UnifiedElement {
+    _id?: string;
+    id: string;
+    name: string;
+    description: string;
+    type: "2D" | "3D" | "LAYERS" | "COMPONENT"; // Changed to specific string literal types
+    attachTo?: string;
+    diagramComponents?: DiagramComponent[];
+    attachmentPoints?: AttachmentPoint[];
+    svgFile?: string;
+    svgContent?: string;
+    path?: string;
+    created?: Date;
+    lastModified?: Date;
+}
+export type UnifiedResponse = {
     _id: string;
     createdAt: string;
     updatedAt: string;
     status: string;
     name: string;
-    type: string;
+    type: "3D" | "2D" | "COMPONENT" | "LAYERS";
     attachTo: string | null;
     svgFile: string | null;
     svgContent: string | null;
@@ -107,6 +129,10 @@ export type ShapeResponse = {
     author: string | null;
     diagram_components: DiagramComponent[];
     attachment_points: AttachmentPoint[];
+    categoryDetails?: {
+        _id: string;
+        path: string;
+    };
 };
 export interface ComponentLibrary {
     components: { [key: string]: Component };
@@ -256,4 +282,5 @@ export interface Category {
     ancestors: string[];
     children: Category[];
     level?: number;
+    shapeCount: number;
 }
