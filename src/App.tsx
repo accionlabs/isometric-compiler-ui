@@ -18,9 +18,7 @@ import {
     getShapesByCategory,
     getShapesByName
 } from "./services/shapes";
-import { mergeAndMapItems } from "./lib/utils";
 import { shapesLibraryManager } from "./lib/shapesLib";
-import { config } from "./config";
 
 const App: React.FC = () => {
     const [svgLibrary, setSvgLibrary] = useState<Shape[]>([]);
@@ -198,8 +196,6 @@ const App: React.FC = () => {
 
     const handleAdd3DShape = useCallback(
         (shapeName: string) => {
-            console.log("svgLibrary", svgLibrary);
-
             const result = diagramComponentsLib.add3DShape(
                 diagramComponents,
                 svgLibrary,
@@ -227,18 +223,8 @@ const App: React.FC = () => {
 
     const handleAddComponent = useCallback(
         (component: Component) => {
-            if (
-                !componentLibraryManager.checkComponentCanRender(
-                    component,
-                    svgLibrary
-                )
-            ) {
-                console.error(
-                    "can't add this component, some dependencies are missing"
-                );
-                return;
-            }
-            componentLibraryManager.deserializeComponentLib([component]);
+            if (!componentLibraryManager.getComponent(component.id))
+                componentLibraryManager.deserializeComponentLib([component]);
             const result = diagramComponentsLib.addComponentToScene(
                 diagramComponents,
                 component.id,

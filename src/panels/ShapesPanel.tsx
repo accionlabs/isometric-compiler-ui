@@ -9,7 +9,7 @@ import {
     Category,
     UnifiedElement
 } from "../Types";
-import { Grid, List, Search } from "lucide-react";
+import { CircleX, Search } from "lucide-react";
 
 import SVGPreview from "../components/ui/SVGPreview";
 import { componentLibraryManager } from "../lib/componentLib";
@@ -95,14 +95,6 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
     // Temporary function to show SVG preview content for a component
     const getComponentPreview = (component: Component): string => {
         if (!component.svgContent || component.svgContent === "") {
-            if (
-                !componentLibraryManager.checkComponentCanRender(
-                    component,
-                    svgLibrary
-                )
-            )
-                return "";
-
             return componentLibraryManager.renderComponent(
                 component.id,
                 canvasSize,
@@ -126,12 +118,13 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
     };
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setSearchQuery(inputquery);
+        inputquery ? setInputQuery("") : setSearchQuery(inputquery);
     };
 
     const isAllOrComponent =
         selectedfilter === "All" ||
         selectedfilter.toLocaleUpperCase() === "COMPONENT";
+
     const filteredShapes = useMemo(() => {
         const upperCaseFilter = selectedfilter.toLocaleUpperCase();
         if (upperCaseFilter === "COMPONENT") return [];
@@ -157,6 +150,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
               )
             : searchedData?.data ?? [];
     }, [selectedfilter, searchedData?.data]);
+
     const renderPreview = (element: Shape | Component) => (
         <SVGPreview
             svgContent={
@@ -168,6 +162,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
             className="w-full h-full object-cover bg-white"
         />
     );
+
     const renderCategories = (categories: Category[], level = 0) => {
         return categories.map((category) => (
             <div key={category._id}>
@@ -315,6 +310,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
             </div>
         );
     };
+
     return (
         <div>
             <div className="border-t-2 border-customBorderColor">
@@ -332,7 +328,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                             className="w-full px-4 py-2 bg-customLightGray text-white placeholder-gray-400 rounded-l-md focus:outline-none"
                         />
                         <button type="submit" className="p-2">
-                            <Search className="text-white" />
+                            {!inputquery ? <Search /> : <CircleX />}
                         </button>
                     </form>
                     <div className="flex mt-4 space-x-2 flex-wrap justify-end  ">
@@ -425,29 +421,3 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
 };
 
 export default ShapesPanel;
-
-{
-    /* <div className="flex items-center ">
-                        <button
-                            onClick={() => setLayoutShapes("list")}
-                            className={`p-2 rounded hover:bg-customLightGray ${
-                                layoutShapes === "list"
-                                    ? "bg-customLightGray"
-                                    : "bg-customGray"
-                            }`}
-                        >
-                            <List />
-                        </button>
-
-                        <button
-                            onClick={() => setLayoutShapes("grid")}
-                            className={`p-2 rounded hover:bg-customLightGray ${
-                                layoutShapes === "grid"
-                                    ? "bg-customLightGray"
-                                    : "bg-customGray"
-                            }`}
-                        >
-                            <Grid />
-                        </button>
-                    </div> */
-}

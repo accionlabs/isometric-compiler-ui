@@ -903,29 +903,6 @@ class ComponentLibraryManager {
             attachmentPoints: component.attachmentPoints
         };
     }
-
-    public checkComponentCanRender(
-        component: Component,
-        svgLibrary: Shape[]
-    ): boolean {
-        let allDependenciesPresent = true;
-        if (this.getComponent(component.id)) return allDependenciesPresent;
-        for (const diagramComponent of component.diagramComponents) {
-            const { shape, source } = diagramComponent;
-
-            if (
-                source === "shape" &&
-                (!shapesLibraryManager.getShape(shape) ||
-                    !svgLibrary.find((s) => s.name === shape))
-            ) {
-                allDependenciesPresent = false;
-            }
-            if (source === "component" && !this.getComponent(shape)) {
-                allDependenciesPresent = false;
-            }
-        }
-        return allDependenciesPresent;
-    }
 }
 
 export const componentLibraryManager = ComponentLibraryManager.getInstance();
