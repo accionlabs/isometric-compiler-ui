@@ -1,92 +1,92 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-    name: ${MICROSERVICE_NAME}
-    labels:
-        app: ${MICROSERVICE_NAME}
-        com.breeze.project: Breeze
-    annotations:
+  name: ${MICROSERVICE_NAME}
+  labels:
+    app: ${MICROSERVICE_NAME}
+    com.breeze.project: Breeze
+  annotations:
 spec:
-    replicas: ${REPLICAS}
-    selector:
-        matchLabels:
-            app: ${MICROSERVICE_NAME}
-    strategy:
-        type: RollingUpdate
-    template:
-        metadata:
-            labels:
-                app: ${MICROSERVICE_NAME}
-        spec:
-            containers:
-                - envFrom:
-                      - configMapRef:
-                            name: ${MICROSERVICE_NAME}
-                      - secretRef:
-                            name: ${SECRET}
-                  name: ${MICROSERVICE_NAME}
-                  image: ${AWS_ACCOUNT_NUMBER}.dkr.ecr.${REGION}.amazonaws.com/${CLIENT_NAME}/${ENV}/${MICROSERVICE_NAME}:${TAG}
-                  imagePullPolicy: Always
-                  resources:
-                      requests:
-                          cpu: ${MIN_CPU}
-                          memory: ${MIN_MEM}
-                      limits:
-                          cpu: ${MAX_CPU}
-                          memory: ${MAX_MEM}
-                  ports:
-                      - containerPort: 80
-                        name: http
-                  volumeMounts:
-                      - mountPath: /logs
-                        name: logs
-            volumes:
-                - name: data
-                  persistentVolumeClaim:
-                      claimName: ${MICROSERVICES_PVC}
-                - name: logs
-                  persistentVolumeClaim:
-                      claimName: ${LOGS_PVC}
-            restartPolicy: Always
+  replicas: ${REPLICAS}
+  selector:
+    matchLabels:
+      app: ${MICROSERVICE_NAME}
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: ${MICROSERVICE_NAME}
+    spec:
+      containers:
+        - envFrom:
+            - configMapRef:
+                name: ${MICROSERVICE_NAME}
+            - secretRef:
+                name: ${SECRET}
+          name: ${MICROSERVICE_NAME}
+          image: ${AWS_ACCOUNT_NUMBER}.dkr.ecr.${REGION}.amazonaws.com/${CLIENT_NAME}/${ENV}/${MICROSERVICE_NAME}:${TAG}
+          imagePullPolicy: Always
+          resources:
+            requests:
+              cpu: ${MIN_CPU}
+              memory: ${MIN_MEM}
+            limits:
+              cpu: ${MAX_CPU}
+              memory: ${MAX_MEM}
+          ports:
+            - containerPort: 80
+              name: http
+          volumeMounts:
+            - mountPath: /logs
+              name: logs
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: ${MICROSERVICES_PVC}
+        - name: logs
+          persistentVolumeClaim:
+            claimName: ${LOGS_PVC}
+      restartPolicy: Always
 ---
 apiVersion: v1
 kind: Service
 metadata:
-    annotations:
-        app: ${MICROSERVICE_NAME}
-        com.breeze.env: development
-        com.breeze.project: Breeze
-    labels:
-        app: ${MICROSERVICE_NAME}
-    name: ${MICROSERVICE_NAME}
+  annotations:
+    app: ${MICROSERVICE_NAME}
+    com.breeze.env: development
+    com.breeze.project: Breeze
+  labels:
+    app: ${MICROSERVICE_NAME}
+  name: ${MICROSERVICE_NAME}
 spec:
-    ports:
-        - name: "http"
-          port: 80
-          targetPort: 80
-    selector:
-        app: ${MICROSERVICE_NAME}
-    type: NodePort
+  ports:
+    - name: 'http'
+      port: 80
+      targetPort: 80
+  selector:
+    app: ${MICROSERVICE_NAME}
+  type: NodePort
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-    annotations:
-        konghq.com/plugins: cors
-        konghq.com/strip-path: "true"
-        plugins.konghq.com: jwt, cors
-    name: ${MICROSERVICE_NAME}-ing
-    namespace: ${NAMESPACE}
+  annotations:
+    konghq.com/plugins: cors
+    konghq.com/strip-path: "true"
+    plugins.konghq.com: jwt, cors
+  name: ${MICROSERVICE_NAME}-ing
+  namespace: ${NAMESPACE}
 spec:
-    ingressClassName: kong
-    rules:
-        - host: ${ENVIRONMENT_URL}
-          http:
-              paths:
-                  - backend:
-                        service:
-                            name: ${MICROSERVICE_NAME}
-                            port:
-                                number: 80
-                    path: ${ENV_CONTEXT_PATH}
-                    pathType: ImplementationSpecific
+  ingressClassName: kong
+  rules:
+    - host: ${ENVIRONMENT_URL}
+      http:
+        paths:
+          - backend:
+              service:
+                name: ${MICROSERVICE_NAME}
+                port:
+                  number: 80
+            path: ${ENV_CONTEXT_PATH}
+            pathType: ImplementationSpecific
