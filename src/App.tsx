@@ -20,8 +20,10 @@ import {
 } from "./services/shapes";
 import { mergeAndMapItems } from "./lib/utils";
 import { shapesLibraryManager } from "./lib/shapesLib";
+import { config } from "./config";
 
 const App: React.FC = () => {
+    console.log("env", config);
     const [svgLibrary, setSvgLibrary] = useState<Shape[]>([]);
     const [diagramComponents, setDiagramComponents] = useState<
         DiagramComponent[]
