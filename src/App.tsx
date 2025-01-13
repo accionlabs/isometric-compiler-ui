@@ -77,7 +77,6 @@ const App: React.FC = () => {
         queryFn: () => getsearchedShapes(searchQuery),
         enabled: !!searchQuery
     });
-    console.log("searchedData", searchedData?.data.length);
     const { data: shapesAndComponentsData, isLoading: isShapesLoading } =
         useQuery({
             queryKey: ["shapes_data", selectedCategoryId],
