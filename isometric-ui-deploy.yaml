@@ -1,39 +1,40 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ${MICROSERVICE_NAME}
+  name: '${MICROSERVICE_NAME}'
   labels:
-    app: ${MICROSERVICE_NAME}
+    app: '${MICROSERVICE_NAME}'
     com.breeze.project: Breeze
-  annotations:
+  annotations: null
 spec:
-  replicas: ${REPLICAS}
+  replicas: '${REPLICAS}'
   selector:
     matchLabels:
-      app: ${MICROSERVICE_NAME}
+      app: '${MICROSERVICE_NAME}'
   strategy:
     type: RollingUpdate
   template:
     metadata:
       labels:
-        app: ${MICROSERVICE_NAME}
+        app: '${MICROSERVICE_NAME}'
     spec:
       containers:
         - envFrom:
             - configMapRef:
-                name: ${MICROSERVICE_NAME}
+                name: '${MICROSERVICE_NAME}'
             - secretRef:
-                name: ${SECRET}
-          name: ${MICROSERVICE_NAME}
-          image: ${AWS_ACCOUNT_NUMBER}.dkr.ecr.${REGION}.amazonaws.com/${CLIENT_NAME}/${ENV}/${MICROSERVICE_NAME}:${TAG}
+                name: '${SECRET}'
+          name: '${MICROSERVICE_NAME}'
+          image: >-
+            ${AWS_ACCOUNT_NUMBER}.dkr.ecr.${REGION}.amazonaws.com/${CLIENT_NAME}/${ENV}/${MICROSERVICE_NAME}:${TAG}
           imagePullPolicy: Always
           resources:
             requests:
-              cpu: ${MIN_CPU}
-              memory: ${MIN_MEM}
+              cpu: '${MIN_CPU}'
+              memory: '${MIN_MEM}'
             limits:
-              cpu: ${MAX_CPU}
-              memory: ${MAX_MEM}
+              cpu: '${MAX_CPU}'
+              memory: '${MAX_MEM}'
           ports:
             - containerPort: 80
               name: http
@@ -43,10 +44,10 @@ spec:
       volumes:
         - name: data
           persistentVolumeClaim:
-            claimName: ${MICROSERVICES_PVC}
+            claimName: '${MICROSERVICES_PVC}'
         - name: logs
           persistentVolumeClaim:
-            claimName: ${LOGS_PVC}
+            claimName: '${LOGS_PVC}'
       restartPolicy: Always
 ---
 apiVersion: v1
