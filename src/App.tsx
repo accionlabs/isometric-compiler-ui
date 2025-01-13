@@ -13,15 +13,20 @@ import { StorageType, loadFile, saveFile } from "./lib/fileOperations";
 import { exportAsPNG, exportAsSVG } from "./lib/exportUtils";
 import { useQuery } from "@tanstack/react-query";
 import { getCategories } from "./services/categories";
-import { getShapesByCaterory, getsearchedShapes } from "./services/shapes";
-import { mergeArrays } from "./lib/utils";
+import {
+    getsearchedShapes,
+    getShapesByCategory,
+    getShapesByName
+} from "./services/shapes";
+import { mergeAndMapItems } from "./lib/utils";
+import { shapesLibraryManager } from "./lib/shapesLib";
 
 const App: React.FC = () => {
     const [svgLibrary, setSvgLibrary] = useState<Shape[]>([]);
     const [diagramComponents, setDiagramComponents] = useState<
         DiagramComponent[]
     >([]);
-    const [searchQuery, setSearchQuery] = useState("base");
+    const [searchQuery, setSearchQuery] = useState("");
     const [canvasSize, setCanvasSize] = useState({ width: 1000, height: 1000 });
     const [canvasSettings, setCanvasSettings] = useState<CanvasSettings | null>(
         null
@@ -62,22 +67,23 @@ const App: React.FC = () => {
     const [isSaveDiagramDialogOpen, setIsSaveDiagramDialogOpen] =
         useState(false);
 
-    const { data: categories } = useQuery({
+    const { data: categories, isLoading: isCategoryLoading } = useQuery({
         queryKey: ["categories_data"],
         queryFn: getCategories
     });
 
-    const { data: searchedData } = useQuery({
+    const { data: searchedData, isLoading: isSearchLoading } = useQuery({
         queryKey: ["searched_shapes_data", searchQuery],
         queryFn: () => getsearchedShapes(searchQuery),
         enabled: !!searchQuery
     });
-
-    const { data: shapesAndComponentsData } = useQuery({
-        queryKey: ["shapes_data", selectedCategoryId],
-        queryFn: () => getShapesByCaterory(selectedCategoryId),
-        enabled: !!selectedCategoryId
-    });
+    console.log("searchedData", searchedData?.data.length);
+    const { data: shapesAndComponentsData, isLoading: isShapesLoading } =
+        useQuery({
+            queryKey: ["shapes_data", selectedCategoryId],
+            queryFn: () => getShapesByCategory(selectedCategoryId),
+            enabled: !!selectedCategoryId
+        });
 
     // on category change
     const handleCategoryChange = useCallback((id: string) => {
@@ -192,6 +198,8 @@ const App: React.FC = () => {
 
     const handleAdd3DShape = useCallback(
         (shapeName: string) => {
+            console.log("svgLibrary", svgLibrary);
+
             const result = diagramComponentsLib.add3DShape(
                 diagramComponents,
                 svgLibrary,
@@ -218,13 +226,22 @@ const App: React.FC = () => {
     );
 
     const handleAddComponent = useCallback(
-        (componentId: string, component?: Component) => {
-            if (!componentLibraryManager.getComponent(componentId) && component)
-                componentLibraryManager.deserializeComponentLib([component]);
-
+        (component: Component) => {
+            if (
+                !componentLibraryManager.checkComponentCanRender(
+                    component,
+                    svgLibrary
+                )
+            ) {
+                console.error(
+                    "can't add this component, some dependencies are missing"
+                );
+                return;
+            }
+            componentLibraryManager.deserializeComponentLib([component]);
             const result = diagramComponentsLib.addComponentToScene(
                 diagramComponents,
-                componentId,
+                component.id,
                 selectedPosition,
                 selectedAttachmentPoint,
                 selected3DShape
@@ -246,6 +263,17 @@ const App: React.FC = () => {
 
     const handleAdd2DShape = useCallback(
         (shapeName: string, attachTo: string) => {
+            const shape =
+                shapesLibraryManager.getShape(shapeName) ||
+                svgLibrary.find((s) => s.name === shapeName);
+            if (!shape) {
+                console.error(`Shape ${shapeName} not found in library`);
+                return {
+                    updatedComponents: diagramComponents,
+                    newComponent: null
+                };
+            }
+            shapesLibraryManager.deserializeShapesLib([shape]);
             const updatedComponents = diagramComponentsLib.add2DShape(
                 diagramComponents,
                 selected3DShape,
@@ -713,22 +741,26 @@ const App: React.FC = () => {
 
         loadComponentSchema();
     }, [schemaUrl]);
-
     useEffect(() => {
         if (!shapesAndComponentsData) return;
-        const { shapes = [], components: fetchedComps = [] } =
-            shapesAndComponentsData;
-        const mergedSvgLib: Shape[] = mergeArrays(svgLibrary, shapes, "name");
-        setSvgLibrary(mergedSvgLib);
-        const mergedLocalComponents: Component[] = mergeArrays(
-            components,
-            fetchedComps,
-            "name"
-        );
-        setComponents(mergedLocalComponents);
-        // componentLibraryManager.deserializeComponentLib(components);
-    }, [shapesAndComponentsData]);
+        const { shapes = [] } = shapesAndComponentsData;
 
+        setSvgLibrary(shapes);
+    }, [shapesAndComponentsData]);
+    useEffect(() => {
+        if (!searchedData?.data) return;
+        console.log("here when searched");
+        setSvgLibrary(
+            searchedData.data
+                ?.filter((item) => item.type !== "COMPONENT")
+                .map((item) => ({ ...item } as Shape))
+        );
+    }, [searchedData?.data]);
+
+    // useEffect(() => {
+    //     setSvgLibrary(shapesLibraryManager.getAllShapes());
+    //     setComponents(componentLibraryManager.getAllComponents());
+    // }, []);
     // Load components and shapes library on mount
     // useEffect(() => {
     // load components on mount
@@ -817,7 +849,6 @@ const App: React.FC = () => {
             showAttachmentPoints.toString()
         );
     }, [showAttachmentPoints]);
-
     return (
         <ImprovedLayout
             svgLibrary={svgLibrary}
@@ -831,7 +862,7 @@ const App: React.FC = () => {
             activeLibrary={activeLibrary}
             onLibraryChange={handleLibraryChange}
             diagramComponents={diagramComponents}
-            components={[]}
+            components={shapesAndComponentsData?.components ?? []}
             isCopied={isCopied}
             selected3DShape={selected3DShape}
             composedSVG={composedSVG}
@@ -874,6 +905,11 @@ const App: React.FC = () => {
             onDeleteComponent={handleDeleteComponent}
             isSaveDiagramDialogOpen={isSaveDiagramDialogOpen}
             setIsSaveDiagramDialogOpen={setIsSaveDiagramDialogOpen}
+            isDataLoading={{
+                isCategoryLoading,
+                isSearchLoading,
+                isShapesLoading
+            }}
         />
     );
 };

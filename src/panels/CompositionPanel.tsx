@@ -22,6 +22,7 @@ import {
     DropdownMenuTrigger
 } from "@/components/ui/DropDownMenu";
 import { MoreHorizontal } from "lucide-react";
+import { shapesLibraryManager } from "@/lib/shapesLib";
 
 interface CompositionPanelProps {
     diagramComponents: DiagramComponent[];
@@ -109,7 +110,9 @@ const CompositionPanel: React.FC<CompositionPanelProps> = ({
             }
             return "";
         } else {
-            const shape = svgLibrary.find((s) => s.name === component.shape);
+            const shape =
+                shapesLibraryManager.getShape(component.shape) ||
+                svgLibrary.find((s) => s.name === component.shape);
             return shape ? shape.svgContent : "";
         }
     };

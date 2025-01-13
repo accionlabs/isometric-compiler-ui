@@ -6,12 +6,17 @@ import {
     transformToUnifiedResponse
 } from "@/lib/utils";
 
-export async function getShapesByName(
-    names: string[]
-): Promise<any | undefined> {
+export async function getShapesByName(names: string[]): Promise<
+    | {
+          shapes: Shape[];
+          components: Component[];
+          total: number;
+      }
+    | undefined
+> {
     const params = names.map((item) => "filters[name][$in]=" + item).join("&");
 
-    const url = `${config.isometricApiUrl}/shapes?${params}`;
+    const url = `${config.isometricApiUrl}/shapes?${params}&Page=1&limit=1000`;
     try {
         const response = await fetch(url);
 
@@ -20,13 +25,18 @@ export async function getShapesByName(
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        return await response.json(); // Parse the JSON response
+        const shapesResp: { data: UnifiedResponse[]; total: number } =
+            await response.json(); // Parse the JSON response
+        const segregatedData = segregateShapesAndComponents(
+            shapesResp?.data ?? []
+        );
+        return { ...segregatedData, total: shapesResp.total };
     } catch (error) {
         console.error("Error:", error); // Handle errors
     }
 }
 
-export async function getShapesByCaterory(id: string): Promise<
+export async function getShapesByCategory(id: string): Promise<
     | {
           shapes: Shape[];
           components: Component[];

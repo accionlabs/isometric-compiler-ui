@@ -45,6 +45,7 @@ export interface Shape {
     svgContent: string;
     description?: string;
     path?: string;
+    version?: string;
 }
 
 export interface DependencyResult {
@@ -87,6 +88,7 @@ export interface Component {
     attachmentPoints: AttachmentPoint[];
     svgContent?: string;
     path?: string;
+    version?: string;
     created: Date;
     lastModified: Date;
 }
@@ -109,6 +111,7 @@ export interface UnifiedElement {
     svgFile?: string;
     svgContent?: string;
     path?: string;
+    version?: string;
     created?: Date;
     lastModified?: Date;
 }
@@ -136,6 +139,11 @@ export type UnifiedResponse = {
 };
 export interface ComponentLibrary {
     components: { [key: string]: Component };
+    lastModified: Date;
+}
+
+export interface ShapesLibrary {
+    shapes: { [key: string]: Shape };
     lastModified: Date;
 }
 
@@ -283,4 +291,32 @@ export interface Category {
     children: Category[];
     level?: number;
     shapeCount: number;
+}
+
+export interface DependencyCheckResult {
+    componentId: string;
+    missingDependencies: string[];
+}
+
+export interface BatchResult {
+    results: DependencyCheckResult[];
+    error?: string;
+}
+
+export interface WorkerMessage {
+    type: "CHECK_DEPENDENCIES_BATCH";
+    payload: {
+        componentIds: string[];
+        svgLibrary: Shape[];
+        allComponents: Component[];
+        existingComponentIds: string[];
+    };
+}
+
+export interface WorkerResponse {
+    type: "DEPENDENCIES_RESULT_BATCH";
+    payload: {
+        results: DependencyCheckResult[];
+        error?: string;
+    };
 }

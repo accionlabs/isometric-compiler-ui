@@ -34,6 +34,7 @@ import {
 } from "./pointUtils";
 import { getAttachmentPoint } from "./diagramComponentsLib";
 import { Underline } from "lucide-react";
+import { shapesLibraryManager } from "./shapesLib";
 
 // Helper interfaces for attachment point calculation
 
@@ -710,6 +711,8 @@ class ComponentLibraryManager {
         if (!this.validateComponentLibrary(components)) {
             throw new Error("Invalid component library structure");
         }
+        console.trace();
+
         components.forEach((component) => {
             const now = new Date();
             this.library.components[component.name] = component;
@@ -748,7 +751,6 @@ class ComponentLibraryManager {
                 ${svgRender}
             </svg>
         `;
-
         // Create a temporary container to parse and modify the SVG
         const parser = new DOMParser();
         // Wrap the content in an SVG tag for proper parsing
@@ -790,7 +792,7 @@ class ComponentLibraryManager {
         // Update the component with the new SVG content
         if (componentFromLib) this.updateComponent(id, { svgContent });
 
-        return svgContent;
+        return svgRender ? svgContent : "";
     }
 
     public renderComponentOld(
@@ -870,6 +872,9 @@ class ComponentLibraryManager {
     public getAllComponents(): Component[] {
         return Object.values(this.library.components);
     }
+    public getAllComponentsMap(): { [key: string]: Component } {
+        return this.library.components;
+    }
 
     public clearLibrary(): void {
         this.library = {
@@ -897,6 +902,29 @@ class ComponentLibraryManager {
             attached2DShapes: [],
             attachmentPoints: component.attachmentPoints
         };
+    }
+
+    public checkComponentCanRender(
+        component: Component,
+        svgLibrary: Shape[]
+    ): boolean {
+        let allDependenciesPresent = true;
+        if (this.getComponent(component.id)) return allDependenciesPresent;
+        for (const diagramComponent of component.diagramComponents) {
+            const { shape, source } = diagramComponent;
+
+            if (
+                source === "shape" &&
+                (!shapesLibraryManager.getShape(shape) ||
+                    !svgLibrary.find((s) => s.name === shape))
+            ) {
+                allDependenciesPresent = false;
+            }
+            if (source === "component" && !this.getComponent(shape)) {
+                allDependenciesPresent = false;
+            }
+        }
+        return allDependenciesPresent;
     }
 }
 

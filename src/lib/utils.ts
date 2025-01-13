@@ -23,7 +23,8 @@ export const segregateShapesAndComponents = (response: UnifiedResponse[]) => {
                 attachTo: item.attachTo ?? undefined,
                 svgFile: item.svgFile ?? "",
                 svgContent: item.svgContent ?? "",
-                path: item.categoryDetails?.path ?? ""
+                path: item.categoryDetails?.path ?? "",
+                version: item.version ?? ""
             });
         }
 
@@ -38,6 +39,7 @@ export const segregateShapesAndComponents = (response: UnifiedResponse[]) => {
                 attachmentPoints: item.attachment_points,
                 svgContent: item.svgContent ?? undefined,
                 path: item.categoryDetails?.path ?? "",
+                version: item.version ?? "",
                 created: new Date(item.createdAt),
                 lastModified: new Date(item.updatedAt)
             });
@@ -61,6 +63,7 @@ export const transformToUnifiedResponse = (
                 attachmentPoints: item.attachment_points,
                 svgContent: item.svgContent ?? undefined,
                 path: item.categoryDetails?.path ?? "",
+                version: item.version ?? "",
                 created: new Date(item.createdAt),
                 lastModified: new Date(item.updatedAt)
             };
@@ -74,27 +77,39 @@ export const transformToUnifiedResponse = (
             attachTo: item.attachTo ?? undefined,
             svgFile: item.svgFile ?? "",
             svgContent: item.svgContent ?? "",
-            path: item.categoryDetails?.path ?? ""
+            path: item.categoryDetails?.path ?? "",
+            version: item.version ?? ""
         };
     });
 };
-
-export const mergeArrays = <T extends Record<string, any>>(
+export const mergeAndMapItems = <T extends Record<string, any>>(
     array1: T[],
     array2: T[],
     key: keyof T
-): T[] => {
+): { items: T[]; namesMap: Record<string, any> } => {
     // Combine both arrays
     const combined = [...array1, ...array2];
 
     // Create a map to store unique items based on the dynamic key
     const uniqueItemsMap = new Map<any, T>();
 
+    // Create an object to store the names
+    const namesObject: Record<string, any> = {};
+
     // Iterate over the combined array
     for (const item of combined) {
+        // Add the item to the map if the key is unique
         uniqueItemsMap.set(item[key], item);
+
+        // Collect names into the namesObject
+        if (item[key]) {
+            namesObject[item[key]] = item;
+        }
     }
 
     // Convert the map back to an array
-    return Array.from(uniqueItemsMap.values());
+    const itemsArray = Array.from(uniqueItemsMap.values());
+
+    // Return the items array and the names object
+    return { items: itemsArray, namesMap: namesObject };
 };

@@ -66,7 +66,7 @@ interface ImprovedLayoutProps {
     composedSVG: string;
     onAdd3DShape: (shapeName: string) => void;
     onAdd2DShape: (shapeName: string, attachTo: string) => void;
-    onAddComponent: (componentId: string, component?: Component) => void;
+    onAddComponent: (component: Component) => void;
     onDeleteComponent: (componentId: string) => void;
     onRemove3DShape: (id: string) => void;
     onRemove2DShape: (parentId: string, shapeIndex: number) => void;
@@ -105,6 +105,11 @@ interface ImprovedLayoutProps {
     onSaveAsComponent: (name: string, description: string) => void;
     isSaveDiagramDialogOpen: boolean;
     setIsSaveDiagramDialogOpen: (open: boolean) => void;
+    isDataLoading: {
+        isCategoryLoading: boolean;
+        isSearchLoading: boolean;
+        isShapesLoading: boolean;
+    };
 }
 
 const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
@@ -161,7 +166,8 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     onStorageTypeChange,
     onSaveAsComponent,
     isSaveDiagramDialogOpen,
-    setIsSaveDiagramDialogOpen
+    setIsSaveDiagramDialogOpen,
+    isDataLoading
 }) => {
     const params = new URLSearchParams(window.location.search);
     const isReadModeEnabled = params.get("mode") === "read";
@@ -481,6 +487,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                     selected3DShape={selected3DShape}
                                     diagramComponents={diagramComponents}
                                     components={components}
+                                    isDataLoading={isDataLoading}
                                 />
                             )}
                             {activePanel === "composition" && (

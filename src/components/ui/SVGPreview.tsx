@@ -1,5 +1,6 @@
 // @/components/ui/SVGPreview.tsx
 
+import { DownloadCloudIcon } from "lucide-react";
 import React from "react";
 
 interface SVGPreviewProps {
@@ -25,7 +26,6 @@ const SVGPreview: React.FC<SVGPreviewProps> = ({
             const height = svgElement.getAttribute("height") || "100";
             viewBox = `0 0 ${width} ${height}`;
         }
-
         // Create a new SVG element with our desired properties
         const newSvgContent = `
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
@@ -40,10 +40,19 @@ const SVGPreview: React.FC<SVGPreviewProps> = ({
         <div
             className={`flex items-center justify-center p-1 rounded ${className}`}
         >
-            <div
-                className="w-full h-full"
-                dangerouslySetInnerHTML={{ __html: renderSVG() }}
-            />
+            {!svgContent ? (
+                <DownloadCloudIcon
+                    width="100%"
+                    height="100%"
+                    preserveAspectRatio="xMidYMid meet"
+                    color="gray"
+                />
+            ) : (
+                <div
+                    className="w-full h-full"
+                    dangerouslySetInnerHTML={{ __html: renderSVG() }}
+                />
+            )}
         </div>
     );
 };

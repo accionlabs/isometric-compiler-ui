@@ -13,6 +13,7 @@ import {
 import { toggleAttachmentPoints } from "./svgUtils";
 import { v4 as uuidv4 } from "uuid";
 import { componentLibraryManager } from "./componentLib";
+import { shapesLibraryManager } from "./shapesLib";
 
 declare global {
     interface Window {
@@ -284,11 +285,15 @@ export const add3DShape = (
         .substr(2, 9)}`;
 
     if (diagramComponents.length === 0 || selected3DShape !== null) {
-        const shape = svgLibrary.find((s) => s.name === shapeName);
+        const shape =
+            shapesLibraryManager.getShape(shapeName) ||
+            svgLibrary.find((s) => s.name === shapeName);
         if (!shape) {
             console.error(`Shape ${shapeName} not found in library`);
             return { updatedComponents: diagramComponents, newComponent: null };
         }
+
+        shapesLibraryManager.deserializeShapesLib([shape]);
 
         const parser = new DOMParser();
         const svgDoc = parser.parseFromString(
@@ -648,7 +653,9 @@ export const getSvgFromLibrary = (
     shapeName: string,
     svgLibrary: Shape[]
 ): SVGGElement | null => {
-    const shape = svgLibrary.find((s) => s.name === shapeName);
+    const shape =
+        shapesLibraryManager.getShape(shapeName) ||
+        svgLibrary.find((s) => s.name === shapeName);
     if (!shape) {
         console.warn(`Shape ${shapeName} not found in library`);
         return null;
@@ -896,7 +903,9 @@ const renderComponent = (
         shape3DElement = createSvgGroup(svgContent);
         attachmentPoints = componentData.attachmentPoints;
     } else {
-        const shape = svgLibrary.find((s) => s.name === component.shape);
+        const shape =
+            shapesLibraryManager.getShape(component.shape) ||
+            svgLibrary.find((s) => s.name === component.shape);
         if (!shape) {
             console.warn(`Shape ${component.shape} not found in library`);
             return null;
