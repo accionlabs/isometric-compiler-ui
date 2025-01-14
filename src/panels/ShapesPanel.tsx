@@ -344,13 +344,11 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
             </div>
         );
     };
-    console.log("shapesByCategory", shapesByCategory);
     return (
         <div>
             <div className="border-t-2 border-customBorderColor">
                 <div className="py-3 px-2 bg-customGray rounded-lg">
-                    <form
-                        onSubmit={handleSubmit}
+                    <div
                         className="flex items-center bg-customLightGray rounded-md"
                     >
                         <input
@@ -361,10 +359,10 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                             placeholder="Search"
                             className="w-full p-2 bg-customLightGray text-white placeholder-gray-400 rounded focus:outline-none"
                         />
-                        <button type="submit" className="p-2">
+                        <button onClick={handleSubmit} className="p-2">
                             {!inputQuery ? <Search /> : <CircleX />}
                         </button>
-                    </form>
+                    </div>
                     <div className="flex mt-3 space-x-1 flex-wrap justify-end  ">
                         {filterOptionsWithColor.map((item) => (
                             <button
@@ -398,13 +396,13 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
             </div>
             {!inputQuery && (
                 <>
-                    <div className="flex items-center justify-between bg-customGray text-white px-4 py-3  border-t-2 border-customBorderColor">
+                    <div className="flex items-center justify-between bg-customGray text-white px-4 py-2  border-t-2 border-customBorderColor">
                         <h1 className="text-lg font-bold text-white ">
                             Categories
                         </h1>
                     </div>
                     <div className="mx-auto bg-customGray  rounded-lg shadow-lg">
-                        <div className="h-[25vh] overflow-y-auto">
+                        <div className="max-h-36 overflow-y-auto">
                             {renderCategories(categories ?? [])}
                         </div>
                     </div>
@@ -412,7 +410,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
             )}
             {!inputQuery && (
                 <div className="border-t-2 border-customBorderColor">
-                    <div className="flex items-center justify-between bg-customGray text-white px-4 py-3 rounded-lg ">
+                    <div className="flex items-center justify-between bg-customGray text-white px-4 py-2 rounded-lg ">
                         <h1 className="text-lg font-bold text-white ">
                             Shapes
                         </h1>
@@ -446,7 +444,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                                             No shapes available in this category
                                         </div>
                                     )}
-                                    <div className="h-4"></div>
+                                    <div className="h-7"></div>
                                 </div>
                             )}
                         </div>
