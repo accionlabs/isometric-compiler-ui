@@ -338,13 +338,12 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
             console.log("onSaveDiagram completed");
         } catch (error) {
             console.error("Error in handleSaveDiagram:", error);
-            // Could show an error notification here
         }
     };
 
     return (
         <ChatProvider>
-            <div className="flex flex-row min-h-screen  text-white">
+            <div className="flex flex-row h-screen w-screen  text-white">
                 {/* Left side control panels */}
                 {!isReadModeEnabled && (
                     <div className="flex flex-col border-r bg-customGray border-gray-700 w-1/3">

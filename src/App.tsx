@@ -16,7 +16,8 @@ import { getCategories } from "./services/categories";
 import {
     getsearchedShapes,
     getShapesByCategory,
-    getShapesByName
+    getShapesByName,
+    saveComponent
 } from "./services/shapes";
 import { shapesLibraryManager } from "./lib/shapesLib";
 
@@ -66,7 +67,11 @@ const App: React.FC = () => {
     const [isSaveDiagramDialogOpen, setIsSaveDiagramDialogOpen] =
         useState(false);
 
-    const { data: categories, isLoading: isCategoryLoading } = useQuery({
+    const {
+        data: categories,
+        isLoading: isCategoryLoading,
+        refetch: refetchCategories
+    } = useQuery({
         queryKey: ["categories_data"],
         queryFn: getCategories
     });
@@ -76,12 +81,15 @@ const App: React.FC = () => {
         queryFn: () => getsearchedShapes(searchQuery),
         enabled: !!searchQuery
     });
-    const { data: shapesAndComponentsData, isLoading: isShapesLoading } =
-        useQuery({
-            queryKey: ["shapes_data", selectedCategoryId],
-            queryFn: () => getShapesByCategory(selectedCategoryId),
-            enabled: !!selectedCategoryId
-        });
+    const {
+        data: shapesAndComponentsData,
+        isLoading: isShapesLoading,
+        refetch: refetchShapes
+    } = useQuery({
+        queryKey: ["shapes_data", selectedCategoryId],
+        queryFn: () => getShapesByCategory(selectedCategoryId),
+        enabled: !!selectedCategoryId
+    });
 
     // on category change
     const handleCategoryChange = useCallback((id: string) => {
@@ -471,6 +479,7 @@ const App: React.FC = () => {
                 }
                 const parsedData = JSON.parse(loadedData);
                 // Deserialize the loaded data to retrieve diagram components and library information
+
                 const deserializedComponents =
                     diagramComponentsLib.deserializeDiagramComponents(
                         parsedData.serializedDiagramComponents
@@ -480,6 +489,17 @@ const App: React.FC = () => {
                     parsedData.serializedComponentLib
                 );
 
+                const response = await getShapesByName(
+                    parsedData.serializedDiagramComponents?.map(
+                        (component: DiagramComponent) => component.shape
+                    )
+                );
+
+                if (response) {
+                    const { shapes = [], components = [] } = response;
+                    shapesLibraryManager.deserializeShapesLib(shapes);
+                    componentLibraryManager.deserializeComponentLib(components);
+                }
                 setComponents(componentLibraryManager.getAllComponents());
                 setDiagramComponents(deserializedComponents);
                 setErrorMessage(null);
@@ -599,7 +619,7 @@ const App: React.FC = () => {
 
     // New handler to save current composition as a component
     const handleSaveAsComponent = useCallback(
-        (name: string, description: string) => {
+        async (name: string, description: string) => {
             try {
                 let selectedShapes = diagramComponents;
                 // if a shape is selected, then copy those shapes that are selected for saving as component
@@ -625,6 +645,7 @@ const App: React.FC = () => {
                     );
                     return null;
                 }
+
                 // Pass true for overwrite since user has already confirmed in dialog
                 const newComponent = componentLibraryManager.createComponent(
                     name,
@@ -671,6 +692,15 @@ const App: React.FC = () => {
                         } else {
                             console.error("Failed to replace new component");
                         }
+                    }
+                    const newComponentToSave =
+                        componentLibraryManager.getComponent(newComponent.id);
+                    if (newComponentToSave) {
+                        await saveComponent(newComponentToSave);
+                        refetchCategories();
+                        // category id harcoded for now with select category to save in fature it will be removed
+                        if (selectedCategoryId === "67853d5f4c7dce63e7c20228")
+                            refetchShapes();
                     }
                     return newComponent;
                 }
