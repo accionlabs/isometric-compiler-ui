@@ -344,12 +344,12 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
 
     return (
         <ChatProvider>
-            <div className="flex flex-row h-screen w-screen  text-white">
+            <div className="flex flex-row min-h-screen  text-white">
                 {/* Left side control panels */}
                 {!isReadModeEnabled && (
                     <div className="flex flex-col border-r bg-customGray border-gray-700 w-1/3">
                         {/* Tab buttons */}
-                        <div className="flex flex-row h-16 px-2 pt-2 space-x-2 border-b border-gray-700 items-center">
+                        <div className="flex flex-row h-16 px-2 py-2 space-x-3 border-b border-gray-700 items-center">
                             <DropdownMenu
                                 open={isDropdownOpen}
                                 onOpenChange={setIsDropdownOpen}
@@ -427,10 +427,10 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                 </DropdownMenuContent>
                             </DropdownMenu>
                             <button
-                                className={`rounded px-2 py-1
+                                className={`rounded px-2 py-1 text-sm
                                 ${
                                     activePanel === "shapes"
-                                        ? "bg-customLightGray"
+                                        ? "bg-customLightGray font-bold"
                                         : "bg-customGray"
                                 } `}
                                 onClick={() => setActivePanel("shapes")}
@@ -438,9 +438,9 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                 Shapes
                             </button>
                             <button
-                                className={`rounded px-2 py-1 ${
+                                className={`rounded px-2 py-1 text-sm ${
                                     activePanel === "composition"
-                                        ? "bg-customLightGray"
+                                        ? "bg-customLightGray font-bold"
                                         : "bg-customGray"
                                 }`}
                                 onClick={() => setActivePanel("composition")}
@@ -448,9 +448,9 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                 Composition
                             </button>
                             <button
-                                className={`rounded px-2 py-1 ${
+                                className={`rounded px-2 py-1 text-sm ${
                                     activePanel === "chat"
-                                        ? "bg-customLightGray"
+                                        ? "bg-customLightGray font-bold"
                                         : "bg-customGray"
                                 }`}
                                 onClick={() => setActivePanel("chat")}

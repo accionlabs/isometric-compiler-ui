@@ -45,7 +45,28 @@ interface ShapesPanelProps {
         isShapesLoading: boolean;
     };
 }
-const filterOptions = ["All", "2D", "3D", "Layers", "Component"];
+const filterOptionsWithColor = [
+    {
+        name: "All",
+        color: "text-white"
+    },
+    {
+        name: "2D",
+        color: "text-[#61C5FF]"
+    },
+    {
+        name: "3D",
+        color: "text-[#FC97FF]"
+    },
+    {
+        name: "Layers",
+        color: "text-[#E3FF96]"
+    },
+    {
+        name: "Component",
+        color: "text-[#FFAD00]"
+    }
+]
 const ShapesPanel: React.FC<ShapesPanelProps> = ({
     svgLibrary,
     shapesByCategory,
@@ -317,7 +338,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
     return (
         <div>
             <div className="border-t-2 border-customBorderColor">
-                <div className="p-4 bg-customGray rounded-lg">
+                <div className="py-3 px-2 bg-customGray rounded-lg">
                     <form
                         onSubmit={handleSubmit}
                         className="flex items-center bg-customLightGray rounded-md"
@@ -328,24 +349,24 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                             type="text"
                             name="search"
                             placeholder="Search"
-                            className="w-full px-4 py-2 bg-customLightGray text-white placeholder-gray-400 rounded-l-md focus:outline-none"
+                            className="w-full p-2 bg-customLightGray text-white placeholder-gray-400 rounded focus:outline-none"
                         />
                         <button type="submit" className="p-2">
                             {!inputQuery ? <Search /> : <CircleX />}
                         </button>
                     </form>
-                    <div className="flex mt-4 space-x-2 flex-wrap justify-end  ">
-                        {filterOptions.map((item) => (
+                    <div className="flex mt-3 space-x-1 flex-wrap justify-end  ">
+                        {filterOptionsWithColor.map((item) => (
                             <button
-                                key={item}
-                                className={`px-2 py-2 text-white font-medium  rounded-md focus:outline-none  ${
-                                    selectedfilter === item
-                                        ? "bg-customLightGray"
+                                key={item.name}
+                                className={`px-2 py-1 ${item.color} rounded focus:outline-none text-sm ${
+                                    selectedfilter === item.name
+                                        ? "bg-customLightGray font-bold"
                                         : "bg-customGray"
                                 }`}
-                                onClick={() => setSelectedFilter(item)}
+                                onClick={() => setSelectedFilter(item.name)}
                             >
-                                {item}
+                                {item.name}
                             </button>
                         ))}
                     </div>
@@ -365,12 +386,12 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
             </div>
             {!inputQuery && (
                 <>
-                    <div className="flex items-center justify-between bg-customGray text-white p-4  border-t-2 border-customBorderColor">
-                        <h1 className="text-lg font-medium text-white ">
+                    <div className="flex items-center justify-between bg-customGray text-white px-4 py-3  border-t-2 border-customBorderColor">
+                        <h1 className="text-lg font-bold text-white ">
                             Categories
                         </h1>
                     </div>
-                    <div className="mx-auto bg-customGray  rounded-lg shadow-lg ">
+                    <div className="mx-auto bg-customGray  rounded-lg shadow-lg">
                         <div className="h-[25vh] overflow-y-auto">
                             {renderCategories(categories ?? [])}
                         </div>
@@ -379,8 +400,8 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
             )}
             {!inputQuery && (
                 <div className="border-t-2 border-customBorderColor">
-                    <div className="flex items-center justify-between bg-customGray text-white p-4 rounded-lg ">
-                        <h1 className="text-lg font-medium text-white ">
+                    <div className="flex items-center justify-between bg-customGray text-white px-4 py-3 rounded-lg ">
+                        <h1 className="text-lg font-bold text-white ">
                             Shapes
                         </h1>
                     </div>
@@ -392,7 +413,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                                     Select any category to see shapes
                                 </h2>
                             ) : (
-                                <div className="space-5">
+                                <div className="px-4 pb-2 space-5">
                                     {isShapesLoading ? (
                                         <LoaderSkeleton />
                                     ) : shapesByCategory.length > 0 ? (
