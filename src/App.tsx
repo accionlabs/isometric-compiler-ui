@@ -471,6 +471,7 @@ const App: React.FC = () => {
                 }
                 const parsedData = JSON.parse(loadedData);
                 // Deserialize the loaded data to retrieve diagram components and library information
+
                 const deserializedComponents =
                     diagramComponentsLib.deserializeDiagramComponents(
                         parsedData.serializedDiagramComponents
@@ -480,6 +481,17 @@ const App: React.FC = () => {
                     parsedData.serializedComponentLib
                 );
 
+                const response = await getShapesByName(
+                    parsedData.serializedDiagramComponents?.map(
+                        (component: DiagramComponent) => component.shape
+                    )
+                );
+
+                if (response) {
+                    const { shapes = [], components = [] } = response;
+                    shapesLibraryManager.deserializeShapesLib(shapes);
+                    componentLibraryManager.deserializeComponentLib(components);
+                }
                 setComponents(componentLibraryManager.getAllComponents());
                 setDiagramComponents(deserializedComponents);
                 setErrorMessage(null);
