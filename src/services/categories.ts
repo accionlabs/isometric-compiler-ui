@@ -2,7 +2,7 @@
 import { Category } from "@/Types";
 import { config } from "@/config";
 
-export async function getCategories(): Promise<Category[] | undefined> {
+export async function getCategories(): Promise<Category[]> {
     const url = `${config.isometricApiUrl}/categories?format=nested`;
 
     try {
@@ -16,5 +16,6 @@ export async function getCategories(): Promise<Category[] | undefined> {
         return await response.json(); // Parse the JSON response
     } catch (error) {
         console.error("Error:", error); // Handle errors
+        return [];
     }
 }

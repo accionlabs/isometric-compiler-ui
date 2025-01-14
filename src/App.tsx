@@ -735,7 +735,6 @@ const App: React.FC = () => {
     }, [shapesAndComponentsData]);
     useEffect(() => {
         if (!searchedData?.data) return;
-        console.log("here when searched");
         setSvgLibrary(
             searchedData.data
                 ?.filter((item) => item.type !== "COMPONENT")

@@ -1,6 +1,6 @@
 // @/panels/ShapesPanel.tsx
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
     CanvasSize,
     DiagramComponent,
@@ -63,22 +63,13 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
     selected3DShape,
     diagramComponents,
     components,
-    isDataLoading,
-    activeLibrary
+    isDataLoading
 }) => {
-    const { isCategoryLoading, isSearchLoading, isShapesLoading } =
-        isDataLoading;
-    const [inputquery, setInputQuery] = useState("");
-    const [layout, setLayout] = useState("list");
-    const [layoutShapes, setLayoutShapes] = useState("grid");
+    const [inputQuery, setInputQuery] = useState("");
     const [selectedfilter, setSelectedFilter] = useState("All");
     const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
         new Set()
     );
-
-    const shouldDisable3DShapeButtons = () => {
-        return diagramComponents.length > 0 && selected3DShape === null;
-    };
 
     const isAddDisabled: Record<ElementType, boolean> = {
         "3D": diagramComponents.length > 0 && selected3DShape === null,
@@ -118,13 +109,25 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
     };
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        inputquery ? setInputQuery("") : setSearchQuery(inputquery);
+        inputQuery ? setInputQuery("") : setSearchQuery(inputQuery);
     };
+
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setSearchQuery(inputQuery);
+        }, 500);
+
+        return () => {
+            clearTimeout(handler);
+        };
+    }, [inputQuery]);
 
     const isAllOrComponent =
         selectedfilter === "All" ||
         selectedfilter.toLocaleUpperCase() === "COMPONENT";
 
+    const { isCategoryLoading, isSearchLoading, isShapesLoading } =
+        isDataLoading;
     const filteredShapes = useMemo(() => {
         const upperCaseFilter = selectedfilter.toLocaleUpperCase();
         if (upperCaseFilter === "COMPONENT") return [];
@@ -293,7 +296,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
 
     const LoaderSkeleton = () => {
         return (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4">
                 {Array.from({ length: 10 }).map((_, index) => (
                     <div
                         key={index}
@@ -320,7 +323,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                         className="flex items-center bg-customLightGray rounded-md"
                     >
                         <input
-                            value={inputquery}
+                            value={inputQuery}
                             onChange={(e) => setInputQuery(e.target.value)}
                             type="text"
                             name="search"
@@ -328,7 +331,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                             className="w-full px-4 py-2 bg-customLightGray text-white placeholder-gray-400 rounded-l-md focus:outline-none"
                         />
                         <button type="submit" className="p-2">
-                            {!inputquery ? <Search /> : <CircleX />}
+                            {!inputQuery ? <Search /> : <CircleX />}
                         </button>
                     </form>
                     <div className="flex mt-4 space-x-2 flex-wrap justify-end  ">
@@ -350,7 +353,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                 {isSearchLoading ? (
                     <LoaderSearchSkeleton />
                 ) : (
-                    inputquery.length > 0 && (
+                    inputQuery.length > 0 && (
                         <div className="bg-customDarkGray p-4 rounded-lg">
                             <h2 className="text-white text-lg mb-4">
                                 {filteredSearch?.length} Results found
@@ -360,7 +363,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                     )
                 )}
             </div>
-            {!inputquery && (
+            {!inputQuery && (
                 <>
                     <div className="flex items-center justify-between bg-customGray text-white p-4  border-t-2 border-customBorderColor">
                         <h1 className="text-lg font-medium text-white ">
@@ -374,7 +377,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                     </div>
                 </>
             )}
-            {!inputquery && (
+            {!inputQuery && (
                 <div className="border-t-2 border-customBorderColor">
                     <div className="flex items-center justify-between bg-customGray text-white p-4 rounded-lg ">
                         <h1 className="text-lg font-medium text-white ">
@@ -393,14 +396,14 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                                     {isShapesLoading ? (
                                         <LoaderSkeleton />
                                     ) : shapesByCategory.length > 0 ? (
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4">
+                                            {isAllOrComponent &&
+                                                components.map((element) =>
+                                                    renderElement(element)
+                                                )}
                                             {(selectedfilter === "All" ||
                                                 filteredShapes.length > 0) &&
                                                 filteredShapes.map((element) =>
-                                                    renderElement(element)
-                                                )}
-                                            {isAllOrComponent &&
-                                                components.map((element) =>
                                                     renderElement(element)
                                                 )}
                                         </div>

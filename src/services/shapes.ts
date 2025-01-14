@@ -4,7 +4,7 @@ import { config } from "@/config";
 import {
     segregateShapesAndComponents,
     transformToUnifiedResponse
-} from "@/lib/utils";
+} from "@/lib/serviceUtils";
 
 export async function getShapesByName(names: string[]): Promise<
     | {
