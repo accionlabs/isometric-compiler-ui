@@ -67,7 +67,7 @@ const filterOptionsWithColor = [
         name: "Component",
         color: "text-[#FFAD00]"
     }
-]
+];
 const ShapesPanel: React.FC<ShapesPanelProps> = ({
     svgLibrary,
     shapesByCategory,
@@ -205,7 +205,10 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                     <div className="flex items-center space-x-1">
                         {category.children?.length > 0 && (
                             <button
-                                onClick={() => toggleCategory(category._id)}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleCategory(category._id);
+                                }}
                                 className={`p-2 rounded  ${
                                     activeCategory === category._id
                                         ? "bg-customLightGray"
@@ -235,7 +238,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
 
                 {expandedCategories.has(category._id) &&
                     category.children.length > 0 && (
-                        <div className="ml-6 mt-2 border-l-2 border-gray-300 pl-4">
+                        <div className="ml-6 mt-2  border-gray-300 pl-4">
                             {renderCategories(category.children, level + 1)}
                         </div>
                     )}
@@ -366,7 +369,9 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                         {filterOptionsWithColor.map((item) => (
                             <button
                                 key={item.name}
-                                className={`px-2 py-1 ${item.color} rounded focus:outline-none text-sm ${
+                                className={`px-2 py-1 ${
+                                    item.color
+                                } rounded focus:outline-none text-sm ${
                                     selectedfilter === item.name
                                         ? "bg-customLightGray font-bold"
                                         : "bg-customGray"

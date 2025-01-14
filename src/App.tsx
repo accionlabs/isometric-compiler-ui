@@ -727,12 +727,14 @@ const App: React.FC = () => {
 
         loadComponentSchema();
     }, [schemaUrl]);
+
     useEffect(() => {
         if (!shapesAndComponentsData) return;
         const { shapes = [] } = shapesAndComponentsData;
 
         setSvgLibrary(shapes);
     }, [shapesAndComponentsData]);
+
     useEffect(() => {
         if (!searchedData?.data) return;
         setSvgLibrary(
