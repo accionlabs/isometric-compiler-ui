@@ -348,9 +348,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
         <div>
             <div className="border-t-2 border-customBorderColor">
                 <div className="py-3 px-2 bg-customGray rounded-lg">
-                    <div
-                        className="flex items-center bg-customLightGray rounded-md"
-                    >
+                    <div className="flex items-center bg-customLightGray rounded-md">
                         <input
                             value={inputQuery}
                             onChange={(e) => setInputQuery(e.target.value)}
@@ -402,7 +400,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                         </h1>
                     </div>
                     <div className="mx-auto bg-customGray  rounded-lg shadow-lg">
-                        <div className="max-h-36 overflow-y-auto">
+                        <div className="max-h-[28vh] overflow-y-auto">
                             {renderCategories(categories ?? [])}
                         </div>
                     </div>
@@ -417,7 +415,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                     </div>
 
                     <div className="mx-auto bg-customGray  rounded-lg shadow-lg ">
-                        <div className="flex h-[40vh] overflow-y-auto ">
+                        <div className="flex h-[45vh] overflow-y-auto ">
                             {!activeCategory ? (
                                 <h2 className="p-4 text-white text-sm">
                                     Select any category to see shapes
@@ -444,7 +442,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                                             No shapes available in this category
                                         </div>
                                     )}
-                                    <div className="h-7"></div>
+                                    {/* <div className="h-7"></div> */}
                                 </div>
                             )}
                         </div>
