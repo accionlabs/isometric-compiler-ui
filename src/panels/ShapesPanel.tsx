@@ -189,12 +189,11 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
     );
 
     const renderCategories = (categories: Category[], level = 0) => {
-        console.log("categories", categories);
         return categories.map((category) => (
             <div key={category._id}>
                 <div
                     onClick={() => onCategoryChange(category._id)}
-                    className={`text-sm flex items-center justify-between bg-customGray text-white py-1 px-2 hover:bg-customLightGray rounded-lg ${
+                    className={`text-sm flex items-center justify-between bg-customGray text-white py-1 px-2 hover:bg-customLightGray ${
                         activeCategory === category._id
                             ? "bg-customLightGray"
                             : ""

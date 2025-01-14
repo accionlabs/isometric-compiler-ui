@@ -3,6 +3,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { ToggleGroup, ToggleGroupOption } from '../components/ui/ToggleGroup';
 import { RadixSelect } from '../components/ui/Select';
+import { Top, FrontLeft, FrontRight } from '@/components/ui/IconGroup';
 
 interface AttachmentOptionsPanelProps {
     selectedPosition: string;
@@ -22,9 +23,9 @@ const AttachmentOptionsPanel: React.FC<AttachmentOptionsPanelProps> = ({
     const [filteredAttachmentPoints, setFilteredAttachmentPoints] = useState<string[]>([]);
 
     const positionOptions: ToggleGroupOption[] = [
-        { value: 'top', label: 'Top' },
-        { value: 'front-left', label: 'Front Left' },
-        { value: 'front-right', label: 'Front Right' },
+        { value: 'top', label: 'Top', icon: <Top /> },
+        { value: 'front-left', label: 'Front Left', icon: <FrontLeft /> },
+        { value: 'front-right', label: 'Front Right', icon: <FrontRight /> },
     ];
 
     useEffect(() => {
@@ -52,8 +53,8 @@ const AttachmentOptionsPanel: React.FC<AttachmentOptionsPanelProps> = ({
     };
 
     return (
-        <div className="bg-gray-800 p-4 shadow-md w-full">
-            <h3 className="text-lg font-semibold mb-2">Attachment Options</h3>
+        <div className="bg-customGray px-4 py-3 shadow-md w-full">
+            {/* <h3 className="text-lg font-semibold mb-2">Attachment Options</h3> */}
             <div className="flex items-center space-x-4">
                 <div className="flex-grow">
                     <ToggleGroup

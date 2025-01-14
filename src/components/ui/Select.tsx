@@ -23,9 +23,9 @@ export const RadixSelect: React.FC<SelectProps> = ({ options, onChange, placehol
       <Select.Trigger 
         className={cn(
           "inline-flex items-center justify-between rounded px-3 py-2 text-sm",
-          "leading-none h-10 gap-1 bg-gray-700 text-white",
+          "leading-none h-10 gap-1 bg-customLightGray text-white",
           "shadow-md hover:bg-gray-600 focus:outline-none focus:ring-2",
-          "focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900",
+          " focus:ring-offset-2 focus:ring-offset-gray-900",
           "w-full"
         )}
       >
@@ -37,7 +37,7 @@ export const RadixSelect: React.FC<SelectProps> = ({ options, onChange, placehol
       <Select.Portal>
         <Select.Content 
           className={cn(
-            "overflow-hidden bg-gray-800 rounded-md shadow-lg",
+            "overflow-hidden bg-customGray rounded-md shadow-lg",
             "border border-gray-700",
             "z-50" // Ensure the content is above other elements
           )}
@@ -48,7 +48,7 @@ export const RadixSelect: React.FC<SelectProps> = ({ options, onChange, placehol
           avoidCollisions={true}
           style={{ width: 'var(--radix-select-trigger-width)' }} // Match trigger width
         >
-          <Select.ScrollUpButton className="flex items-center justify-center h-6 bg-gray-800 text-gray-400 cursor-default">
+          <Select.ScrollUpButton className="flex items-center justify-center h-6 bg-customGray text-gray-400 cursor-default">
             <ChevronUpIcon />
           </Select.ScrollUpButton>
           <Select.Viewport className="p-1 max-h-60 overflow-y-auto">
@@ -59,7 +59,7 @@ export const RadixSelect: React.FC<SelectProps> = ({ options, onChange, placehol
                 className={cn(
                   "text-sm leading-none text-gray-200 rounded flex items-center",
                   "h-8 pr-8 pl-6 relative select-none",
-                  "data-[highlighted]:outline-none data-[highlighted]:bg-blue-600",
+                  "data-[highlighted]:outline-none data-[highlighted]:bg-customLightGray",
                   "data-[highlighted]:text-white cursor-pointer"
                 )}
               >
@@ -70,7 +70,7 @@ export const RadixSelect: React.FC<SelectProps> = ({ options, onChange, placehol
               </Select.Item>
             ))}
           </Select.Viewport>
-          <Select.ScrollDownButton className="flex items-center justify-center h-6 bg-gray-800 text-gray-400 cursor-default">
+          <Select.ScrollDownButton className="flex items-center justify-center h-6 bg-customGray text-gray-400 cursor-default">
             <ChevronDownIcon />
           </Select.ScrollDownButton>
         </Select.Content>

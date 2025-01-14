@@ -518,9 +518,9 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                         </div>
                     </div>
                 )}
-                <div className="flex-grow flex flex-col mx-2  relative">
+                <div className="flex-grow flex flex-col  relative">
                     {/* Heading */}
-                    <h2 className="text-xl h-14 font-semibold bg-customGray rounded p-4 z-10">
+                    <h2 className="text-xl h-14 font-semibold bg-customGray p-4 z-10">
                         Composed SVG
                     </h2>
 

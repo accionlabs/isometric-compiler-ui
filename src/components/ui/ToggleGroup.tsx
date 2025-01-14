@@ -7,6 +7,7 @@ import { cn } from "../../lib/utils";
 export interface ToggleGroupOption {
   value: string;
   label: string;
+  icon?: React.ReactNode;
 }
 
 interface ToggleGroupProps {
@@ -36,17 +37,20 @@ const ToggleGroup = React.forwardRef<
         value={option.value}
         className={cn(
           "flex-1 py-2 px-4 rounded text-sm font-medium transition-all duration-200",
-          "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500",
+          "focus:outline-none focus:ring-2 focus:ring-offset-2",
           "border-2",
           value === option.value
-            ? "bg-blue-600 text-white border-white shadow-inner"
-            : "bg-gray-700 text-gray-200 border-gray-500 hover:bg-gray-600 hover:border-gray-400",
+            ? " text-white border-white shadow-inner"
+            : "bg-customLightGray text-gray-200 border-gray-500 hover:bg-gray-600 hover:border-gray-400",
           value === option.value
             ? "transform scale-105"
             : "transform scale-100"
         )}
       >
-        {option.label}
+        <div className='flex gap-3 justify-center items-center'>
+          <div>{option.icon}</div>
+          <div>{option.label}</div>
+        </div>
       </ToggleGroupPrimitive.Item>
     ))}
   </ToggleGroupPrimitive.Root>
