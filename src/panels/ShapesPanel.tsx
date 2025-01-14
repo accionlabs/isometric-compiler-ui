@@ -345,7 +345,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
             </div>
         );
     };
-
+    console.log("shapesByCategory", shapesByCategory);
     return (
         <div>
             <div className="border-t-2 border-customBorderColor">
@@ -429,7 +429,8 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                                 <div className="px-4 pb-2 space-5">
                                     {isShapesLoading ? (
                                         <LoaderSkeleton />
-                                    ) : shapesByCategory.length > 0 ? (
+                                    ) : shapesByCategory.length > 0 ||
+                                      components.length > 0 ? (
                                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4">
                                             {isAllOrComponent &&
                                                 components.map((element) =>

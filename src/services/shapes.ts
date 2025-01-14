@@ -89,3 +89,36 @@ export async function getsearchedShapes(query: string): Promise<
         console.error("Error:", error);
     }
 }
+
+export async function saveComponent(payload: Component) {
+    const body = {
+        name: payload.name,
+        type: "COMPONENT",
+        attachTo: "",
+        svgContent: payload.svgContent,
+        version: "1.0.0",
+        category: "67853d5f4c7dce63e7c20228",
+        metadata: {
+            description: payload.description
+        },
+        diagram_components: payload.diagramComponents,
+        attachment_points: payload.attachmentPoints
+    };
+
+    const url = `${config.isometricApiUrl}/shapes`;
+    try {
+        const response = await fetch(url, {
+            method: "POST",
+            body: JSON.stringify(body),
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return await response.json(); // Parse the JSON response
+    } catch (error) {
+        console.error("Error:", error);
+    }
+}
