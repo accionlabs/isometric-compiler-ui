@@ -2,10 +2,13 @@
 
 import { config } from "@/config";
 import { v4 as uuidv4 } from "uuid";
+import { getShapesByName } from "./shapes";
+import { shapesLibraryManager } from "../lib/shapesLib";
+import { componentLibraryManager } from "../lib/componentLib";
 const newUUID = uuidv4();
 
 export async function sendChatRequest(query: string) {
-    const url = `${config.gatewayApiUrl}/document/isometric?uuid=${newUUID}`;
+    const url = `${config.gatewayApiUrl}/document/isometric/v2?uuid=${newUUID}`;
 
     try {
         const response = await fetch(url, {
@@ -21,7 +24,18 @@ export async function sendChatRequest(query: string) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        return await response.json(); // Parse the JSON response
+        const res = await response.json(); // Parse the JSON response
+        if (
+            res.action?.shapeName &&
+            res.action?.action === "add"
+        ) {
+            const shapes = await getShapesByName([res.action.shapeName]);
+            if(shapes){
+                shapesLibraryManager.deserializeShapesLib(shapes.shapes);
+                componentLibraryManager.deserializeComponentLib(shapes.components);
+            }
+        }
+        return res;
     } catch (error) {
         console.error("Error:", error); // Handle errors
     }
