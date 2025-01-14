@@ -270,7 +270,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
 
     const SearchResults = ({ results }: { results: UnifiedElement[] }) => {
         return (
-            <ul className="h-[74vh] overflow-y-scroll">
+            <ul className="h-[74vh] scrollbar-hide overflow-y-scroll">
                 {results.map((result, index) => (
                     <li
                         className="flex items-center p-4 rounded-md gap-4 hover:bg-customLightGray cursor-pointer"
@@ -327,7 +327,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
 
     const LoaderSkeleton = () => {
         return (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 scrollbar-hide sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4">
                 {Array.from({ length: 12 }).map((_, index) => (
                     <div
                         key={index}
