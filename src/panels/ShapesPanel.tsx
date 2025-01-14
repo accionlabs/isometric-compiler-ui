@@ -109,7 +109,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
     };
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        inputQuery ? setInputQuery("") : setSearchQuery(inputQuery);
+        setInputQuery("");
     };
 
     useEffect(() => {
