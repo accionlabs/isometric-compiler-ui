@@ -9,7 +9,7 @@ import {
     Category,
     UnifiedElement
 } from "../Types";
-import { CircleX, Search } from "lucide-react";
+import { CircleX, Search, ChevronDown, ChevronRight } from "lucide-react";
 
 import SVGPreview from "../components/ui/SVGPreview";
 import { componentLibraryManager } from "../lib/componentLib";
@@ -215,9 +215,11 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                                         : ""
                                 }`}
                             >
-                                {expandedCategories.has(category._id)
-                                    ? "▼"
-                                    : "▶"}
+                                {expandedCategories.has(category._id) ? (
+                                    <ChevronDown />
+                                ) : (
+                                    <ChevronRight />
+                                )}
                             </button>
                         )}
                         <div
@@ -324,7 +326,6 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
             ))}
         </ul>
     );
-
     const LoaderSkeleton = () => {
         return (
             <div className="grid grid-cols-1 scrollbar-hide sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4">
