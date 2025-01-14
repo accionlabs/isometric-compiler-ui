@@ -742,10 +742,6 @@ const App: React.FC = () => {
         );
     }, [searchedData?.data]);
 
-    // useEffect(() => {
-    //     setSvgLibrary(shapesLibraryManager.getAllShapes());
-    //     setComponents(componentLibraryManager.getAllComponents());
-    // }, []);
     // Load components and shapes library on mount
     // useEffect(() => {
     // load components on mount

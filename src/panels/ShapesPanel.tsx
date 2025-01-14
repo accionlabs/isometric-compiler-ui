@@ -13,6 +13,7 @@ import { CircleX, Search } from "lucide-react";
 
 import SVGPreview from "../components/ui/SVGPreview";
 import { componentLibraryManager } from "../lib/componentLib";
+import { Folder, RootFolder } from "@/components/ui/IconGroup";
 
 type ElementType = "3D" | "2D" | "LAYERS" | "COMPONENT";
 
@@ -188,16 +189,28 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
     );
 
     const renderCategories = (categories: Category[], level = 0) => {
+        console.log("categories", categories);
         return categories.map((category) => (
             <div key={category._id}>
-                <div className="flex items-center justify-between bg-customGray text-white py-1 px-2">
+                <div
+                    onClick={() => onCategoryChange(category._id)}
+                    className={`text-sm flex items-center justify-between bg-customGray text-white py-1 px-2 hover:bg-customLightGray rounded-lg ${
+                        activeCategory === category._id
+                            ? "bg-customLightGray"
+                            : ""
+                    }`}
+                >
                     {/* Left Section: Icon and Text */}
 
                     <div className="flex items-center space-x-1">
                         {category.children?.length > 0 && (
                             <button
                                 onClick={() => toggleCategory(category._id)}
-                                className="p-2 bg-customGray rounded hover:bg-gray-600"
+                                className={`p-2 rounded  ${
+                                    activeCategory === category._id
+                                        ? "bg-customLightGray"
+                                        : ""
+                                }`}
                             >
                                 {expandedCategories.has(category._id)
                                     ? "▼"
@@ -205,15 +218,9 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                             </button>
                         )}
                         <div
-                            onClick={() => onCategoryChange(category._id)}
-                            className={`flex items-center space-x-3 hover:bg-customLightGray p-2 ${
-                                activeCategory === category._id
-                                    ? "bg-customLightGray"
-                                    : ""
-                            } rounded-lg cursor-pointer`}
+                            className={`flex items-center space-x-3 hover:bg-customLightGray p-2  rounded-lg cursor-pointer`}
                         >
-                            {/* Folder Icon */}
-                            {/* <Folder className="p-2 rounded" size={"40px"} /> */}
+                            {category.parent ? <Folder /> : <RootFolder />}
 
                             {/* Title and Subtitle */}
                             <div>
@@ -318,7 +325,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
     const LoaderSkeleton = () => {
         return (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4">
-                {Array.from({ length: 10 }).map((_, index) => (
+                {Array.from({ length: 12 }).map((_, index) => (
                     <div
                         key={index}
                         className="flex flex-col p-1 rounded-lg hover:bg-customLightGray mb-2 relative aspect-[3/2] transition-all hover:scale-105 focus:outline-none  animate-pulse"
