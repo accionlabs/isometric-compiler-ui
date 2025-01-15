@@ -249,6 +249,23 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
 
     const renderElement = (element: Shape | Component) => {
         const elementType = "type" in element ? element.type : "COMPONENT";
+        let elementTypeColor = "";
+        switch (elementType) {
+            case "2D":
+                elementTypeColor = "text-custom2D";
+                break;
+            case "3D":
+                elementTypeColor = "text-custom3D";
+                break;
+            case "LAYERS":
+                elementTypeColor = "text-customLayers";
+                break;
+            case "COMPONENT":
+                elementTypeColor = "text-customComponent";
+                break;
+            default:
+                elementTypeColor = "text-white";
+        }
         return (
             <button
                 key={element.name + element.version}
@@ -264,7 +281,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                 <div className="text-white text-sm overflow-hidden text-ellipsis whitespace-pre-line line-clamp-1">
                     {element.name}
                 </div>
-                <div className="text-[#00BFFF] text-[13px]">{elementType}</div>
+                <div className={`${elementTypeColor} text-xs capitalize`}>{(elementType == '2D' || elementType === '3D') ? elementType : elementType.toLocaleLowerCase()}</div>
             </button>
         );
     };
