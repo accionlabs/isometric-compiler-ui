@@ -275,18 +275,19 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                 disabled={isAddDisabled[elementType]}
                 onClick={(e) => {
                     e.stopPropagation();
-                    setCurrentShapeDetails(element);
+                    // setCurrentShapeDetails(element);
+                    addActionFor[elementType](element);
                     console.log("clicked");
                 }}
                 className="flex flex-col p-1 rounded-lg hover:bg-customLightGray mb-2 relative aspect-[3/2] transition-all hover:scale-105 focus:outline-none disabled:opacity-80 disabled:cursor-not-allowed"
             >
                 {renderPreview(element)}
-                <button onClick={(e) => {
+                {/* <button onClick={(e) => {
                     e.stopPropagation();
                     addActionFor[elementType](element);
                 }}>
                     <CirclePlus className="text-white w-6 h-6" />
-                </button>
+                </button> */}
 
                 <div className="text-white text-sm overflow-hidden text-ellipsis whitespace-pre-line line-clamp-1">
                     {element.name}
