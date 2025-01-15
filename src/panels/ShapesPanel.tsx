@@ -516,7 +516,8 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                             Shapes
                         </h1>
                     </div>
-                    { !currentShapeDetails ? renderShapeList() : ShapeDetail(currentShapeDetails)}
+                    {renderShapeList()}
+                    {/* { !currentShapeDetails ? renderShapeList() : ShapeDetail(currentShapeDetails)} */}
                    
                 </div>
             )}
