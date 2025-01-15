@@ -9,11 +9,12 @@ import {
     Category,
     UnifiedElement
 } from "../Types";
-import { CircleX, Search, ChevronDown, ChevronRight } from "lucide-react";
+import { CircleX, Search, ChevronDown, ChevronRight, CirclePlus } from "lucide-react";
 
 import SVGPreview from "../components/ui/SVGPreview";
 import { componentLibraryManager } from "../lib/componentLib";
 import { Folder, RootFolder } from "@/components/ui/IconGroup";
+import { set } from "yaml/dist/schema/yaml-1.1/set";
 
 type ElementType = "3D" | "2D" | "LAYERS" | "COMPONENT";
 
@@ -92,6 +93,8 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
     const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
         new Set()
     );
+
+    const [currentShapeDetails, setCurrentShapeDetails] = useState<Shape | Component | null>(null);
 
     const isAddDisabled: Record<ElementType, boolean> = {
         "3D": diagramComponents.length > 0 && selected3DShape === null,
@@ -249,32 +252,56 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
 
     const renderElement = (element: Shape | Component) => {
         const elementType = "type" in element ? element.type : "COMPONENT";
+        let elementTypeColor = "";
+        switch (elementType) {
+            case "2D":
+                elementTypeColor = "text-custom2D";
+                break;
+            case "3D":
+                elementTypeColor = "text-custom3D";
+                break;
+            case "LAYERS":
+                elementTypeColor = "text-customLayers";
+                break;
+            case "COMPONENT":
+                elementTypeColor = "text-customComponent";
+                break;
+            default:
+                elementTypeColor = "text-white";
+        }
         return (
             <button
                 key={element.name + element.version}
                 disabled={isAddDisabled[elementType]}
                 onClick={(e) => {
                     e.stopPropagation();
-                    addActionFor[elementType](element);
+                    setCurrentShapeDetails(element);
+                    console.log("clicked");
                 }}
                 className="flex flex-col p-1 rounded-lg hover:bg-customLightGray mb-2 relative aspect-[3/2] transition-all hover:scale-105 focus:outline-none disabled:opacity-80 disabled:cursor-not-allowed"
             >
                 {renderPreview(element)}
+                <button onClick={(e) => {
+                    e.stopPropagation();
+                    addActionFor[elementType](element);
+                }}>
+                    <CirclePlus className="text-white w-6 h-6" />
+                </button>
 
                 <div className="text-white text-sm overflow-hidden text-ellipsis whitespace-pre-line line-clamp-1">
                     {element.name}
                 </div>
-                <div className="text-[#00BFFF] text-[13px]">{elementType}</div>
+                <div className={`${elementTypeColor} text-xs capitalize`}>{(elementType == '2D' || elementType === '3D') ? elementType : elementType.toLocaleLowerCase()}</div>
             </button>
         );
     };
 
     const SearchResults = ({ results }: { results: UnifiedElement[] }) => {
         return (
-            <ul className="h-[74vh] scrollbar-hide overflow-y-scroll">
+            <ul className="h-[74vh] scrollbar-hide overflow-y-scroll border-t-2 border-customBorderColor">
                 {results.map((result, index) => (
                     <li
-                        className="flex items-center p-4 rounded-md gap-4 hover:bg-customLightGray cursor-pointer"
+                        className="flex items-center px-4 py-3 rounded-md gap-4 hover:bg-customLightGray cursor-pointer"
                         key={result.name + result.version}
                         // disabled={isAddDisabled[result.type]}
                         onClick={(e) => {
@@ -286,14 +313,14 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                             {renderPreview(result as Shape | Component)}
                         </div>
                         <div>
-                            <h3 className="text-white font-semibold text-lg">
+                            <div className="text-white font-semibold">
                                 {result.name}
-                            </h3>
-                            <p className="text-gray-400 text-sm">
+                            </div>
+                            <p className="text-gray-400 text-xs">
                                 {result.path}
                             </p>
                             <span
-                                className={`mt-2 inline-block text-sm font-medium ${"text-blue-400"}`}
+                                className={`mt-2 inline-block text-xs font-medium ${"text-blue-400"}`}
                             >
                                 {"type" in result ? result.type : "Component"}
                             </span>
@@ -344,6 +371,82 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
             </div>
         );
     };
+
+    const renderShapeList = () => { 
+        return (
+            <div className="mx-auto bg-customGray  rounded-lg shadow-lg ">
+            <div className="flex h-[45vh] overflow-y-auto ">
+                {!activeCategory ? (
+                    <h2 className="p-4 text-white text-sm">
+                        Select any category to see shapes
+                    </h2>
+                ) : (
+                    <div className="px-4 pb-2 space-5">
+                        {isShapesLoading ? (
+                            <LoaderSkeleton />
+                        ) : shapesByCategory.length > 0 ||
+                          components.length > 0 ? (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4">
+                                {isAllOrComponent &&
+                                    components.map((element) =>
+                                        renderElement(element)
+                                    )}
+                                {(selectedfilter === "All" ||
+                                    filteredShapes.length > 0) &&
+                                    filteredShapes.map((element) =>
+                                        renderElement(element)
+                                    )}
+                            </div>
+                        ) : (
+                            <div className="p-4 text-white text-sm">
+                                No shapes available in this category
+                            </div>
+                        )}
+                        {/* <div className="h-7"></div> */}
+                    </div>
+                )}
+            </div>
+        </div>
+        )
+    }
+
+    const ShapeDetail = (shape: Shape | Component)  => {
+        console.log("shape", shape);
+        const elementType = "type" in shape ? shape.type : "COMPONENT";
+        return (
+            <div className="flex gap-2 bg-customLightGray text-white rounded-lg shadow-md p-4 max-w-sm">
+              {/* Image Section */}
+              <div className="flex justify-center">
+                <div className="w-24 h-24 bg-indigo-300 rounded-md flex items-center justify-center">
+                    {renderPreview(shape)}
+                </div>
+              </div>
+              <div className="flex flex-col gap-2">
+                <div className="flex justify-center items-center">
+                    <span className="text-sm">Shape Name:</span>
+                    <span className="text-xs text-customTextSecondary">{shape.name}</span>
+                </div>
+                <div className="flex">
+                    <span className="text-sm">Type:</span>
+                    <span className="text-xs text-customTextSecondary">{elementType}</span>
+                </div>
+                <div className="flex">
+                    <span className="text-sm">Category:</span>
+                    <span className="text-xs text-customTextSecondary">{shape.path}</span>
+                </div>
+                <div className="flex">
+                    <span className="text-sm">Version:</span>
+                    <span className="text-xs text-customTextSecondary">{shape.version}</span>
+                </div>
+                <div className="flex">
+                    <span className="text-sm">Description:</span>
+                    <span className="text-xs text-customTextSecondary">{shape.description}</span>
+                </div>
+              </div>
+            </div>
+          );
+        
+    }
     return (
         <div>
             <div className="border-t-2 border-customBorderColor">
@@ -383,8 +486,8 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                     <LoaderSearchSkeleton />
                 ) : (
                     inputQuery.length > 0 && (
-                        <div className="bg-customDarkGray p-4 rounded-lg">
-                            <h2 className="text-white text-lg mb-4">
+                        <div className="bg-customDarkGray">
+                            <h2 className="text-white p-2 text-[16px]">
                                 {filteredSearch?.length} Results found
                             </h2>
                             <SearchResults results={filteredSearch ?? []} />
@@ -413,40 +516,9 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                             Shapes
                         </h1>
                     </div>
-
-                    <div className="mx-auto bg-customGray  rounded-lg shadow-lg ">
-                        <div className="flex h-[45vh] overflow-y-auto ">
-                            {!activeCategory ? (
-                                <h2 className="p-4 text-white text-sm">
-                                    Select any category to see shapes
-                                </h2>
-                            ) : (
-                                <div className="px-4 pb-2 space-5">
-                                    {isShapesLoading ? (
-                                        <LoaderSkeleton />
-                                    ) : shapesByCategory.length > 0 ||
-                                      components.length > 0 ? (
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4">
-                                            {isAllOrComponent &&
-                                                components.map((element) =>
-                                                    renderElement(element)
-                                                )}
-                                            {(selectedfilter === "All" ||
-                                                filteredShapes.length > 0) &&
-                                                filteredShapes.map((element) =>
-                                                    renderElement(element)
-                                                )}
-                                        </div>
-                                    ) : (
-                                        <div className="p-4 text-white text-sm">
-                                            No shapes available in this category
-                                        </div>
-                                    )}
-                                    {/* <div className="h-7"></div> */}
-                                </div>
-                            )}
-                        </div>
-                    </div>
+                    {renderShapeList()}
+                    {/* { !currentShapeDetails ? renderShapeList() : ShapeDetail(currentShapeDetails)} */}
+                   
                 </div>
             )}
         </div>
