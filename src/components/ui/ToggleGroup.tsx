@@ -37,11 +37,9 @@ const ToggleGroup = React.forwardRef<
         value={option.value}
         className={cn(
           "flex-1 py-2 px-4 rounded text-sm font-medium transition-all duration-200",
-          "focus:outline-none focus:ring-2 focus:ring-offset-2",
-          "border-2",
           value === option.value
-            ? " text-white border-white shadow-inner"
-            : "bg-customLightGray text-gray-200 border-gray-500 hover:bg-gray-600 hover:border-gray-400",
+            ? " text-white shadow-inner bg-customLightGray"
+            : " text-gray-200 hover:bg-customLightGray ",
           value === option.value
             ? "transform scale-105"
             : "transform scale-100"

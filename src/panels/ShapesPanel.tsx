@@ -271,10 +271,10 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
 
     const SearchResults = ({ results }: { results: UnifiedElement[] }) => {
         return (
-            <ul className="h-[74vh] scrollbar-hide overflow-y-scroll">
+            <ul className="h-[74vh] scrollbar-hide overflow-y-scroll border-t-2 border-customBorderColor">
                 {results.map((result, index) => (
                     <li
-                        className="flex items-center p-4 rounded-md gap-4 hover:bg-customLightGray cursor-pointer"
+                        className="flex items-center px-4 py-3 rounded-md gap-4 hover:bg-customLightGray cursor-pointer"
                         key={result.name + result.version}
                         // disabled={isAddDisabled[result.type]}
                         onClick={(e) => {
@@ -286,14 +286,14 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                             {renderPreview(result as Shape | Component)}
                         </div>
                         <div>
-                            <h3 className="text-white font-semibold text-lg">
+                            <div className="text-white font-semibold">
                                 {result.name}
-                            </h3>
-                            <p className="text-gray-400 text-sm">
+                            </div>
+                            <p className="text-gray-400 text-xs">
                                 {result.path}
                             </p>
                             <span
-                                className={`mt-2 inline-block text-sm font-medium ${"text-blue-400"}`}
+                                className={`mt-2 inline-block text-xs font-medium ${"text-blue-400"}`}
                             >
                                 {"type" in result ? result.type : "Component"}
                             </span>
@@ -383,8 +383,8 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                     <LoaderSearchSkeleton />
                 ) : (
                     inputQuery.length > 0 && (
-                        <div className="bg-customDarkGray p-4 rounded-lg">
-                            <h2 className="text-white text-lg mb-4">
+                        <div className="bg-customDarkGray">
+                            <h2 className="text-white p-2 text-[16px]">
                                 {filteredSearch?.length} Results found
                             </h2>
                             <SearchResults results={filteredSearch ?? []} />
