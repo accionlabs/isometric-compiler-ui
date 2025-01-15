@@ -275,18 +275,19 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                 disabled={isAddDisabled[elementType]}
                 onClick={(e) => {
                     e.stopPropagation();
-                    setCurrentShapeDetails(element);
+                    // setCurrentShapeDetails(element);
+                    addActionFor[elementType](element);
                     console.log("clicked");
                 }}
                 className="flex flex-col p-1 rounded-lg hover:bg-customLightGray mb-2 relative aspect-[3/2] transition-all hover:scale-105 focus:outline-none disabled:opacity-80 disabled:cursor-not-allowed"
             >
                 {renderPreview(element)}
-                <button onClick={(e) => {
+                {/* <button onClick={(e) => {
                     e.stopPropagation();
                     addActionFor[elementType](element);
                 }}>
                     <CirclePlus className="text-white w-6 h-6" />
-                </button>
+                </button> */}
 
                 <div className="text-white text-sm overflow-hidden text-ellipsis whitespace-pre-line line-clamp-1">
                     {element.name}
@@ -375,7 +376,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
     const renderShapeList = () => { 
         return (
             <div className="mx-auto bg-customGray  rounded-lg shadow-lg ">
-            <div className="flex h-[45vh] overflow-y-auto ">
+            <div className="flex h-[45vh] overflow-y-auto scrollbar-thin scrollbar-thumb-customLightGray scrollbar-track-transparent scrollbar-thumb-rounded custom-scrollbar">
                 {!activeCategory ? (
                     <h2 className="p-4 text-white text-sm">
                         Select any category to see shapes
@@ -503,7 +504,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                         </h1>
                     </div>
                     <div className="mx-auto bg-customGray  rounded-lg shadow-lg">
-                        <div className="max-h-[28vh] overflow-y-auto">
+                        <div className="max-h-[28vh] overflow-y-auto scrollbar-thin scrollbar-thumb-customLightGray scrollbar-track-transparent scrollbar-thumb-rounded custom-scrollbar">
                             {renderCategories(categories ?? [])}
                         </div>
                     </div>
