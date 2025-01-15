@@ -11,6 +11,7 @@ module.exports = {
                 custom3D: '#FC97FF',
                 customLayer: '#E3FF96',
                 customComponent: '#FFAD00',
+                customTextSecondary: '#BFBFBF'
             },
             borderRadius: {
                 lg: "var(--radius)",
