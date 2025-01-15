@@ -40,3 +40,14 @@
 .read-the-docs {
   color: #888;
 }
+
+/* Hide the top and bottom arrows of the scrollbar */
+.custom-scrollbar::-webkit-scrollbar-button {
+  display: none;
+}
+
+/* Hide the scrollbar track (background), keeping only the thumb visible */
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
