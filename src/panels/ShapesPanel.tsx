@@ -383,7 +383,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
     const renderShapeList = () => {
         return (
             <div className="mx-auto bg-customGray  rounded-lg shadow-lg ">
-                <div className="flex h-[45vh] overflow-y-auto scrollbar-thin scrollbar-thumb-customLightGray scrollbar-track-transparent scrollbar-thumb-rounded custom-scrollbar">
+                <div className="flex h-[28vh] overflow-y-auto scrollbar-thin scrollbar-thumb-customLightGray scrollbar-track-transparent scrollbar-thumb-rounded custom-scrollbar">
                     {!activeCategory ? (
                         <h2 className="p-4 text-white text-sm">
                             Select any category to see shapes
@@ -546,8 +546,8 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                     {renderShapeList()}
                 </div>
             )}
-            {/* {currentShapeDetails &&
-                renderShapeDetails(currentShapeDetails as Shape | Component)} */}
+            {currentShapeDetails &&
+                renderShapeDetails(currentShapeDetails as Shape | Component)}
         </div>
     );
 };
