@@ -9,12 +9,11 @@ import {
     Category,
     UnifiedElement
 } from "../Types";
-import { CircleX, Search, ChevronDown, ChevronRight, CirclePlus } from "lucide-react";
+import { CircleX, Search, ChevronDown, ChevronRight } from "lucide-react";
 
 import SVGPreview from "../components/ui/SVGPreview";
 import { componentLibraryManager } from "../lib/componentLib";
 import { Folder, RootFolder } from "@/components/ui/IconGroup";
-import { set } from "yaml/dist/schema/yaml-1.1/set";
 
 type ElementType = "3D" | "2D" | "LAYERS" | "COMPONENT";
 
@@ -54,19 +53,19 @@ const filterOptionsWithColor = [
     },
     {
         name: "2D",
-        color: "text-[#61C5FF]"
+        color: "text-custom2D"
     },
     {
         name: "3D",
-        color: "text-[#FC97FF]"
+        color: "text-custom3D"
     },
     {
         name: "Layers",
-        color: "text-[#E3FF96]"
+        color: "text-customLayer"
     },
     {
         name: "Component",
-        color: "text-[#FFAD00]"
+        color: "text-customComponent"
     }
 ];
 const ShapesPanel: React.FC<ShapesPanelProps> = ({
@@ -89,13 +88,14 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
     isDataLoading
 }) => {
     const [inputQuery, setInputQuery] = useState("");
-    const [selectedfilter, setSelectedFilter] = useState("All");
+    const [selectedFilter, setselectedFilter] = useState("All");
     const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
         new Set()
     );
 
-    const [currentShapeDetails, setCurrentShapeDetails] = useState<Shape | Component | null>(null);
-
+    const [currentShapeDetails, setCurrentShapeDetails] = useState<
+        Shape | Component | null
+    >(null);
     const isAddDisabled: Record<ElementType, boolean> = {
         "3D": diagramComponents.length > 0 && selected3DShape === null,
         LAYERS: diagramComponents.length > 0 && selected3DShape === null,
@@ -139,6 +139,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
 
     useEffect(() => {
         const handler = setTimeout(() => {
+            setselectedFilter("All");
             setSearchQuery(inputQuery);
         }, 500);
 
@@ -148,13 +149,13 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
     }, [inputQuery]);
 
     const isAllOrComponent =
-        selectedfilter === "All" ||
-        selectedfilter.toLocaleUpperCase() === "COMPONENT";
+        selectedFilter === "All" ||
+        selectedFilter.toLocaleUpperCase() === "COMPONENT";
 
     const { isCategoryLoading, isSearchLoading, isShapesLoading } =
         isDataLoading;
     const filteredShapes = useMemo(() => {
-        const upperCaseFilter = selectedfilter.toLocaleUpperCase();
+        const upperCaseFilter = selectedFilter.toLocaleUpperCase();
         if (upperCaseFilter === "COMPONENT") return [];
         const isShapeType = ["3D", "2D", "LAYERS"].includes(upperCaseFilter);
 
@@ -163,10 +164,10 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                   (shape) => shape.type.toLocaleUpperCase() === upperCaseFilter
               )
             : shapesByCategory;
-    }, [selectedfilter, shapesByCategory]);
+    }, [selectedFilter, shapesByCategory]);
 
     const filteredSearch = useMemo(() => {
-        const upperCaseFilter = selectedfilter.toLocaleUpperCase();
+        const upperCaseFilter = selectedFilter.toLocaleUpperCase();
 
         const isShapeType = ["3D", "2D", "LAYERS", "COMPONENT"].includes(
             upperCaseFilter
@@ -177,7 +178,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                   (shape) => shape.type.toLocaleUpperCase() === upperCaseFilter
               )
             : searchedData?.data ?? [];
-    }, [selectedfilter, searchedData?.data]);
+    }, [selectedFilter, searchedData?.data]);
 
     const renderPreview = (element: Shape | Component) => (
         <SVGPreview
@@ -195,7 +196,10 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
         return categories.map((category) => (
             <div key={category._id}>
                 <div
-                    onClick={() => onCategoryChange(category._id)}
+                    onClick={() => {
+                        setselectedFilter("All");
+                        onCategoryChange(category._id);
+                    }}
                     className={`text-sm flex items-center justify-between bg-customGray text-white py-1 px-2 hover:bg-customLightGray ${
                         activeCategory === category._id
                             ? "bg-customLightGray"
@@ -261,7 +265,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                 elementTypeColor = "text-custom3D";
                 break;
             case "LAYERS":
-                elementTypeColor = "text-customLayers";
+                elementTypeColor = "text-customLayer";
                 break;
             case "COMPONENT":
                 elementTypeColor = "text-customComponent";
@@ -275,9 +279,8 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                 disabled={isAddDisabled[elementType]}
                 onClick={(e) => {
                     e.stopPropagation();
-                    // setCurrentShapeDetails(element);
+                    setCurrentShapeDetails(element);
                     addActionFor[elementType](element);
-                    console.log("clicked");
                 }}
                 className="flex flex-col p-1 rounded-lg hover:bg-customLightGray mb-2 relative aspect-[3/2] transition-all hover:scale-105 focus:outline-none disabled:opacity-80 disabled:cursor-not-allowed"
             >
@@ -292,7 +295,11 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                 <div className="text-white text-sm overflow-hidden text-ellipsis whitespace-pre-line line-clamp-1">
                     {element.name}
                 </div>
-                <div className={`${elementTypeColor} text-xs capitalize`}>{(elementType == '2D' || elementType === '3D') ? elementType : elementType.toLocaleLowerCase()}</div>
+                <div className={`${elementTypeColor} text-xs capitalize`}>
+                    {elementType == "2D" || elementType === "3D"
+                        ? elementType
+                        : elementType.toLocaleLowerCase()}
+                </div>
             </button>
         );
     };
@@ -373,81 +380,85 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
         );
     };
 
-    const renderShapeList = () => { 
+    const renderShapeList = () => {
         return (
             <div className="mx-auto bg-customGray  rounded-lg shadow-lg ">
-            <div className="flex h-[45vh] overflow-y-auto scrollbar-thin scrollbar-thumb-customLightGray scrollbar-track-transparent scrollbar-thumb-rounded custom-scrollbar">
-                {!activeCategory ? (
-                    <h2 className="p-4 text-white text-sm">
-                        Select any category to see shapes
-                    </h2>
-                ) : (
-                    <div className="px-4 pb-2 space-5">
-                        {isShapesLoading ? (
-                            <LoaderSkeleton />
-                        ) : shapesByCategory.length > 0 ||
-                          components.length > 0 ? (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4">
-                                {isAllOrComponent &&
-                                    components.map((element) =>
-                                        renderElement(element)
-                                    )}
-                                {(selectedfilter === "All" ||
-                                    filteredShapes.length > 0) &&
-                                    filteredShapes.map((element) =>
-                                        renderElement(element)
-                                    )}
-                            </div>
-                        ) : (
-                            <div className="p-4 text-white text-sm">
-                                No shapes available in this category
-                            </div>
-                        )}
-                        {/* <div className="h-7"></div> */}
+                <div className="flex h-[45vh] overflow-y-auto scrollbar-thin scrollbar-thumb-customLightGray scrollbar-track-transparent scrollbar-thumb-rounded custom-scrollbar">
+                    {!activeCategory ? (
+                        <h2 className="p-4 text-white text-sm">
+                            Select any category to see shapes
+                        </h2>
+                    ) : (
+                        <div className="px-4 pb-2 space-5">
+                            {isShapesLoading ? (
+                                <LoaderSkeleton />
+                            ) : shapesByCategory.length > 0 ||
+                              components.length > 0 ? (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4">
+                                    {isAllOrComponent &&
+                                        components.map((element) =>
+                                            renderElement(element)
+                                        )}
+                                    {(selectedFilter === "All" ||
+                                        filteredShapes.length > 0) &&
+                                        filteredShapes.map((element) =>
+                                            renderElement(element)
+                                        )}
+                                </div>
+                            ) : (
+                                <div className="p-4 text-white text-sm">
+                                    No shapes available in this category
+                                </div>
+                            )}
+                            {/* <div className="h-7"></div> */}
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+    };
+    const renderShapeDetails = (element: Shape | Component) => (
+        <div className="px-2 py-4 ">
+            <div className="flex gap-3">
+                <div className="w-[106px] h-[106px] flex-shrink-0">
+                    {renderPreview(element as Shape | Component)}
+                </div>
+                <div className="">
+                    <div className="flex items-center">
+                        <p className="text-sm w-24">Shape Name:</p>
+                        <p className="text-xs">{element.name}</p>
                     </div>
-                )}
+                    <div className="flex items-center">
+                        <p className="text-sm w-24">Type:</p>
+                        <p className="text-xs">
+                            {"type" in element ? element.type : "component"}
+                        </p>
+                    </div>
+                    <div className="flex items-center">
+                        <p className="text-sm w-24">Category:</p>
+                        <p className="text-xs">{element.path}</p>
+                    </div>
+                    <div className="flex items-center">
+                        <p className="text-sm w-24">Version:</p>
+                        <p className="text-xs">{element.version}</p>
+                    </div>
+                    <div className="flex ">
+                        <p className="text-sm  w-24 h-auto">Description:</p>
+                        <p
+                            className="text-xs flex-1 h-auto 
+                        overflow-hidden text-ellipsis whitespace-pre-line line-clamp-2"
+                        >
+                            {/* {element.description} */}o ensure that the
+                            ToggleGroup and the RadixSelect components are
+                            styled properly with a consistent gap-4, and that
+                            the
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
-        )
-    }
+    );
 
-    const ShapeDetail = (shape: Shape | Component)  => {
-        console.log("shape", shape);
-        const elementType = "type" in shape ? shape.type : "COMPONENT";
-        return (
-            <div className="flex gap-2 bg-customLightGray text-white rounded-lg shadow-md p-4 max-w-sm">
-              {/* Image Section */}
-              <div className="flex justify-center">
-                <div className="w-24 h-24 bg-indigo-300 rounded-md flex items-center justify-center">
-                    {renderPreview(shape)}
-                </div>
-              </div>
-              <div className="flex flex-col gap-2">
-                <div className="flex justify-center items-center">
-                    <span className="text-sm">Shape Name:</span>
-                    <span className="text-xs text-customTextSecondary">{shape.name}</span>
-                </div>
-                <div className="flex">
-                    <span className="text-sm">Type:</span>
-                    <span className="text-xs text-customTextSecondary">{elementType}</span>
-                </div>
-                <div className="flex">
-                    <span className="text-sm">Category:</span>
-                    <span className="text-xs text-customTextSecondary">{shape.path}</span>
-                </div>
-                <div className="flex">
-                    <span className="text-sm">Version:</span>
-                    <span className="text-xs text-customTextSecondary">{shape.version}</span>
-                </div>
-                <div className="flex">
-                    <span className="text-sm">Description:</span>
-                    <span className="text-xs text-customTextSecondary">{shape.description}</span>
-                </div>
-              </div>
-            </div>
-          );
-        
-    }
     return (
         <div>
             <div className="border-t-2 border-customBorderColor">
@@ -469,16 +480,31 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                         {filterOptionsWithColor.map((item) => (
                             <button
                                 key={item.name}
-                                className={`px-2 py-1 ${
+                                className={`relative px-2 py-1 ${
                                     item.color
-                                } rounded focus:outline-none text-sm ${
-                                    selectedfilter === item.name
-                                        ? "bg-customLightGray font-bold"
-                                        : "bg-customGray"
-                                }`}
-                                onClick={() => setSelectedFilter(item.name)}
+                                } rounded focus:outline-none 
+            ${
+                selectedFilter === item.name
+                    ? "bg-customLightGray"
+                    : "bg-customGray"
+            }`}
+                                onClick={() => setselectedFilter(item.name)}
                             >
-                                {item.name}
+                                {/* Hidden bold reference text - always maintains maximum space */}
+                                <span
+                                    aria-hidden="true"
+                                    className="block font-bold invisible whitespace-nowrap"
+                                >
+                                    {item.name}
+                                </span>
+
+                                {/* Visible text that sits on top */}
+                                <span
+                                    className={`absolute inset-0 flex items-center justify-center
+              ${selectedFilter === item.name ? "font-bold" : "font-normal"}`}
+                                >
+                                    {item.name}
+                                </span>
                             </button>
                         ))}
                     </div>
@@ -518,10 +544,10 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                         </h1>
                     </div>
                     {renderShapeList()}
-                    {/* { !currentShapeDetails ? renderShapeList() : ShapeDetail(currentShapeDetails)} */}
-                   
                 </div>
             )}
+            {/* {currentShapeDetails &&
+                renderShapeDetails(currentShapeDetails as Shape | Component)} */}
         </div>
     );
 };

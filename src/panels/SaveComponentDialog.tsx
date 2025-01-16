@@ -21,11 +21,14 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
 import { componentLibraryManager } from "@/lib/componentLib";
+import { useQuery } from "@tanstack/react-query";
+import { RadixSelect } from "@/components/ui/Select";
+import { getCategoriesFlat } from "@/services/categories";
 
 interface SaveComponentDialogProps {
     isOpen: boolean;
     onClose: () => void;
-    onSave: (name: string, description: string) => void;
+    onSave: (name: string, description: string, category: string) => void;
 }
 
 const SaveComponentDialog: React.FC<SaveComponentDialogProps> = ({
@@ -35,12 +38,24 @@ const SaveComponentDialog: React.FC<SaveComponentDialogProps> = ({
 }) => {
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
+    const [category, setCategory] = useState("");
     const [error, setError] = useState<string | null>(null);
     const [showOverwriteDialog, setShowOverwriteDialog] = useState(false);
-
+    const { data: categories } = useQuery({
+        queryKey: ["categories_data_flat"],
+        queryFn: getCategoriesFlat
+    });
     const handleSubmit = () => {
+        if (!name.trim() && !category.trim()) {
+            setError("Component name and category is required");
+            return;
+        }
         if (!name.trim()) {
             setError("Component name is required");
+            return;
+        }
+        if (!category.trim()) {
+            setError("Category is required");
             return;
         }
 
@@ -54,7 +69,7 @@ const SaveComponentDialog: React.FC<SaveComponentDialogProps> = ({
     };
 
     const handleSaveComponent = () => {
-        onSave(name.trim(), description.trim());
+        onSave(name.trim(), description.trim(), category);
         handleClose();
     };
 
@@ -65,12 +80,11 @@ const SaveComponentDialog: React.FC<SaveComponentDialogProps> = ({
         setShowOverwriteDialog(false);
         onClose();
     };
-
     return (
         <>
             <Dialog open={isOpen} onOpenChange={handleClose}>
                 <DialogContent
-                    className="bg-gray-800 text-white"
+                    className="bg-customGray text-white"
                     aria-describedby="dialog-description"
                 >
                     <DialogHeader>
@@ -91,13 +105,30 @@ const SaveComponentDialog: React.FC<SaveComponentDialogProps> = ({
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
                                 placeholder="Enter component name"
-                                className="w-full bg-gray-700 text-white border-gray-600"
+                                className="w-full bg-customLightGray text-white border-gray-600"
                             />
                             {error && (
                                 <div className="text-red-400 text-sm mt-1">
                                     {error}
                                 </div>
                             )}
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-200 mb-1">
+                                Category
+                            </label>
+                            <RadixSelect
+                                options={
+                                    categories?.data.map((category) => ({
+                                        label: category.name,
+                                        value: category._id
+                                    })) ?? []
+                                }
+                                value={category}
+                                onChange={(value) => setCategory(value)}
+                                placeholder="Select categoty"
+                            />
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-200 mb-1">
@@ -107,15 +138,11 @@ const SaveComponentDialog: React.FC<SaveComponentDialogProps> = ({
                                 value={description}
                                 onChange={(e) => setDescription(e.target.value)}
                                 placeholder="Enter component description"
-                                className="w-full bg-gray-700 text-white border-gray-600"
+                                className="w-full  text-white bg-customLightGray"
                                 rows={3}
                             />
                         </div>
-                        <label className="block text-sm font-medium text-gray-200 mb-1">
-                            Note: Components will be saved under the default
-                            category until the category selection feature is
-                            implemented.
-                        </label>
+
                         <div className="flex justify-end space-x-2">
                             <Button
                                 onClick={handleClose}
@@ -126,7 +153,7 @@ const SaveComponentDialog: React.FC<SaveComponentDialogProps> = ({
                             <Button
                                 onClick={handleSubmit}
                                 className="bg-blue-600 hover:bg-blue-700"
-                                disabled={!name.trim()}
+                                disabled={!name.trim() || !category}
                             >
                                 Save Component
                             </Button>

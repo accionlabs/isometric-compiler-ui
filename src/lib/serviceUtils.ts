@@ -18,7 +18,8 @@ export const segregateShapesAndComponents = (response: UnifiedResponse[]) => {
                 svgFile: item.svgFile ?? "",
                 svgContent: item.svgContent ?? "",
                 path: item.categoryDetails?.path ?? "",
-                version: item.version ?? ""
+                version: item.version ?? "",
+                description: item?.metadata?.description ?? ""
             });
         }
 
@@ -28,7 +29,7 @@ export const segregateShapesAndComponents = (response: UnifiedResponse[]) => {
                 _id: item._id,
                 id: item.name,
                 name: item.name,
-                description: item.category, // Assuming category is used as a description
+                description: item?.metadata?.description ?? "",
                 diagramComponents: item.diagram_components,
                 attachmentPoints: item.attachment_points,
                 svgContent: item.svgContent ?? undefined,

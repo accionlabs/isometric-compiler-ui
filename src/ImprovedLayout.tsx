@@ -38,8 +38,16 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger
 } from "@/components/ui/DropDownMenu";
-import { MoreHorizontal } from "lucide-react";
-import { set } from "yaml/dist/schema/yaml-1.1/set";
+import { ChevronDown } from "lucide-react";
+import { MenuIcon } from "./components/ui/IconGroup";
+
+type PanelType = "shapes" | "composition" | "chat";
+
+const panels: Array<{ id: PanelType; label: string }> = [
+    { id: "shapes", label: "Shapes" },
+    { id: "composition", label: "Composition" },
+    { id: "chat", label: "AI Model" }
+];
 
 interface ImprovedLayoutProps {
     svgLibrary: Shape[];
@@ -102,7 +110,11 @@ interface ImprovedLayoutProps {
     ) => void;
     storageType: StorageType;
     onStorageTypeChange: (type: StorageType) => void;
-    onSaveAsComponent: (name: string, description: string) => void;
+    onSaveAsComponent: (
+        name: string,
+        description: string,
+        category: string
+    ) => void;
     isSaveDiagramDialogOpen: boolean;
     setIsSaveDiagramDialogOpen: (open: boolean) => void;
     isDataLoading: {
@@ -172,9 +184,8 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     const params = new URLSearchParams(window.location.search);
     const isReadModeEnabled = params.get("mode") === "read";
 
-    const [activePanel, setActivePanel] = useState<
-        "shapes" | "composition" | "settings" | "chat"
-    >("shapes");
+    const [activePanel, setActivePanel] = useState<PanelType>("shapes");
+
     const [isLoadingDialogOpen, setIsLoadingDialogOpen] = useState(false);
     const [isSaveLoadDialogOpen, setIsSaveLoadDialogOpen] = useState(false);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -356,14 +367,15 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                 <DropdownMenuTrigger asChild>
                                     <Button
                                         variant="outline"
-                                        className="px-2 h-7"
+                                        className="p-2 gap-1"
                                     >
-                                        <MoreHorizontal className="h-4 w-4" />
+                                        <MenuIcon />
+                                        <ChevronDown />
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent
                                     align="end"
-                                    className="w-[200px]"
+                                    className="w-[200px] bg-customGray"
                                 >
                                     <DropdownMenuGroup>
                                         <DropdownMenuItem
@@ -391,7 +403,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                             Save as Component
                                         </DropdownMenuItem>
                                     </DropdownMenuGroup>
-                                    <DropdownMenuSeparator />
+                                    <DropdownMenuSeparator className="bg-customLightGray" />
                                     <DropdownMenuGroup>
                                         <DropdownMenuItem
                                             onSelect={handleMenuSelect(() =>
@@ -408,7 +420,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                             Download PNG
                                         </DropdownMenuItem>
                                     </DropdownMenuGroup>
-                                    <DropdownMenuSeparator />
+                                    <DropdownMenuSeparator className="bg-customLightGray" />
                                     <DropdownMenuItem
                                         onSelect={handleMenuSelect(() =>
                                             setIsSettingsDialogOpen(true)
@@ -416,46 +428,43 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                     >
                                         Display Settings
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem
+                                    {/* <DropdownMenuItem
                                         onSelect={handleMenuSelect(() =>
                                             setIsLibraryDialogOpen(true)
                                         )}
                                     >
                                         Library Settings
-                                    </DropdownMenuItem>
+                                    </DropdownMenuItem> */}
                                 </DropdownMenuContent>
                             </DropdownMenu>
-                            <button
-                                className={`rounded px-2 py-1 text-sm
-                                ${
-                                    activePanel === "shapes"
-                                        ? "bg-customLightGray font-bold"
-                                        : "bg-customGray"
-                                } `}
-                                onClick={() => setActivePanel("shapes")}
-                            >
-                                Shapes
-                            </button>
-                            <button
-                                className={`rounded px-2 py-1 text-sm ${
-                                    activePanel === "composition"
-                                        ? "bg-customLightGray font-bold"
-                                        : "bg-customGray"
-                                }`}
-                                onClick={() => setActivePanel("composition")}
-                            >
-                                Composition
-                            </button>
-                            <button
-                                className={`rounded px-2 py-1 text-sm ${
-                                    activePanel === "chat"
-                                        ? "bg-customLightGray font-bold"
-                                        : "bg-customGray"
-                                }`}
-                                onClick={() => setActivePanel("chat")}
-                            >
-                                AI Model
-                            </button>
+                            {panels.map((panel) => (
+                                <button
+                                    key={panel.id}
+                                    onClick={() => setActivePanel(panel.id)}
+                                    className={`relative rounded px-2 py-1 
+            ${
+                activePanel === panel.id
+                    ? "bg-customLightGray"
+                    : "bg-customGray"
+            }`}
+                                >
+                                    {/* Hidden bold reference text */}
+                                    <span
+                                        aria-hidden="true"
+                                        className="block text-sm font-bold invisible whitespace-nowrap"
+                                    >
+                                        {panel.label}
+                                    </span>
+
+                                    {/* Visible text layer */}
+                                    <span
+                                        className={`absolute inset-0 flex items-center justify-center text-sm
+              ${activePanel === panel.id ? "font-bold" : "font-normal"}`}
+                                    >
+                                        {panel.label}
+                                    </span>
+                                </button>
+                            ))}
                             <input
                                 ref={fileInputRef}
                                 type="file"
@@ -504,7 +513,6 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                     onCancelCut3DShape={onCancelCut3DShape}
                                     onPaste3DShape={handlePaste3DShape}
                                     onUpdateMetadata={onUpdateMetadata}
-                                    onSaveAsComponent={onSaveAsComponent}
                                 />
                             )}
                             {activePanel === "chat" && (

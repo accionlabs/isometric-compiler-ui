@@ -1,15 +1,15 @@
-import React from 'react';
-import { 
-    Dialog, 
-    DialogContent, 
-    DialogHeader, 
+import React from "react";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
     DialogTitle,
     DialogDescription,
     DialogFooter
-} from '@/components/ui/Dialog';
-import { Input } from '@/components/ui/Input';
-import { Button } from '@/components/ui/Button';
-import { Label } from '@/components/ui/Label';
+} from "@/components/ui/Dialog";
+import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
+import { Label } from "@/components/ui/Label";
 
 interface SaveDiagramDialogProps {
     isOpen: boolean;
@@ -54,9 +54,9 @@ const SaveDiagramDialog: React.FC<SaveDiagramDialogProps> = ({
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         if (!fileName.trim()) {
-            setError('File name is required');
+            setError("File name is required");
             return;
         }
 
@@ -67,7 +67,7 @@ const SaveDiagramDialog: React.FC<SaveDiagramDialogProps> = ({
         try {
             setIsSaving(true);
             setError(null);
-            
+
             // First ensure no focus is trapped
             if (document.activeElement instanceof HTMLElement) {
                 document.activeElement.blur();
@@ -79,20 +79,20 @@ const SaveDiagramDialog: React.FC<SaveDiagramDialogProps> = ({
             // Then perform the save operation
             await onSave(fileName);
         } catch (error) {
-            console.error('Error in save process:', error);
+            console.error("Error in save process:", error);
         } finally {
             setIsSaving(false);
         }
     };
 
     return (
-        <Dialog 
-            open={isOpen} 
+        <Dialog
+            open={isOpen}
             onOpenChange={(open) => {
                 if (!open) cleanup();
             }}
         >
-            <DialogContent 
+            <DialogContent
                 onInteractOutside={(e) => {
                     if (isSaving) e.preventDefault();
                 }}
@@ -111,12 +111,10 @@ const SaveDiagramDialog: React.FC<SaveDiagramDialogProps> = ({
                         Enter a name for your diagram file.
                     </DialogDescription>
                 </DialogHeader>
-                
+
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="fileName">
-                            File Name
-                        </Label>
+                    <div className="space-y-2 text-white">
+                        <Label htmlFor="fileName">File Name</Label>
                         <Input
                             ref={inputRef}
                             id="fileName"
@@ -125,11 +123,17 @@ const SaveDiagramDialog: React.FC<SaveDiagramDialogProps> = ({
                             placeholder="Enter file name"
                             className="w-full bg-gray-700 text-white border-gray-600"
                             disabled={isSaving}
-                            aria-invalid={error ? 'true' : 'false'}
-                            aria-describedby={error ? 'fileName-error' : undefined}
+                            aria-invalid={error ? "true" : "false"}
+                            aria-describedby={
+                                error ? "fileName-error" : undefined
+                            }
                         />
                         {error && (
-                            <div id="fileName-error" className="text-red-400 text-sm" role="alert">
+                            <div
+                                id="fileName-error"
+                                className="text-red-400 text-sm"
+                                role="alert"
+                            >
                                 {error}
                             </div>
                         )}
@@ -142,7 +146,10 @@ const SaveDiagramDialog: React.FC<SaveDiagramDialogProps> = ({
                             className="bg-gray-700 hover:bg-gray-600"
                             disabled={isSaving}
                             onClick={() => {
-                                if (document.activeElement instanceof HTMLElement) {
+                                if (
+                                    document.activeElement instanceof
+                                    HTMLElement
+                                ) {
                                     document.activeElement.blur();
                                 }
                                 cleanup();
@@ -150,12 +157,12 @@ const SaveDiagramDialog: React.FC<SaveDiagramDialogProps> = ({
                         >
                             Cancel
                         </Button>
-                        <Button 
+                        <Button
                             type="submit"
                             className="bg-blue-600 hover:bg-blue-700"
                             disabled={!fileName.trim() || isSaving}
                         >
-                            {isSaving ? 'Saving...' : 'Save'}
+                            {isSaving ? "Saving..." : "Save"}
                         </Button>
                     </DialogFooter>
                 </form>

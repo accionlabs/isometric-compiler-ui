@@ -72,10 +72,9 @@ const App: React.FC = () => {
         isLoading: isCategoryLoading,
         refetch: refetchCategories
     } = useQuery({
-        queryKey: ["categories_data"],
-        queryFn: getCategories
+        queryKey: ["categories_data_nested"],
+        queryFn: () => getCategories("nested")
     });
-
     const { data: searchedData, isLoading: isSearchLoading } = useQuery({
         queryKey: ["searched_shapes_data", searchQuery],
         queryFn: () => getsearchedShapes(searchQuery),
@@ -619,7 +618,7 @@ const App: React.FC = () => {
 
     // New handler to save current composition as a component
     const handleSaveAsComponent = useCallback(
-        async (name: string, description: string) => {
+        async (name: string, description: string, category: string) => {
             try {
                 let selectedShapes = diagramComponents;
                 // if a shape is selected, then copy those shapes that are selected for saving as component
@@ -696,7 +695,7 @@ const App: React.FC = () => {
                     const newComponentToSave =
                         componentLibraryManager.getComponent(newComponent.id);
                     if (newComponentToSave) {
-                        await saveComponent(newComponentToSave);
+                        await saveComponent(newComponentToSave, category);
                         refetchCategories();
                         // category id harcoded for now with select category to save in fature it will be removed
                         if (selectedCategoryId === "67853d5f4c7dce63e7c20228")
@@ -757,6 +756,11 @@ const App: React.FC = () => {
 
         loadComponentSchema();
     }, [schemaUrl]);
+    useEffect(() => {
+        if (!categories?.length) return;
+        if (selectedCategoryId) return;
+        setSelectedCategoryId(categories[0]._id);
+    }, [categories, selectedCategoryId]);
 
     useEffect(() => {
         if (!shapesAndComponentsData) return;
@@ -773,43 +777,6 @@ const App: React.FC = () => {
                 .map((item) => ({ ...item } as Shape))
         );
     }, [searchedData?.data]);
-
-    // Load components and shapes library on mount
-    // useEffect(() => {
-    // load components on mount
-    // setComponents(componentLibraryManager.getAllComponents());
-    // // initiatlize libraries
-    // const initializeLibraries = async () => {
-    //     console.log("Initializing libraries...");
-    //     // First make sure default library exists and is loaded
-    //     await SVGLibraryManager.initializeDefaultLibrary();
-    //     // Get the active library ID from localStorage or use default
-    //     const activeLibraryId =
-    //         localStorage.getItem("activeLibrary") || "default";
-    //     console.log("Active library ID:", activeLibraryId);
-    //     // Get the active library
-    //     const library = SVGLibraryManager.getLibrary(activeLibraryId);
-    //     if (library) {
-    //         console.log("Setting active library:", library.id);
-    //         setActiveLibrary(library.id);
-    //         setSvgLibrary(library.shapes);
-    //         // render all components if any
-    //         componentLibraryManager.renderAllComponents(
-    //             canvasSize,
-    //             library.shapes
-    //         );
-    //     } else {
-    //         // Fallback to default library if active library not found
-    //         console.log("Falling back to default library");
-    //         const defaultLibrary = SVGLibraryManager.getLibrary("default");
-    //         if (defaultLibrary) {
-    //             setActiveLibrary("default");
-    //             setSvgLibrary(defaultLibrary.shapes);
-    //         }
-    //     }
-    // };
-    // initializeLibraries();
-    // }, []); // Empty dependency array - only run once on mount
 
     useEffect(() => {
         const { handleKeyDown } = handleKeyboardShortcuts();

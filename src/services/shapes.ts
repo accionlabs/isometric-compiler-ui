@@ -90,14 +90,14 @@ export async function getsearchedShapes(query: string): Promise<
     }
 }
 
-export async function saveComponent(payload: Component) {
+export async function saveComponent(payload: Component, category: string) {
     const body = {
         name: payload.name,
         type: "COMPONENT",
         attachTo: "",
         svgContent: payload.svgContent,
         version: "1.0.0",
-        category: "67853d5f4c7dce63e7c20228",
+        category,
         metadata: {
             description: payload.description
         },

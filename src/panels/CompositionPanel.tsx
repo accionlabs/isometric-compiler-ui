@@ -42,7 +42,6 @@ interface CompositionPanelProps {
         type: string | undefined,
         metadata: any
     ) => void;
-    onSaveAsComponent: (name: string, description: string) => void;
 }
 
 const CompositionPanel: React.FC<CompositionPanelProps> = ({
@@ -58,8 +57,7 @@ const CompositionPanel: React.FC<CompositionPanelProps> = ({
     onCancelCut3DShape,
     onPaste3DShape,
     selected3DShape,
-    onUpdateMetadata,
-    onSaveAsComponent
+    onUpdateMetadata
 }) => {
     const componentRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
