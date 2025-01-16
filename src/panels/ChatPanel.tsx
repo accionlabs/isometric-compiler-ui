@@ -9,12 +9,12 @@ import { useChat } from "@/hooks/useChatProvider";
 import { sendChatRequest } from "@/services/chat";
 import { useEnterSubmit } from "@/hooks/useEnterSubmit";
 import { Textarea } from "@/components/ui/Textarea";
-
 interface ChatPanelProps {
     handleLoadDiagramFromJSON: (loadedComponents: DiagramComponent[]) => void;
+    diagramComponents: DiagramComponent[]
 }
 
-const ChatPanel: React.FC<ChatPanelProps> = ({ handleLoadDiagramFromJSON }) => {
+const ChatPanel: React.FC<ChatPanelProps> = ({ handleLoadDiagramFromJSON,diagramComponents }) => {
     const { messages, setMessages } = useChat();
     const { formRef, onKeyDown } = useEnterSubmit();
 
@@ -41,14 +41,18 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ handleLoadDiagramFromJSON }) => {
 	const handleResponse = async (input: string) => {
 		setLoading(true);
 		try {
-			const res = await sendChatRequest(input);
+			const res = await sendChatRequest(input,diagramComponents);
 			if(res.needFeedback){
 				setMessages((prev) => [
 					...prev,
-					{ text: res.action, isUser: false,isSystemQuery:true },
+					{ text: res.feedback, isUser: false,isSystemQuery:true },
 				]);
 			}else{
 				handleLoadDiagramFromJSON(res.result);
+                setMessages((prev) => [
+					...prev,
+					{ text: res.feedback, isUser: false,isSystemQuery:true },
+				]);
 				setMessages((prev) => [
 					...prev,
 					{ text: JSON.stringify(res.result, null, 2), isUser: false,isSystemQuery:false },

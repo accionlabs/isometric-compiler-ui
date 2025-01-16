@@ -5,9 +5,10 @@ import { v4 as uuidv4 } from "uuid";
 import { getShapesByName } from "./shapes";
 import { shapesLibraryManager } from "../lib/shapesLib";
 import { componentLibraryManager } from "../lib/componentLib";
+import { DiagramComponent } from "@/Types";
 const newUUID = uuidv4();
 
-export async function sendChatRequest(query: string) {
+export async function sendChatRequest(query: string,currentState:DiagramComponent[]) {
     const url = `${config.gatewayApiUrl}/document/isometric/v2?uuid=${newUUID}`;
 
     try {
@@ -16,7 +17,7 @@ export async function sendChatRequest(query: string) {
             headers: {
                 "Content-Type": "application/json" // Set the Content-Type header
             },
-            body: JSON.stringify({ query }) // Convert the data object to a JSON string
+            body: JSON.stringify({ query,currentState:currentState }) // Convert the data object to a JSON string
         });
 
         // Check if the response is ok (status code in the range 200-299)

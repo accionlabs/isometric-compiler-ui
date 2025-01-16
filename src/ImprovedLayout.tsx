@@ -517,6 +517,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                             )}
                             {activePanel === "chat" && (
                                 <ChatPanel
+                                    diagramComponents={diagramComponents}
                                     handleLoadDiagramFromJSON={
                                         handleLoadDiagramFromJSON
                                     }
