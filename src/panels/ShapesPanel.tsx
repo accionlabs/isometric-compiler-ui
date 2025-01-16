@@ -530,7 +530,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                         </h1>
                     </div>
                     <div className="mx-auto bg-customGray  rounded-lg shadow-lg">
-                        <div className="max-h-[28vh] overflow-y-auto scrollbar-thin scrollbar-thumb-customLightGray scrollbar-track-transparent scrollbar-thumb-rounded custom-scrollbar">
+                        <div className="h-[28vh] overflow-y-auto scrollbar-thin scrollbar-thumb-customLightGray scrollbar-track-transparent scrollbar-thumb-rounded custom-scrollbar">
                             {renderCategories(categories ?? [])}
                         </div>
                     </div>
