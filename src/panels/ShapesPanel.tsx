@@ -9,7 +9,13 @@ import {
     Category,
     UnifiedElement
 } from "../Types";
-import { CircleX, Search, ChevronDown, ChevronRight } from "lucide-react";
+import {
+    CircleX,
+    Search,
+    ChevronDown,
+    ChevronRight,
+    ChevronLeft
+} from "lucide-react";
 
 import SVGPreview from "../components/ui/SVGPreview";
 import { componentLibraryManager } from "../lib/componentLib";
@@ -276,21 +282,29 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
         return (
             <button
                 key={element.name + element.version}
-                disabled={isAddDisabled[elementType]}
                 onClick={(e) => {
                     e.stopPropagation();
                     setCurrentShapeDetails(element);
-                    addActionFor[elementType](element);
                 }}
-                className="flex flex-col p-1 rounded-lg hover:bg-customLightGray mb-2 relative aspect-[3/2] transition-all hover:scale-105 focus:outline-none disabled:opacity-80 disabled:cursor-not-allowed"
+                className="flex flex-col p-1 rounded-lg mb-2 relative aspect-[3/2] transition-all hover:bg-cu focus:outline-none disabled:opacity-80 disabled:cursor-not-allowed"
             >
-                {renderPreview(element)}
-                {/* <button onClick={(e) => {
-                    e.stopPropagation();
-                    addActionFor[elementType](element);
-                }}>
-                    <CirclePlus className="text-white w-6 h-6" />
-                </button> */}
+                {/* Preview Container */}
+                <button
+                    disabled={isAddDisabled[elementType]}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        addActionFor[elementType](element);
+                    }}
+                    className="relative w-full h-full"
+                >
+                    {/* Preview */}
+                    {renderPreview(element)}
+
+                    {/* Blur and Icon on Hover */}
+                    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm opacity-0 hover:opacity-100 transition-opacity">
+                        <span className="text-white text-3xl">+</span>
+                    </div>
+                </button>
 
                 <div className="text-white text-sm overflow-hidden text-ellipsis whitespace-pre-line line-clamp-1">
                     {element.name}
@@ -383,7 +397,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
     const renderShapeList = () => {
         return (
             <div className="mx-auto bg-customGray  rounded-lg shadow-lg ">
-                <div className="flex h-[28vh] overflow-y-auto scrollbar-thin scrollbar-thumb-customLightGray scrollbar-track-transparent scrollbar-thumb-rounded custom-scrollbar">
+                <div className="flex h-[44vh] overflow-y-auto scrollbar-thin scrollbar-thumb-customLightGray scrollbar-track-transparent scrollbar-thumb-rounded custom-scrollbar">
                     {!activeCategory ? (
                         <h2 className="p-4 text-white text-sm">
                             Select any category to see shapes
@@ -536,7 +550,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                     </div>
                 </>
             )}
-            {!inputQuery && (
+            {!currentShapeDetails && !inputQuery && (
                 <div className="border-t-2 border-customBorderColor">
                     <div className="flex items-center justify-between bg-customGray text-white px-4 py-2 rounded-lg ">
                         <h1 className="text-lg font-bold text-white ">
@@ -546,8 +560,22 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                     {renderShapeList()}
                 </div>
             )}
-            {currentShapeDetails &&
-                renderShapeDetails(currentShapeDetails as Shape | Component)}
+            {currentShapeDetails && (
+                <div className="border-t-2 border-customBorderColor">
+                    <div className="flex items-center justify-between bg-customGray text-white px-4 py-2 rounded-lg ">
+                        <button
+                            onClick={() => setCurrentShapeDetails(null)}
+                            className="text-lg font-bold text-white flex items-center"
+                        >
+                            <ChevronLeft />
+                            Back
+                        </button>
+                    </div>
+                    {renderShapeDetails(
+                        currentShapeDetails as Shape | Component
+                    )}
+                </div>
+            )}
         </div>
     );
 };
