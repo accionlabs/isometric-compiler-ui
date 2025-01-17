@@ -434,7 +434,9 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                     <DropdownMenuSeparator className="bg-customLightGray" />
                                     <DropdownMenuItem
                                         onSelect={handleMenuSelect(() =>
-                                            keycloak.logout({ logoutMethod: 'POST' })
+                                            keycloak.logout({
+                                                logoutMethod: "POST"
+                                            })
                                         )}
                                     >
                                         Logout
