@@ -1,27 +1,6 @@
 import { useKeycloak } from "@react-keycloak/web";
 // import keycloak from "../../services/keycloak";
 
-const overlayStyle: React.CSSProperties = {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 999,
-  };
-  
-  const popupStyle: React.CSSProperties = {
-    backgroundColor: '#fff',
-    padding: '20px',
-    borderRadius: '8px',
-    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
-    position: 'relative',
-  };
-
 export default function Login(){
     // const auth = useAuth();
 
@@ -29,27 +8,19 @@ export default function Login(){
 
     console.log("login page rendered",keycloak.authenticated)
     return (
-        <div style={overlayStyle}>
-              <div style={popupStyle}>
-        <div style={{height:'500', width: '800'}}>
-                <h1>click to login</h1>
-                <button
-                onClick={() => keycloak.login({
+      <div className="flex justify items-center content-center gap-12 bg-customBlack h-screen w-screen px-16">
+        <img src="/images/login-animation.gif" alt="accionlabs logo"
+        className="w-[400px] h-96 rounded-full ml-10" />
+        <div className="flex flex-col">
+            <p className=" text-white" >Welcome to</p>
+            <h1 className="text-2xl font-bold text-white">Isometric Compiler</h1>
+
+            <button className="bg-blue-700 px-4 py-2 mt-8 rounded text-white font-bold" onClick={() => keycloak.login({
                     prompt: 'login',
                     idpHint: 'google', // Replace 'google' with your IDP alias in Keycloak
-                  })}
-                >login</button>
-                {/* <button
-                onClick={()=>{
-                    keycloak.logout().then(() => {
-                        console.log('Logout successful');
-                        localStorage.removeItem('keycloakToken');
-                        localStorage.removeItem('keycloakRefreshToken');
-                      });
-                    
-                }}>logout</button> */}
+                  })}>Accion Labs</button>
         </div>
-        </div>
-        </div>
+      </div>
+        
     )
 }
