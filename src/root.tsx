@@ -7,6 +7,9 @@ export default function Root() {
     const { keycloak : kc, initialized } = useKeycloak();
     console.log("root page rendered********************************",kc)
     console.log("root page keycloak",keycloak)
+    if(!initialized){ 
+        return <div>Loading...</div>
+    }
 
     return (
         <>
