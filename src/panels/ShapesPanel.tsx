@@ -14,12 +14,14 @@ import {
     Search,
     ChevronDown,
     ChevronRight,
-    ChevronLeft
+    ChevronLeft,
+    CirclePlus
 } from "lucide-react";
 
 import SVGPreview from "../components/ui/SVGPreview";
 import { componentLibraryManager } from "../lib/componentLib";
 import { Folder, RootFolder } from "@/components/ui/IconGroup";
+import { Button } from "@/components/ui/Button";
 
 type ElementType = "3D" | "2D" | "LAYERS" | "COMPONENT";
 
@@ -431,48 +433,64 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
             </div>
         );
     };
-    const renderShapeDetails = (element: Shape | Component) => (
-        <div className="px-2 py-4 ">
-            <div className="flex gap-3">
-                <div className="w-[106px] h-[106px] flex-shrink-0">
-                    {renderPreview(element as Shape | Component)}
-                </div>
-                <div className="">
-                    <div className="flex items-center">
-                        <p className="text-sm w-24">Shape Name:</p>
-                        <p className="text-xs">{element.name}</p>
+    const renderShapeDetails = (element: Shape | Component) => {
+        const elementType = "type" in element ? element.type : "COMPONENT";
+
+        return (
+            <div className="px-2 py-4 ">
+                <div className="flex gap-3">
+                    <div className="w-[106px] h-[106px] flex-shrink-0">
+                        {renderPreview(element as Shape | Component)}
                     </div>
-                    <div className="flex items-center">
-                        <p className="text-sm w-24">Type:</p>
-                        <p className="text-xs">
-                            {"type" in element ? element.type : "component"}
-                        </p>
-                    </div>
-                    {element.path && (
+                    <div className="">
                         <div className="flex items-center">
-                            <p className="text-sm w-24">Category:</p>
-                            <p className="text-xs">{element.path}</p>
+                            <p className="text-sm w-24">Shape Name:</p>
+                            <p className="text-xs">{element.name}</p>
                         </div>
-                    )}
-                    <div className="flex items-center">
-                        <p className="text-sm w-24">Version:</p>
-                        <p className="text-xs">{element.version}</p>
-                    </div>
-                    {element.description && (
-                        <div className="flex ">
-                            <p className="text-sm  w-24 h-auto">Description:</p>
-                            <p
-                                className="text-xs flex-1 h-auto 
+                        <div className="flex items-center">
+                            <p className="text-sm w-24">Type:</p>
+                            <p className="text-xs">{elementType}</p>
+                        </div>
+                        {element.path && (
+                            <div className="flex items-center">
+                                <p className="text-sm w-24">Category:</p>
+                                <p className="text-xs">{element.path}</p>
+                            </div>
+                        )}
+                        <div className="flex items-center">
+                            <p className="text-sm w-24">Version:</p>
+                            <p className="text-xs">{element.version}</p>
+                        </div>
+                        {element.description && (
+                            <div className="flex ">
+                                <p className="text-sm  w-24 h-auto">
+                                    Description:
+                                </p>
+                                <p
+                                    className="text-xs flex-1 h-auto 
                         overflow-hidden text-ellipsis whitespace-pre-line line-clamp-2"
-                            >
-                                {element.description}
-                            </p>
-                        </div>
-                    )}
+                                >
+                                    {element.description}
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+                <div className="float-end mt-2">
+                    <Button
+                        disabled={isAddDisabled[elementType]}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            addActionFor[elementType](element);
+                        }}
+                        className="flex gap-2 text-sm"
+                    >
+                        Add <CirclePlus />
+                    </Button>
                 </div>
             </div>
-        </div>
-    );
+        );
+    };
 
     return (
         <div>
