@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/DropDownMenu";
 import { ChevronDown } from "lucide-react";
 import { MenuIcon } from "./components/ui/IconGroup";
+import { useKeycloak } from "@react-keycloak/web";
 
 type PanelType = "shapes" | "composition" | "chat";
 
@@ -352,6 +353,8 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
         }
     };
 
+    const { keycloak } = useKeycloak();
+
     return (
         <ChatProvider>
             <div className="flex flex-row h-screen w-screen  text-white">
@@ -427,6 +430,14 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                         )}
                                     >
                                         Display Settings
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator className="bg-customLightGray" />
+                                    <DropdownMenuItem
+                                        onSelect={handleMenuSelect(() =>
+                                            keycloak.logout({ logoutMethod: 'POST' })
+                                        )}
+                                    >
+                                        Logout
                                     </DropdownMenuItem>
                                     {/* <DropdownMenuItem
                                         onSelect={handleMenuSelect(() =>

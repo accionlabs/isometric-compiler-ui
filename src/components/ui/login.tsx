@@ -35,6 +35,7 @@ export default function Login(){
                 <h1>click to login</h1>
                 <button
                 onClick={() => keycloak.login({
+                    prompt: 'login',
                     idpHint: 'google', // Replace 'google' with your IDP alias in Keycloak
                   })}
                 >login</button>
