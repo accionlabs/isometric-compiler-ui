@@ -3,7 +3,6 @@ import { Shape, UnifiedResponse, Component, UnifiedElement } from "@/Types";
 export const segregateShapesAndComponents = (response: UnifiedResponse[]) => {
     const shapes: Shape[] = [];
     const components: Component[] = [];
-
     response.forEach((item) => {
         // Convert to Shape if type is "2D" or "3D" or "LAYERS"
         if (

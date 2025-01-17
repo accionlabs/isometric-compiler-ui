@@ -448,26 +448,27 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                             {"type" in element ? element.type : "component"}
                         </p>
                     </div>
-                    <div className="flex items-center">
-                        <p className="text-sm w-24">Category:</p>
-                        <p className="text-xs">{element.path}</p>
-                    </div>
+                    {element.path && (
+                        <div className="flex items-center">
+                            <p className="text-sm w-24">Category:</p>
+                            <p className="text-xs">{element.path}</p>
+                        </div>
+                    )}
                     <div className="flex items-center">
                         <p className="text-sm w-24">Version:</p>
                         <p className="text-xs">{element.version}</p>
                     </div>
-                    <div className="flex ">
-                        <p className="text-sm  w-24 h-auto">Description:</p>
-                        <p
-                            className="text-xs flex-1 h-auto 
+                    {element.description && (
+                        <div className="flex ">
+                            <p className="text-sm  w-24 h-auto">Description:</p>
+                            <p
+                                className="text-xs flex-1 h-auto 
                         overflow-hidden text-ellipsis whitespace-pre-line line-clamp-2"
-                        >
-                            {/* {element.description} */}o ensure that the
-                            ToggleGroup and the RadixSelect components are
-                            styled properly with a consistent gap-4, and that
-                            the
-                        </p>
-                    </div>
+                            >
+                                {element.description}
+                            </p>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
