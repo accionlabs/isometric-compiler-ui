@@ -8,7 +8,10 @@ import { componentLibraryManager } from "../lib/componentLib";
 import { DiagramComponent } from "@/Types";
 const newUUID = uuidv4();
 
-export async function sendChatRequest(query: string,currentState:DiagramComponent[]) {
+export async function sendChatRequest(
+    query: string,
+    currentState: DiagramComponent[]
+) {
     const url = `${config.gatewayApiUrl}/document/isometric/v2?uuid=${newUUID}`;
 
     try {
@@ -17,23 +20,27 @@ export async function sendChatRequest(query: string,currentState:DiagramComponen
             headers: {
                 "Content-Type": "application/json" // Set the Content-Type header
             },
-            body: JSON.stringify({ query,currentState:currentState }) // Convert the data object to a JSON string
+            body: JSON.stringify({ query, currentState: currentState }) // Convert the data object to a JSON string
         });
 
         // Check if the response is ok (status code in the range 200-299)
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-
+        const shapeNames = [];
         const res = await response.json(); // Parse the JSON response
-        if (
-            res.action?.shapeName &&
-            res.action?.action === "add"
-        ) {
-            const shapes = await getShapesByName([res.action.shapeName]);
-            if(shapes){
+        for (let i = 0; i < res.action?.length; i++) {
+            if (res.action[i].shapeName && res.action[i].action === "add") {
+                shapeNames.push(res.action[i].shapeName);
+            }
+        }
+        if (shapeNames.length>0) {
+            const shapes = await getShapesByName(shapeNames);
+            if (shapes) {
                 shapesLibraryManager.deserializeShapesLib(shapes.shapes);
-                componentLibraryManager.deserializeComponentLib(shapes.components);
+                componentLibraryManager.deserializeComponentLib(
+                    shapes.components
+                );
             }
         }
         return res;
