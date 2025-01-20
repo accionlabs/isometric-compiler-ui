@@ -13,6 +13,7 @@ import { Component, Shape } from "@/Types";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Label } from "@/components/ui/Label";
+import { processSVGFile } from "@/lib/svgUtils";
 
 interface LibraryManagerDialogProps {
     isOpen: boolean;
@@ -27,7 +28,6 @@ const EditElementDialog: React.FC<LibraryManagerDialogProps> = ({
     element
 }) => {
     const [elementData, setElementData] = useState(element);
-    const [uploadedSvg, setUploadedSvg] = useState<File | null>(null);
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] w-[800px] max-h-[80vh] bg-gray-800 text-white overflow-hidden">
@@ -59,10 +59,16 @@ const EditElementDialog: React.FC<LibraryManagerDialogProps> = ({
                             <Input
                                 type="file"
                                 accept=".svg"
-                                multiple
-                                onChange={(e) => {
-                                    e.target.files?.[0] &&
-                                        setUploadedSvg(e.target.files[0]);
+                                onChange={async (e) => {
+                                    if (e.target.files?.[0]) {
+                                        const svg = await processSVGFile(
+                                            e.target.files[0]
+                                        );
+                                        setElementData((prev) => ({
+                                            ...prev,
+                                            svgContent: svg || ""
+                                        }));
+                                    }
                                 }}
                                 className="w-full bg-gray-700 text-white border-gray-600"
                                 aria-describedby="upload new svg"
