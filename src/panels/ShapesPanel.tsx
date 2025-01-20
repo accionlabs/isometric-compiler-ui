@@ -15,13 +15,15 @@ import {
     ChevronDown,
     ChevronRight,
     ChevronLeft,
-    CirclePlus
+    CirclePlus,
+    Edit
 } from "lucide-react";
 
 import SVGPreview from "../components/ui/SVGPreview";
 import { componentLibraryManager } from "../lib/componentLib";
 import { Folder, RootFolder } from "@/components/ui/IconGroup";
 import { Button } from "@/components/ui/Button";
+import EditElementDialog from "./EditElementDialog";
 
 type ElementType = "3D" | "2D" | "LAYERS" | "COMPONENT";
 
@@ -100,7 +102,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
     const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
         new Set()
     );
-
+    const [isEditDialog, setIsEditDialog] = useState(false);
     const [currentShapeDetails, setCurrentShapeDetails] = useState<
         Shape | Component | null
     >(null);
@@ -476,7 +478,16 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                         )}
                     </div>
                 </div>
-                <div className="float-end mt-2">
+                <div className="flex gap-2 float-end mt-2">
+                    <Button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setIsEditDialog(true);
+                        }}
+                        className="flex gap-2 text-sm"
+                    >
+                        Edit <Edit />
+                    </Button>
                     <Button
                         disabled={isAddDisabled[elementType]}
                         onClick={(e) => {
@@ -594,6 +605,13 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                         currentShapeDetails as Shape | Component
                     )}
                 </div>
+            )}
+            {currentShapeDetails && (
+                <EditElementDialog
+                    isOpen={isEditDialog}
+                    onClose={() => setIsEditDialog(false)}
+                    element={currentShapeDetails as Shape | Component}
+                />
             )}
         </div>
     );
