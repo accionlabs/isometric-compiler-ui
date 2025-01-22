@@ -1,6 +1,6 @@
 // @/App.tsx
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Shape, DiagramComponent, Component, CanvasSettings } from "./Types";
 import ImprovedLayout from "./ImprovedLayout";
 import { calculateSVGBoundingBox } from "./lib/svgUtils";
@@ -20,12 +20,16 @@ import {
     saveComponent
 } from "./services/shapes";
 import { shapesLibraryManager } from "./lib/shapesLib";
+const MAX_HISTORY_LENGTH = 10;
 
 const App: React.FC = () => {
     const [svgLibrary, setSvgLibrary] = useState<Shape[]>([]);
     const [diagramComponents, setDiagramComponents] = useState<
         DiagramComponent[]
     >([]);
+    const [history, setHistory] = useState<DiagramComponent[][]>([[]]);
+    const [currentIndex, setCurrentIndex] = useState(0);
+
     const [searchQuery, setSearchQuery] = useState("");
     const [canvasSize, setCanvasSize] = useState({ width: 1000, height: 1000 });
     const [canvasSettings, setCanvasSettings] = useState<CanvasSettings | null>(
@@ -89,7 +93,19 @@ const App: React.FC = () => {
         queryFn: () => getShapesByCategory(selectedCategoryId),
         enabled: !!selectedCategoryId
     });
-
+    const addHistory = (diagramComponents: DiagramComponent[]) => {
+        const newHistory = [
+            ...history.slice(0, currentIndex + 1),
+            diagramComponents
+        ];
+        const trimmedHistory =
+            newHistory.length > MAX_HISTORY_LENGTH
+                ? newHistory.slice(newHistory.length - MAX_HISTORY_LENGTH)
+                : newHistory;
+        setHistory(trimmedHistory);
+        // Adjust currentIndex if history was trimmed
+        setCurrentIndex(trimmedHistory.length - 1);
+    };
     // on category change
     const handleCategoryChange = useCallback((id: string) => {
         setSelectedCategoryId(id);
@@ -126,7 +142,7 @@ const App: React.FC = () => {
         }
     }, []);
 
-    // update diagram component metadata when added
+    // update diagram coamponent metadata when added
     const handleUpdateMetadata = useCallback(
         (id: string, type: string | undefined, metadata: any) => {
             setDiagramComponents((prevComponents) =>
@@ -215,6 +231,7 @@ const App: React.FC = () => {
             if (result.newComponent) {
                 setDiagramComponents(result.updatedComponents);
                 updateSelected3DShape(result.newComponent);
+                addHistory(result.updatedComponents);
             } else {
                 console.error("Failed to add new 3D shape");
             }
@@ -242,6 +259,7 @@ const App: React.FC = () => {
             if (result.newComponent) {
                 setDiagramComponents(result.updatedComponents);
                 updateSelected3DShape(result.newComponent);
+                addHistory(result.updatedComponents);
             } else {
                 console.error("Failed to add new component");
             }
@@ -276,6 +294,7 @@ const App: React.FC = () => {
                 selectedAttachmentPoint
             );
             setDiagramComponents(updatedComponents);
+            addHistory(updatedComponents);
         },
         [
             diagramComponents,
@@ -296,6 +315,7 @@ const App: React.FC = () => {
                     id
                 );
                 setDiagramComponents(updatedComponents);
+                addHistory(updatedComponents);
 
                 // if removed component was currently selected, then select last component or none
                 if (selected3DShape === id) {
@@ -320,6 +340,7 @@ const App: React.FC = () => {
                 shapeIndex
             );
             setDiagramComponents(updatedComponents);
+            addHistory(updatedComponents);
         },
         [diagramComponents]
     );
@@ -743,6 +764,21 @@ const App: React.FC = () => {
         []
     );
 
+    const handleUndo = () => {
+        if (currentIndex > 0) {
+            const previousIndex = currentIndex - 1;
+            setCurrentIndex(previousIndex);
+            setDiagramComponents(history[previousIndex]);
+        }
+    };
+
+    const handleRedo = () => {
+        if (currentIndex < history.length - 1) {
+            const nextIndex = currentIndex + 1;
+            setCurrentIndex(nextIndex);
+            setDiagramComponents(history[nextIndex]);
+        }
+    };
     // load the component metadata schema
     useEffect(() => {
         const loadComponentSchema = async () => {
@@ -830,67 +866,74 @@ const App: React.FC = () => {
         );
     }, [showAttachmentPoints]);
     return (
-        <ImprovedLayout
-            svgLibrary={svgLibrary}
-            shapesByCategory={shapesAndComponentsData?.shapes ?? []}
-            categories={categories ?? []}
-            searchQuery={searchQuery}
-            searchedData={searchedData}
-            setSearchQuery={setSearchQuery}
-            activeCategory={selectedCategoryId}
-            onCategoryChange={handleCategoryChange}
-            activeLibrary={activeLibrary}
-            onLibraryChange={handleLibraryChange}
-            diagramComponents={diagramComponents}
-            components={shapesAndComponentsData?.components ?? []}
-            isCopied={isCopied}
-            selected3DShape={selected3DShape}
-            composedSVG={composedSVG}
-            onAdd3DShape={handleAdd3DShape}
-            onAdd2DShape={handleAdd2DShape}
-            onRemove3DShape={handleRemove3DShape}
-            onRemove2DShape={handleRemove2DShape}
-            onSelect3DShape={handleSelect3DShape}
-            selectedPosition={selectedPosition}
-            onSelectedPosition={handleSelectedPosition}
-            selectedAttachmentPoint={selectedAttachmentPoint}
-            onSelectedAttachmentPoint={handleSelectedAttachmentPoint}
-            onCut3DShape={handleCut3DShape}
-            onCopy3DShape={handleCopy3DShape}
-            onCancelCut3DShape={handleCancelCut3DShape}
-            onPaste3DShape={handlePaste3DShape}
-            canvasSize={canvasSize}
-            onSetCanvasSize={handleSetCanvasSize}
-            settings={canvasSettings}
-            onSetCanvasSettings={handleUpdateCanvasSettings}
-            onUpdateSvgLibrary={setSvgLibrary}
-            onDownloadSVG={handleDownloadImage}
-            fileName={fileName}
-            setFileName={handleSetFileName}
-            availableAttachmentPoints={availableAttachmentPoints}
-            errorMessage={errorMessage}
-            setErrorMessage={setErrorMessage}
-            onSaveDiagram={handleSaveDiagram}
-            onLoadDiagram={handleLoadDiagram}
-            handleLoadDiagramFromJSON={handleLoadDiagramFromJSON}
-            folderPath={folderPath}
-            setFolderPath={handleSetFolderPath}
-            showAttachmentPoints={showAttachmentPoints}
-            setShowAttachmentPoints={handleSetShowAttachmentPoints}
-            onUpdateMetadata={handleUpdateMetadata}
-            storageType={storageType}
-            onStorageTypeChange={handleStorageTypeChange}
-            onSaveAsComponent={handleSaveAsComponent}
-            onAddComponent={handleAddComponent}
-            onDeleteComponent={handleDeleteComponent}
-            isSaveDiagramDialogOpen={isSaveDiagramDialogOpen}
-            setIsSaveDiagramDialogOpen={setIsSaveDiagramDialogOpen}
-            isDataLoading={{
-                isCategoryLoading,
-                isSearchLoading,
-                isShapesLoading
-            }}
-        />
+        <>
+            <ImprovedLayout
+                svgLibrary={svgLibrary}
+                shapesByCategory={shapesAndComponentsData?.shapes ?? []}
+                categories={categories ?? []}
+                searchQuery={searchQuery}
+                searchedData={searchedData}
+                setSearchQuery={setSearchQuery}
+                activeCategory={selectedCategoryId}
+                onCategoryChange={handleCategoryChange}
+                activeLibrary={activeLibrary}
+                onLibraryChange={handleLibraryChange}
+                diagramComponents={diagramComponents}
+                components={shapesAndComponentsData?.components ?? []}
+                isCopied={isCopied}
+                selected3DShape={selected3DShape}
+                composedSVG={composedSVG}
+                onAdd3DShape={handleAdd3DShape}
+                onAdd2DShape={handleAdd2DShape}
+                onRemove3DShape={handleRemove3DShape}
+                onRemove2DShape={handleRemove2DShape}
+                onSelect3DShape={handleSelect3DShape}
+                selectedPosition={selectedPosition}
+                onSelectedPosition={handleSelectedPosition}
+                selectedAttachmentPoint={selectedAttachmentPoint}
+                onSelectedAttachmentPoint={handleSelectedAttachmentPoint}
+                onCut3DShape={handleCut3DShape}
+                onCopy3DShape={handleCopy3DShape}
+                onCancelCut3DShape={handleCancelCut3DShape}
+                onPaste3DShape={handlePaste3DShape}
+                canvasSize={canvasSize}
+                onSetCanvasSize={handleSetCanvasSize}
+                settings={canvasSettings}
+                onSetCanvasSettings={handleUpdateCanvasSettings}
+                onUpdateSvgLibrary={setSvgLibrary}
+                onDownloadSVG={handleDownloadImage}
+                fileName={fileName}
+                setFileName={handleSetFileName}
+                availableAttachmentPoints={availableAttachmentPoints}
+                errorMessage={errorMessage}
+                setErrorMessage={setErrorMessage}
+                onSaveDiagram={handleSaveDiagram}
+                onLoadDiagram={handleLoadDiagram}
+                handleLoadDiagramFromJSON={handleLoadDiagramFromJSON}
+                folderPath={folderPath}
+                setFolderPath={handleSetFolderPath}
+                showAttachmentPoints={showAttachmentPoints}
+                setShowAttachmentPoints={handleSetShowAttachmentPoints}
+                onUpdateMetadata={handleUpdateMetadata}
+                storageType={storageType}
+                onStorageTypeChange={handleStorageTypeChange}
+                onSaveAsComponent={handleSaveAsComponent}
+                onAddComponent={handleAddComponent}
+                onDeleteComponent={handleDeleteComponent}
+                isSaveDiagramDialogOpen={isSaveDiagramDialogOpen}
+                setIsSaveDiagramDialogOpen={setIsSaveDiagramDialogOpen}
+                isDataLoading={{
+                    isCategoryLoading,
+                    isSearchLoading,
+                    isShapesLoading
+                }}
+                currentIndex={currentIndex}
+                history={history}
+                addHistory={addHistory}
+                handleUndo={handleUndo}
+                handleRedo={handleRedo}
+            />
+        </>
     );
 };
 

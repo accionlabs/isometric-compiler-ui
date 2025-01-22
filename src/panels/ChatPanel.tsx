@@ -11,10 +11,15 @@ import { useEnterSubmit } from "@/hooks/useEnterSubmit";
 import { Textarea } from "@/components/ui/Textarea";
 interface ChatPanelProps {
     handleLoadDiagramFromJSON: (loadedComponents: DiagramComponent[]) => void;
-    diagramComponents: DiagramComponent[]
+    diagramComponents: DiagramComponent[];
+    addHistory: (diagramComponent: DiagramComponent[]) => void;
 }
 
-const ChatPanel: React.FC<ChatPanelProps> = ({ handleLoadDiagramFromJSON,diagramComponents }) => {
+const ChatPanel: React.FC<ChatPanelProps> = ({
+    handleLoadDiagramFromJSON,
+    diagramComponents,
+    addHistory
+}) => {
     const { messages, setMessages } = useChat();
     const { formRef, onKeyDown } = useEnterSubmit();
 
@@ -30,44 +35,55 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ handleLoadDiagramFromJSON,diagram
     }, [messages]);
 
     const handleSend = async (e: { preventDefault: () => void }) => {
-		e.preventDefault();
-		if (input.trim()) {
-			setMessages((prev) => [...prev, { text: input, isUser: true,isSystemQuery:false }]);
-			handleResponse(input);
-			setInput("");
-		}
-	};
+        e.preventDefault();
+        if (input.trim()) {
+            setMessages((prev) => [
+                ...prev,
+                { text: input, isUser: true, isSystemQuery: false }
+            ]);
+            handleResponse(input);
+            setInput("");
+        }
+    };
 
-	const handleResponse = async (input: string) => {
-		setLoading(true);
-		try {
-			const res = await sendChatRequest(input,diagramComponents);
-			if(res.needFeedback){
-				setMessages((prev) => [
-					...prev,
-					{ text: res.feedback, isUser: false,isSystemQuery:true },
-				]);
-			}else{
-				handleLoadDiagramFromJSON(res.result);
+    const handleResponse = async (input: string) => {
+        setLoading(true);
+        try {
+            const res = await sendChatRequest(input, diagramComponents);
+            if (res.needFeedback) {
                 setMessages((prev) => [
-					...prev,
-					{ text: res.feedback, isUser: false,isSystemQuery:true },
-				]);
-				setMessages((prev) => [
-					...prev,
-					{ text: JSON.stringify(res.result, null, 2), isUser: false,isSystemQuery:false },
-				]);
-			}
-		} catch (error) {
-			console.error("Error in handleResponse:", error);
-			setMessages((prev) => [
-				...prev,
-				{ text: "An error occurred. Please try again.", isUser: false ,isSystemQuery:true},
-			]);
-		} finally {
-			setLoading(false);
-		}
-	};
+                    ...prev,
+                    { text: res.feedback, isUser: false, isSystemQuery: true }
+                ]);
+            } else {
+                handleLoadDiagramFromJSON(res.result);
+                setMessages((prev) => [
+                    ...prev,
+                    { text: res.feedback, isUser: false, isSystemQuery: true }
+                ]);
+                setMessages((prev) => [
+                    ...prev,
+                    {
+                        text: JSON.stringify(res.result, null, 2),
+                        isUser: false,
+                        isSystemQuery: false
+                    }
+                ]);
+            }
+        } catch (error) {
+            console.error("Error in handleResponse:", error);
+            setMessages((prev) => [
+                ...prev,
+                {
+                    text: "An error occurred. Please try again.",
+                    isUser: false,
+                    isSystemQuery: true
+                }
+            ]);
+        } finally {
+            setLoading(false);
+        }
+    };
     return (
         <div className="p-4 flex flex-col gap-4 ">
             {/* chat container */}
@@ -79,7 +95,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ handleLoadDiagramFromJSON,diagram
                             message.isUser ? "justify-end" : "justify-start"
                         }`}
                     >
-                        {(message.isUser || message.isSystemQuery) ? (
+                        {message.isUser || message.isSystemQuery ? (
                             <div
                                 className={`max-w-xs px-4 py-2 rounded-lg break-words ${
                                     message.isUser

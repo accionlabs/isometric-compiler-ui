@@ -38,9 +38,10 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger
 } from "@/components/ui/DropDownMenu";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Redo, Undo } from "lucide-react";
 import { MenuIcon } from "./components/ui/IconGroup";
 import { useKeycloak } from "@react-keycloak/web";
+import CustomTooltip from "./components/flow/CustomToolTip";
 
 type PanelType = "shapes" | "composition" | "chat";
 
@@ -123,6 +124,11 @@ interface ImprovedLayoutProps {
         isSearchLoading: boolean;
         isShapesLoading: boolean;
     };
+    currentIndex: number;
+    history: DiagramComponent[][];
+    addHistory: (diagramComponent: DiagramComponent[]) => void;
+    handleUndo: () => void;
+    handleRedo: () => void;
 }
 
 const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
@@ -180,7 +186,12 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     onSaveAsComponent,
     isSaveDiagramDialogOpen,
     setIsSaveDiagramDialogOpen,
-    isDataLoading
+    isDataLoading,
+    currentIndex,
+    history,
+    addHistory,
+    handleUndo,
+    handleRedo
 }) => {
     const params = new URLSearchParams(window.location.search);
     const isReadModeEnabled = params.get("mode") === "read";
@@ -531,6 +542,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                             {activePanel === "chat" && (
                                 <ChatPanel
                                     diagramComponents={diagramComponents}
+                                    addHistory={addHistory}
                                     handleLoadDiagramFromJSON={
                                         handleLoadDiagramFromJSON
                                     }
@@ -541,9 +553,42 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                 )}
                 <div className="flex-grow flex flex-col  relative">
                     {/* Heading */}
-                    <h2 className="text-xl h-14 font-semibold bg-customGray p-4 z-10">
-                        Composed SVG
-                    </h2>
+                    <div className="flex h-14 justify-between items-center bg-customGray p-4 z-10">
+                        <h2 className="text-xl  font-semibold ">
+                            Composed SVG
+                        </h2>
+                        <div className="flex gap-4">
+                            <CustomTooltip
+                                action={
+                                    <button
+                                        disabled={currentIndex === 0}
+                                        onClick={handleUndo}
+                                        className="hover:bg-customLightGray p-2 rounded disabled:cursor-not-allowed disabled:opacity-50"
+                                        title="Undo"
+                                    >
+                                        <Undo />
+                                    </button>
+                                }
+                                header="Undo"
+                                side="top"
+                            />
+                            <CustomTooltip
+                                action={
+                                    <button
+                                        disabled={
+                                            currentIndex === history.length - 1
+                                        }
+                                        onClick={handleRedo}
+                                        className="hover:bg-customLightGray p-2 rounded disabled:cursor-not-allowed disabled:opacity-50"
+                                    >
+                                        <Redo />
+                                    </button>
+                                }
+                                header="Redo"
+                                side="top"
+                            />
+                        </div>
+                    </div>
 
                     {/* Relative container for SVG Display and Attachment Options Panel */}
                     <div className="relative flex-grow overflow-hidden">

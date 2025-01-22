@@ -265,60 +265,77 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
     };
 
     const renderElement = (element: Shape | Component) => {
-        const elementType = "type" in element ? element.type : "COMPONENT";
-        let elementTypeColor = "";
-        switch (elementType) {
-            case "2D":
-                elementTypeColor = "text-custom2D";
-                break;
-            case "3D":
-                elementTypeColor = "text-custom3D";
-                break;
-            case "LAYERS":
-                elementTypeColor = "text-customLayer";
-                break;
-            case "COMPONENT":
-                elementTypeColor = "text-customComponent";
-                break;
-            default:
-                elementTypeColor = "text-white";
-        }
+        const elementType =
+            "type" in element
+                ? element.type
+                : ("COMPONENT" as keyof typeof typeColors); // Cast to the correct type
+
+        // Define colors based on element type
+        const typeColors = {
+            "2D": "text-custom2D",
+            "3D": "text-custom3D",
+            LAYERS: "text-customLayer",
+            COMPONENT: "text-customComponent"
+        };
+
+        // Utility for element type color classes
+        const getElementTypeColor = (type: keyof typeof typeColors) => {
+            return typeColors[type] || "text-white"; // Default to 'text-white' if no match
+        };
+
+        const handlePreviewClick = (
+            e: React.MouseEvent,
+            type: keyof typeof typeColors
+        ) => {
+            e.stopPropagation();
+            if (!isAddDisabled[type]) {
+                addActionFor[type](element);
+            }
+        };
+
+        const handleElementClick = (e: React.MouseEvent) => {
+            e.stopPropagation();
+            setCurrentShapeDetails(element);
+        };
+
+        const elementTypeColor = getElementTypeColor(elementType);
+
         return (
-            <button
-                key={element.name + element.version}
-                onClick={(e) => {
-                    e.stopPropagation();
-                    setCurrentShapeDetails(element);
-                }}
-                className="flex flex-col p-1 rounded-lg mb-2 relative aspect-[3/2] transition-all hover:bg-cu focus:outline-none disabled:opacity-80 disabled:cursor-not-allowed"
+            <div
+                key={`${element.name}-${element.version}`}
+                onClick={handleElementClick}
+                className="flex flex-col p-1 cursor-pointer rounded-lg mb-2 relative aspect-[3/2] transition-all hover:bg-cu focus:outline-none disabled:opacity-80 disabled:cursor-not-allowed"
             >
                 {/* Preview Container */}
-                <button
-                    disabled={isAddDisabled[elementType]}
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        addActionFor[elementType](element);
-                    }}
-                    className="relative w-full h-full"
+                <div
+                    role="button"
+                    aria-disabled={isAddDisabled[elementType]}
+                    onClick={(e) => handlePreviewClick(e, elementType)}
+                    className={`relative w-full h-full ${
+                        isAddDisabled[elementType]
+                            ? "cursor-not-allowed opacity-50"
+                            : "cursor-pointer"
+                    }`}
                 >
-                    {/* Preview */}
+                    {/* Render Preview */}
                     {renderPreview(element)}
 
-                    {/* Blur and Icon on Hover */}
+                    {/* Hover Effect */}
                     <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm opacity-0 hover:opacity-100 transition-opacity">
                         <span className="text-white text-3xl">+</span>
                     </div>
-                </button>
+                </div>
 
+                {/* Element Details */}
                 <div className="text-white text-sm overflow-hidden text-ellipsis whitespace-pre-line line-clamp-1">
                     {element.name}
                 </div>
                 <div className={`${elementTypeColor} text-xs capitalize`}>
-                    {elementType == "2D" || elementType === "3D"
+                    {["2D", "3D"].includes(elementType)
                         ? elementType
-                        : elementType.toLocaleLowerCase()}
+                        : elementType.toLowerCase()}
                 </div>
-            </button>
+            </div>
         );
     };
 
