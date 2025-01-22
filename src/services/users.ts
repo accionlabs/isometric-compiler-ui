@@ -1,6 +1,6 @@
 import { config } from "@/config";
-
-export async function login(token: string) {
+import { User } from "@/Types";
+export async function login(token: string): Promise<User | undefined> {
     try {
 
         const url = `${config.isometricApiUrl}/users/login`;
@@ -14,7 +14,8 @@ export async function login(token: string) {
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        return await response.json(); // Parse the JSON response
+        const data = await response.json(); // Parse the JSON response
+        return data.user;
     } catch(e) {
         console.error("Error:", e)
     }
