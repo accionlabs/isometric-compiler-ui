@@ -6,10 +6,9 @@ export default function Login(){
 
     const { keycloak, initialized } = useKeycloak();
 
-    console.log("login page rendered",keycloak.authenticated)
     return (
       <div className="flex justify-center items-center content-center gap-12 bg-customBlack h-screen w-screen px-16">
-        <video autoPlay loop muted className="w-[400px] h-[400px] rounded-full object-cover">
+        <video autoPlay loop muted className="w-[70vh] h-[70vh] rounded-full object-cover" style={{filter: 'brightness() contrast() opacity()'}}>
             <source src="/video/Isometric.mp4" type="video/mp4" />
         </video>
         <div className="flex flex-col mb-20">
