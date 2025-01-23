@@ -9,8 +9,9 @@ export default function Login(){
     console.log("login page rendered",keycloak.authenticated)
     return (
       <div className="flex justify-center items-center content-center gap-12 bg-customBlack h-screen w-screen px-16">
-        <img src="/images/login-animation.gif" alt="accionlabs logo"
-        className="w-[400px] h-[400px] rounded-full object-cover" />
+        <video autoPlay loop muted className="w-[400px] h-[400px] rounded-full object-cover">
+            <source src="/video/Isometric.mp4" type="video/mp4" />
+        </video>
         <div className="flex flex-col mb-20">
             <p className=" text-white text-2xl" >Welcome to</p>
             <h1 className="text-3xl font-bold text-white">Isometric Compiler</h1>
