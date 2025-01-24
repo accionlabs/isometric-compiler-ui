@@ -43,14 +43,14 @@ import { MenuIcon } from "./components/ui/IconGroup";
 import { useKeycloak } from "@react-keycloak/web";
 import CustomTooltip from "./components/flow/CustomToolTip";
 
-type PanelType = "shapes" | "composition" | "chat";
+type PanelType = "diagrams" | "shapes" | "composition" | "chat";
 
 const panels: Array<{ id: PanelType; label: string }> = [
+    { id: "diagrams", label: "Diagrams" },
     { id: "shapes", label: "Shapes" },
     { id: "composition", label: "Composition" },
     { id: "chat", label: "AI Model" }
 ];
-
 interface ImprovedLayoutProps {
     svgLibrary: Shape[];
     shapesByCategory: Shape[];
