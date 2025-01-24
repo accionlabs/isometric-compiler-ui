@@ -53,7 +53,17 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     const handleSend = async (e: { preventDefault: () => void }) => {
         e.preventDefault();
         if(selectedImage) {
-            sendImageChatRequest(selectedImage)
+            const res = await sendImageChatRequest(selectedImage);
+            handleLoadDiagramFromJSON(res);
+            clearImage();
+            setMessages((prev) => [
+                ...prev,
+                {
+                    text: JSON.stringify(res, null, 2),
+                    isUser: false,
+                    isSystemQuery: false
+                }
+            ]);
         }
         else if (input.trim()) {
             setMessages((prev) => [

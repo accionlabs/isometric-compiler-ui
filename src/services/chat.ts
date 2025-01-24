@@ -61,7 +61,7 @@ export async function sendImageChatRequest(image: string) {
             formData.append('image', imageFile);
         }
 
-        const response = await fetch(`${config.gatewayApiUrl}/document/isometric/image`, {
+        const response = await fetch(`${config.gatewayApiUrl}/document/isometric/v2/image`, {
             method: 'POST',
             body: formData,
         });
