@@ -321,7 +321,7 @@ export interface WorkerResponse {
     };
 }
 
-export interface User { 
+export interface User {
     _id: string;
     email: string;
     firstName: string;
@@ -329,4 +329,14 @@ export interface User {
     role: string;
     createdAt: string;
     updatedAt: string;
+}
+
+export interface DiagramInfo {
+    name: string;
+    version: string;
+    metadata: {
+        project: string;
+        priority: string;
+    } | null;
+    diagramComponents: DiagramComponent[];
 }
