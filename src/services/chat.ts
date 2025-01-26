@@ -71,5 +71,21 @@ export async function sendImageChatRequest(image: string) {
         }
 
         const result = await response.json();
+        /*Need to be moved to reusable helper function*/
+        const shapeNames = [];
+        for (let i = 0; i < result.length; i++) {
+            if (result[i].shape) {
+                shapeNames.push(result[i].shape);
+            }
+        }
+        if (shapeNames.length>0) {
+            const shapes = await getShapesByName(shapeNames);
+            if (shapes) {
+                shapesLibraryManager.deserializeShapesLib(shapes.shapes);
+                componentLibraryManager.deserializeComponentLib(
+                    shapes.components
+                );
+            }
+        }
         return result
 }
