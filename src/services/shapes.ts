@@ -15,7 +15,7 @@ export async function getShapesByName(names: string[]): Promise<
       }
     | undefined
 > {
-    const params = names.map((item) => "filters[name][$in]=" + item).join("&");
+    const params = names.map((item) => "filters[name][$in]=" + encodeURIComponent(item)).join("&");
 
     const url = `${config.isometricApiUrl}/shapes?${params}&Page=1&limit=1000`;
     try {

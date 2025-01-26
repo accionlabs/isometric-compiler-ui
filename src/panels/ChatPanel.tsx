@@ -53,17 +53,25 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     const handleSend = async (e: { preventDefault: () => void }) => {
         e.preventDefault();
         if(selectedImage) {
-            const res = await sendImageChatRequest(selectedImage);
-            handleLoadDiagramFromJSON(res);
-            clearImage();
-            setMessages((prev) => [
-                ...prev,
-                {
-                    text: JSON.stringify(res, null, 2),
-                    isUser: false,
-                    isSystemQuery: false
-                }
-            ]);
+            setLoading(true);
+            try{
+                const res = await sendImageChatRequest(selectedImage);
+                handleLoadDiagramFromJSON(res);
+                clearImage();
+                setLoading(false);
+                setMessages((prev) => [
+                    ...prev,
+                    {
+                        text: JSON.stringify(res, null, 2),
+                        isUser: false,
+                        isSystemQuery: false
+                    }
+                ]);
+            }catch(error){
+                console.error(error)
+            }finally{
+                setLoading(false);
+            }
         }
         else if (input.trim()) {
             setMessages((prev) => [
@@ -199,7 +207,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                         className="hidden"
                         onChange={handleImageSelect}
                     />
-                        <Button type="submit" disabled={!input && !selectedImage}>
+                        <Button type="submit" disabled={(!input && !selectedImage) || isLoading}>
                             send
                             <span className="sr-only">Send message</span>
                         </Button>
