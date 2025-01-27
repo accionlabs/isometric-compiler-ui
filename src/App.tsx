@@ -34,8 +34,7 @@ const App: React.FC = () => {
         DiagramComponent[]
     >([]);
     const [history, setHistory] = useState<DiagramComponent[][]>([[]]);
-    const [currentDiagramInfo, setCurrentDiagramInfo] =
-        useState<DiagramInfo | null>(null);
+
     const [currentIndex, setCurrentIndex] = useState(0);
 
     const [searchQuery, setSearchQuery] = useState("");

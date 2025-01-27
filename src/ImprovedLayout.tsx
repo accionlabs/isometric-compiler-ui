@@ -13,7 +13,6 @@ import { Button } from "./components/ui/Button";
 import FlowSVGDisplay from "./FlowSVGDIsplay";
 import ShapesPanel from "./panels/ShapesPanel";
 import CompositionPanel from "./panels/CompositionPanel";
-import SettingsPanel from "./panels/SettingsPanel";
 import AttachmentOptionsPanel from "./panels/AttachmentOptionsPanel";
 import {
     DiagramComponent,
@@ -42,11 +41,12 @@ import { ChevronDown, Redo, Undo } from "lucide-react";
 import { MenuIcon } from "./components/ui/IconGroup";
 import { useKeycloak } from "@react-keycloak/web";
 import CustomTooltip from "./components/flow/CustomToolTip";
+import DiagramPanel from "./panels/DiagramPanel";
 
 type PanelType = "diagrams" | "shapes" | "composition" | "chat";
 
 const panels: Array<{ id: PanelType; label: string }> = [
-    { id: "diagrams", label: "Diagrams" },
+    // { id: "diagrams", label: "Diagrams" },
     { id: "shapes", label: "Shapes" },
     { id: "composition", label: "Composition" },
     { id: "chat", label: "AI Model" }
@@ -461,34 +461,36 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                     </DropdownMenuItem> */}
                                 </DropdownMenuContent>
                             </DropdownMenu>
-                            {panels.map((panel) => (
-                                <button
-                                    key={panel.id}
-                                    onClick={() => setActivePanel(panel.id)}
-                                    className={`relative rounded px-2 py-1 
+                            <div className="flex overflow-auto scrollbar-hide">
+                                {panels.map((panel) => (
+                                    <button
+                                        key={panel.id}
+                                        onClick={() => setActivePanel(panel.id)}
+                                        className={`relative rounded px-2 py-1 
             ${
                 activePanel === panel.id
                     ? "bg-customLightGray"
                     : "bg-customGray"
             }`}
-                                >
-                                    {/* Hidden bold reference text */}
-                                    <span
-                                        aria-hidden="true"
-                                        className="block text-sm font-bold invisible whitespace-nowrap"
                                     >
-                                        {panel.label}
-                                    </span>
+                                        {/* Hidden bold reference text */}
+                                        <span
+                                            aria-hidden="true"
+                                            className="block text-sm font-bold invisible whitespace-nowrap"
+                                        >
+                                            {panel.label}
+                                        </span>
 
-                                    {/* Visible text layer */}
-                                    <span
-                                        className={`absolute inset-0 flex items-center justify-center text-sm
+                                        {/* Visible text layer */}
+                                        <span
+                                            className={`absolute inset-0 flex items-center justify-center text-sm
               ${activePanel === panel.id ? "font-bold" : "font-normal"}`}
-                                    >
-                                        {panel.label}
-                                    </span>
-                                </button>
-                            ))}
+                                        >
+                                            {panel.label}
+                                        </span>
+                                    </button>
+                                ))}
+                            </div>
                             <input
                                 ref={fileInputRef}
                                 type="file"
@@ -537,6 +539,11 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                     onCancelCut3DShape={onCancelCut3DShape}
                                     onPaste3DShape={handlePaste3DShape}
                                     onUpdateMetadata={onUpdateMetadata}
+                                />
+                            )}
+                            {activePanel === "diagrams" && (
+                                <DiagramPanel
+                                    diagramComponents={diagramComponents}
                                 />
                             )}
                             {activePanel === "chat" && (

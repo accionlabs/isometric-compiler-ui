@@ -332,9 +332,11 @@ export interface User {
 }
 
 export interface DiagramInfo {
+    _id?: string;
     name: string;
     version: string;
-    metadata: {
+    metadata?: {
+        description: string;
         project: string;
         priority: string;
     } | null;
