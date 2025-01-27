@@ -48,3 +48,44 @@ export async function sendChatRequest(
         console.error("Error:", error); // Handle errors
     }
 }
+
+export async function sendImageChatRequest(image: string) {
+    const formData = new FormData();
+        if (image) {
+            const imageFile = await fetch(image)
+                .then((res) => res.blob())
+                .then(
+                    (blob) =>
+                        new File([blob], 'selectedImage.jpg', { type: blob.type })
+                );
+            formData.append('image', imageFile);
+        }
+
+        const response = await fetch(`${config.gatewayApiUrl}/document/isometric/v2/image`, {
+            method: 'POST',
+            body: formData,
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to send the message.');
+        }
+
+        const result = await response.json();
+        /*Need to be moved to reusable helper function*/
+        const shapeNames = [];
+        for (let i = 0; i < result.length; i++) {
+            if (result[i].shape) {
+                shapeNames.push(result[i].shape);
+            }
+        }
+        if (shapeNames.length>0) {
+            const shapes = await getShapesByName(shapeNames);
+            if (shapes) {
+                shapesLibraryManager.deserializeShapesLib(shapes.shapes);
+                componentLibraryManager.deserializeComponentLib(
+                    shapes.components
+                );
+            }
+        }
+        return result
+}

@@ -6,9 +6,10 @@ import { Button } from "../components/ui/Button";
 import { CodeBlock } from "./CodeBlockCard";
 import { DiagramComponent } from "@/Types";
 import { useChat } from "@/hooks/useChatProvider";
-import { sendChatRequest } from "@/services/chat";
+import { sendChatRequest, sendImageChatRequest } from "@/services/chat";
 import { useEnterSubmit } from "@/hooks/useEnterSubmit";
 import { Textarea } from "@/components/ui/Textarea";
+import { Paperclip, X } from "lucide-react";
 interface ChatPanelProps {
     handleLoadDiagramFromJSON: (loadedComponents: DiagramComponent[]) => void;
     diagramComponents: DiagramComponent[];
@@ -28,6 +29,21 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = React.useRef<HTMLTextAreaElement>(null);
 
+    const [selectedImage, setSelectedImage] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (event.target.files && event.target.files[0]) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+            reader.onload = () => setSelectedImage(reader.result as string);
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const clearImage = () => setSelectedImage(null);
+
+
     // Scroll to the bottom when a new message is added
     useEffect(() => {
         messages.length > 0 &&
@@ -36,7 +52,28 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
 
     const handleSend = async (e: { preventDefault: () => void }) => {
         e.preventDefault();
-        if (input.trim()) {
+        if(selectedImage) {
+            setLoading(true);
+            try{
+                const res = await sendImageChatRequest(selectedImage);
+                handleLoadDiagramFromJSON(res);
+                clearImage();
+                setLoading(false);
+                setMessages((prev) => [
+                    ...prev,
+                    {
+                        text: JSON.stringify(res, null, 2),
+                        isUser: false,
+                        isSystemQuery: false
+                    }
+                ]);
+            }catch(error){
+                console.error(error)
+            }finally{
+                setLoading(false);
+            }
+        }
+        else if (input.trim()) {
             setMessages((prev) => [
                 ...prev,
                 { text: input, isUser: true, isSystemQuery: false }
@@ -140,8 +177,37 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                         onChange={(e) => setInput(e.target.value)}
                     />
 
-                    <div className="absolute right-0 top-[13px] sm:right-4">
-                        <Button type="submit" disabled={!input}>
+                    {selectedImage && (
+                    <div className="absolute top-2 left-2 flex items-center space-x-2">
+                        <div className="relative w-12 h-12">
+                            <img
+                                src={selectedImage}
+                                alt="Selected"
+                                className="w-full h-full object-cover rounded-sm border"
+                            />
+                            <button
+                                type="button"
+                                className="absolute top-0 right-0 p-1 bg-white rounded-full shadow"
+                                onClick={clearImage}
+                            >
+                                <X className="w-4 h-4 text-red-600" />
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+
+                    <div className="flex gap-1 justify-center align-middle absolute right-0 top-[13px] sm:right-4">
+                        <Paperclip className="mt-1 cursor-pointer" onClick={() => fileInputRef.current?.click()}/>
+
+                    <input
+                        type="file"
+                        accept="image/*"
+                        ref={fileInputRef}
+                        className="hidden"
+                        onChange={handleImageSelect}
+                    />
+                        <Button type="submit" disabled={(!input && !selectedImage) || isLoading}>
                             send
                             <span className="sr-only">Send message</span>
                         </Button>
