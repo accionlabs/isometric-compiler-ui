@@ -496,7 +496,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                     </div>
                 </div>
                 <div className="flex gap-2 float-end mt-2">
-                    {/* <Button
+                    <Button
                         onClick={(e) => {
                             e.stopPropagation();
                             setIsEditDialog(true);
@@ -504,7 +504,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                         className="flex gap-2 text-sm"
                     >
                         Edit <Edit />
-                    </Button> */}
+                    </Button>
                     <Button
                         disabled={isAddDisabled[elementType]}
                         onClick={(e) => {
@@ -627,7 +627,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                 <EditElementDialog
                     isOpen={isEditDialog}
                     onClose={() => setIsEditDialog(false)}
-                    element={currentShapeDetails as Shape | Component}
+                    element={currentShapeDetails as UnifiedElement}
                 />
             )}
         </div>

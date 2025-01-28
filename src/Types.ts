@@ -46,6 +46,8 @@ export interface Shape {
     description?: string;
     path?: string;
     version?: string;
+    tags?: string[];
+    status?: "active" | 'inactive';
 }
 
 export interface DependencyResult {
@@ -91,6 +93,8 @@ export interface Component {
     version?: string;
     created: Date;
     lastModified: Date;
+    tags?: string[];
+    status?: 'active' | 'inactive'
 }
 type Metadata = {
     description: string;
@@ -114,6 +118,8 @@ export interface UnifiedElement {
     version?: string;
     created?: Date;
     lastModified?: Date;
+    tags?: string[];
+    status: "active" | "inactive";
 }
 export type UnifiedResponse = {
     _id: string;

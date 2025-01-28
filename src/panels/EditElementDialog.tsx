@@ -1,6 +1,6 @@
 // @/components/LibraryManagerDialog.tsx
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
     Dialog,
     DialogContent,
@@ -9,17 +9,22 @@ import {
     DialogTitle
 } from "@/components/ui/Dialog";
 import LibraryManager from "@/panels/LibraryManager";
-import { Component, Shape } from "@/Types";
+import { Component, Shape, UnifiedElement } from "@/Types";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Label } from "@/components/ui/Label";
 import { processSVGFile } from "@/lib/svgUtils";
+import ChipInput from "@/components/ui/Chip";
+import { getCategoriesFlat } from "@/services/categories";
+import { RadixSelect } from "@/components/ui/Select";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { updateShapesComponent } from "@/services/shapes";
 
 interface LibraryManagerDialogProps {
     isOpen: boolean;
     onClose: () => void;
 
-    element: Shape | Component;
+    element: UnifiedElement;
 }
 
 const EditElementDialog: React.FC<LibraryManagerDialogProps> = ({
@@ -28,6 +33,50 @@ const EditElementDialog: React.FC<LibraryManagerDialogProps> = ({
     element
 }) => {
     const [elementData, setElementData] = useState(element);
+    const [category, setCategory] = useState<string>('');
+        const [error, setError] = useState<string | null>(null);
+    const [status, setStatus] = useState<string>(elementData.status || 'active'); 
+    // const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [description, setDescription] = useState<string>(elementData.description ?? '');
+    const [name, setName] = useState<string>(elementData.name);
+    
+    
+    const { data: categories } = useQuery({
+            queryKey: ["categories_data_flat"],
+            queryFn: getCategoriesFlat
+        });
+
+        useEffect(()=>{
+            categories?.data.forEach((category)=>{
+                if(category.path == elementData.path){
+                    setCategory(category._id)
+                }
+            })
+        }, [elementData, categories])
+
+   
+    const {mutate: shapeComponentMutation} = useMutation({mutationFn: updateShapesComponent, mutationKey:  ['updatedShape']})
+
+    const handleSubmit = async () => {
+        if (!category.trim()) {
+            setError("Category is required");
+            return;
+        }
+    };
+
+    // Update tags handler
+    const handleTagsChange = (updatedTags: string[]) => {
+        setElementData((prev) => ({
+            ...prev,
+            tags: updatedTags
+        }));
+    };
+
+    const handleStatusChange = (newStatus: string) => {
+        setStatus(newStatus);
+    };
+    
+    console.log(elementData, 'elementData')
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] w-[800px] max-h-[80vh] bg-gray-800 text-white overflow-hidden">
@@ -36,6 +85,24 @@ const EditElementDialog: React.FC<LibraryManagerDialogProps> = ({
                 </DialogHeader>
 
                 <form className="space-y-4">
+ 
+                    {/* Version Field */}
+
+                    <div className="space-y-2 text-white">
+                        <Label>Version</Label>
+                        <Input
+                            value={elementData.version || ""}
+                            onChange={(e) =>
+                                setElementData((prev) => ({
+                                    ...prev,
+                                    version: e.target.value
+                                }))
+                            }
+                            className="w-full bg-gray-700 text-white border-gray-600"
+                        />
+                    </div>
+
+
                     <div className="space-y-2 text-white">
                         <Label>Description</Label>
                         <Input
@@ -53,6 +120,55 @@ const EditElementDialog: React.FC<LibraryManagerDialogProps> = ({
                             className="w-full bg-gray-700 text-white border-gray-600"
                         />
                     </div>
+
+                    {/* Tags Field */}
+
+                    <div className="space-y-2">
+                        <Label className="text-white">Tags</Label>
+                        <ChipInput
+                            id="tags-input"
+                            currentValue={elementData.tags || []}
+                            handleNewSkill={handleTagsChange}
+                            placeholder="Add tags and press Enter"
+                            label="Tags"
+                        />
+                    </div>
+
+
+                    <div className="space-y-2 text-white">
+                        <Label >Category</Label>
+                        <RadixSelect
+                            options={
+                                categories?.data.map((category) => ({
+                                    label: category.name,
+                                    value: category._id
+                                })) ?? []
+                            }
+                            value={category}
+                            onChange={(value) => setCategory(value)}
+                            placeholder="Select categoty"
+                        />
+                        {error && (
+                                <div className="text-red-400 text-sm mt-1">
+                                    {error}
+                                </div>
+                            )}
+                    </div>
+
+                     {/* Status Field */}
+                     <div className="space-y-2 text-white">
+                        <Label>Status</Label>
+                        <RadixSelect
+                            options={[
+                                { label: "Active", value: "active" },
+                                { label: "Inactive", value: "inactive" }
+                            ]}
+                            value={status}
+                            onChange={handleStatusChange}
+                            placeholder="Select status"
+                        />
+                    </div>
+
                     {"type" in elementData && (
                         <div className="space-y-2 text-white">
                             <Label>upload svg</Label>
@@ -85,7 +201,12 @@ const EditElementDialog: React.FC<LibraryManagerDialogProps> = ({
                         >
                             Cancel
                         </Button>
-                        <Button>Update</Button>
+                        <Button
+                        onClick={(e)=>{
+                            e.preventDefault()
+                            shapeComponentMutation({...elementData, category})
+                        }}
+                        >Update</Button>
                     </DialogFooter>
                 </form>
             </DialogContent>
