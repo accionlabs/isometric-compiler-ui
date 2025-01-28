@@ -24,6 +24,7 @@ import { componentLibraryManager } from "@/lib/componentLib";
 
 interface SaveComponentDialogProps {
     isOpen: boolean;
+    isPending: boolean;
     onClose: () => void;
     onSave: (name: string, description: string) => void;
 }
@@ -31,7 +32,8 @@ interface SaveComponentDialogProps {
 const SaveNewDiagram: React.FC<SaveComponentDialogProps> = ({
     isOpen,
     onClose,
-    onSave
+    onSave,
+    isPending
 }) => {
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
@@ -53,13 +55,7 @@ const SaveNewDiagram: React.FC<SaveComponentDialogProps> = ({
             setShowOverwriteDialog(true);
             return;
         }
-
-        handleSaveComponent();
-    };
-
-    const handleSaveComponent = () => {
         onSave(name, description);
-        handleClose();
     };
 
     const handleClose = () => {
@@ -119,6 +115,7 @@ const SaveNewDiagram: React.FC<SaveComponentDialogProps> = ({
                         <div className="flex justify-end space-x-2">
                             <Button
                                 onClick={handleClose}
+                                disabled={isPending}
                                 className="bg-gray-600 hover:bg-gray-700"
                             >
                                 Cancel
@@ -126,9 +123,9 @@ const SaveNewDiagram: React.FC<SaveComponentDialogProps> = ({
                             <Button
                                 onClick={handleSubmit}
                                 className="bg-blue-600 hover:bg-blue-700"
-                                disabled={!name.trim()}
+                                disabled={!name.trim() || isPending}
                             >
-                                Save Component
+                                {isPending ? "Saving..." : "Save Component"}
                             </Button>
                         </div>
                     </div>
@@ -155,7 +152,9 @@ const SaveNewDiagram: React.FC<SaveComponentDialogProps> = ({
                         >
                             Cancel
                         </AlertDialogCancel>
-                        <AlertDialogAction onClick={handleSaveComponent}>
+                        <AlertDialogAction
+                            onClick={() => onSave(name, description)}
+                        >
                             Overwrite
                         </AlertDialogAction>
                     </AlertDialogFooter>

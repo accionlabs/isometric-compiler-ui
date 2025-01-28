@@ -337,6 +337,7 @@ export interface DiagramInfo {
     version: string;
     metadata?: {
         description: string;
+        svgContent: string;
         project: string;
         priority: string;
     } | null;

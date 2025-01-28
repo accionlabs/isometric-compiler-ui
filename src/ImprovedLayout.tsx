@@ -20,7 +20,8 @@ import {
     Component,
     CanvasSettings,
     Category,
-    UnifiedElement
+    UnifiedElement,
+    DiagramInfo
 } from "./Types";
 import ChatPanel from "./panels/ChatPanel";
 import { ChatProvider } from "./hooks/useChatProvider";
@@ -42,11 +43,15 @@ import { MenuIcon } from "./components/ui/IconGroup";
 import { useKeycloak } from "@react-keycloak/web";
 import CustomTooltip from "./components/flow/CustomToolTip";
 import DiagramPanel from "./panels/DiagramPanel";
+import { updateDiagram } from "./services/diagrams";
+import { useMutation } from "@tanstack/react-query";
+import useDebounce from "./hooks/useDebounceHook";
+import { calculateSVGBoundingBox } from "./lib/svgUtils";
 
 type PanelType = "diagrams" | "shapes" | "composition" | "chat";
 
 const panels: Array<{ id: PanelType; label: string }> = [
-    // { id: "diagrams", label: "Diagrams" },
+    { id: "diagrams", label: "Diagrams" },
     { id: "shapes", label: "Shapes" },
     { id: "composition", label: "Composition" },
     { id: "chat", label: "AI Model" }
@@ -193,10 +198,14 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     handleUndo,
     handleRedo
 }) => {
+    const { keycloak } = useKeycloak();
+
     const params = new URLSearchParams(window.location.search);
     const isReadModeEnabled = params.get("mode") === "read";
 
     const [activePanel, setActivePanel] = useState<PanelType>("shapes");
+    const [currentDiagramInfo, setCurrentDiagramInfo] =
+        useState<DiagramInfo | null>(null);
 
     const [isLoadingDialogOpen, setIsLoadingDialogOpen] = useState(false);
     const [isSaveLoadDialogOpen, setIsSaveLoadDialogOpen] = useState(false);
@@ -211,28 +220,62 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
         loadedFiles: number;
         totalFiles: number;
     } | null>(null);
+    // const debouncedDiagramComponents = useDebounce(diagramComponents, 2000);
+    // const debouncedComposedSVG = useDebounce(composedSVG, 2000);
+
+    // const { mutate: updateElement } = useMutation({
+    //     mutationFn: updateDiagram
+    // });
     const [saveLoadMessage, setSaveLoadMessage] = useState<string | null>(null);
+    const [lastSavedComponents, setLastSavedComponents] = useState<
+        DiagramComponent[]
+    >([]);
+    const [lastSavedSVG, setLastSavedSVG] = useState<string>("");
 
-    useEffect(() => {
-        const handleMessage = (event: MessageEvent) => {
-            try {
-                //message origin later can be handled by array of origins which we can fetch from db
-                if (event.origin === "https://assistant.accionbreeze.com") {
-                    const { diagramComponents = [] } = event.data;
-                    handleLoadDiagramFromJSON(diagramComponents);
-                }
-            } catch (error) {
-                console.error("Error processing message event: ", error);
-            }
-        };
-        // Add event listener for message events
-        window.addEventListener("message", handleMessage);
+    // const hasUnsavedChanges = useCallback(() => {
+    //     if (!currentDiagramInfo) return false;
 
-        // Clean up the event listener on component unmount
-        return () => {
-            window.removeEventListener("message", handleMessage);
-        };
-    }, []);
+    //     const svgChanged = composedSVG !== lastSavedSVG;
+
+    //     return svgChanged;
+    // }, [currentDiagramInfo, composedSVG, lastSavedComponents, lastSavedSVG]);
+
+    // const debouncedUpdate = useCallback(async () => {
+    //     console.log("got hereee for updating!!!!!123", hasUnsavedChanges());
+    //     if (!currentDiagramInfo?._id || !hasUnsavedChanges()) return;
+
+    //     const boundingBox = calculateSVGBoundingBox(
+    //         composedSVG,
+    //         canvasSize
+    //     ) || {
+    //         x: 0,
+    //         y: 0,
+    //         width: "100%",
+    //         height: "100%"
+    //     };
+
+    //     const svgContent: string = `
+    //     <svg xmlns="http://www.w3.org/2000/svg" viewBox="${boundingBox.x} ${boundingBox.y} ${boundingBox.width} ${boundingBox.height}" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+    //         ${debouncedComposedSVG}
+    //     </svg>
+    // `;
+    //     console.log("got hereee for updating!!!!!");
+    //     // updateElement({
+    //     //     id: currentDiagramInfo._id,
+    //     //     diagramComponents: debouncedDiagramComponents,
+    //     //     svgContent,
+    //     //     name: currentDiagramInfo.name,
+    //     //     description: currentDiagramInfo.metadata?.description || ""
+    //     // });
+
+    //     setLastSavedComponents(debouncedDiagramComponents);
+    //     setLastSavedSVG(debouncedComposedSVG);
+    // }, [
+    //     debouncedDiagramComponents,
+    //     debouncedComposedSVG,
+    //     currentDiagramInfo,
+    //     hasUnsavedChanges
+    // ]);
 
     const handleSelect3DShape = useCallback(
         (id: string | null) => {
@@ -364,7 +407,32 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
         }
     };
 
-    const { keycloak } = useKeycloak();
+    useEffect(() => {
+        const handleMessage = (event: MessageEvent) => {
+            try {
+                //message origin later can be handled by array of origins which we can fetch from db
+                if (event.origin === "https://assistant.accionbreeze.com") {
+                    const { diagramComponents = [] } = event.data;
+                    handleLoadDiagramFromJSON(diagramComponents);
+                }
+            } catch (error) {
+                console.error("Error processing message event: ", error);
+            }
+        };
+        // Add event listener for message events
+        window.addEventListener("message", handleMessage);
+
+        // Clean up the event listener on component unmount
+        return () => {
+            window.removeEventListener("message", handleMessage);
+        };
+    }, []);
+
+    // Trigger debouncedUpdate whenever the debounced values change
+
+    // useEffect(() => {
+    //     debouncedUpdate();
+    // }, [debouncedUpdate]);
 
     return (
         <ChatProvider>
@@ -543,7 +611,16 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                             )}
                             {activePanel === "diagrams" && (
                                 <DiagramPanel
+                                    currentDiagramInfo={currentDiagramInfo}
+                                    setCurrentDiagramInfo={
+                                        setCurrentDiagramInfo
+                                    }
                                     diagramComponents={diagramComponents}
+                                    composedSVG={composedSVG}
+                                    canvasSize={canvasSize}
+                                    handleLoadDiagramFromJSON={
+                                        handleLoadDiagramFromJSON
+                                    }
                                 />
                             )}
                             {activePanel === "chat" && (
