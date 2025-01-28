@@ -106,6 +106,15 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
     const [currentShapeDetails, setCurrentShapeDetails] = useState<
         Shape | Component | UnifiedElement | null
     >(null);
+
+    useEffect(()=>{
+        const updatedCurrentComponentDetails = components.find((component)=>component.name === currentShapeDetails?.name)
+        if(updatedCurrentComponentDetails) {setCurrentShapeDetails(updatedCurrentComponentDetails)}
+
+        const updatedCurrentShapeDetails = shapesByCategory.find((shape)=>shape.name === currentShapeDetails?.name)
+        if(updatedCurrentShapeDetails) {setCurrentShapeDetails(updatedCurrentShapeDetails)}
+    },[components, shapesByCategory])
+
     const isAddDisabled: Record<ElementType, boolean> = {
         "3D": diagramComponents.length > 0 && selected3DShape === null,
         LAYERS: diagramComponents.length > 0 && selected3DShape === null,
@@ -627,6 +636,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                 <EditElementDialog
                     isOpen={isEditDialog}
                     onClose={() => setIsEditDialog(false)}
+                    activeCategory={activeCategory}
                     element={currentShapeDetails as UnifiedElement}
                 />
             )}

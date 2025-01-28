@@ -18,7 +18,8 @@ export const segregateShapesAndComponents = (response: UnifiedResponse[]) => {
                 svgContent: item.svgContent ?? "",
                 path: item.categoryDetails?.path ?? "",
                 version: item.version ?? "",
-                description: item?.metadata?.description ?? ""
+                description: item?.metadata?.description ?? "",
+                tags: item?.tags ?? []
             });
         }
 
@@ -35,7 +36,8 @@ export const segregateShapesAndComponents = (response: UnifiedResponse[]) => {
                 path: item.categoryDetails?.path ?? "",
                 version: item.version ?? "",
                 created: new Date(item.createdAt),
-                lastModified: new Date(item.updatedAt)
+                lastModified: new Date(item.updatedAt),
+                tags: item?.tags ?? []
             });
         }
     });
@@ -60,7 +62,8 @@ export const transformToUnifiedResponse = (
                 path: item.categoryDetails?.path ?? "",
                 version: item.version ?? "",
                 created: new Date(item.createdAt),
-                lastModified: new Date(item.updatedAt)
+                lastModified: new Date(item.updatedAt),
+                status: item?.status
             };
         }
 
@@ -73,7 +76,8 @@ export const transformToUnifiedResponse = (
             svgFile: item.svgFile ?? "",
             svgContent: item.svgContent ?? "",
             path: item.categoryDetails?.path ?? "",
-            version: item.version ?? ""
+            version: item.version ?? "",
+            status: item.status
         };
     });
 };

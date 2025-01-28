@@ -17,29 +17,29 @@ import { processSVGFile } from "@/lib/svgUtils";
 import ChipInput from "@/components/ui/Chip";
 import { getCategoriesFlat } from "@/services/categories";
 import { RadixSelect } from "@/components/ui/Select";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { updateShapesComponent } from "@/services/shapes";
+import { Textarea } from "@/components/ui/Textarea";
 
 interface LibraryManagerDialogProps {
     isOpen: boolean;
     onClose: () => void;
-
+    activeCategory: string;
     element: UnifiedElement;
 }
 
 const EditElementDialog: React.FC<LibraryManagerDialogProps> = ({
     isOpen,
     onClose,
+    activeCategory,
     element
 }) => {
     const [elementData, setElementData] = useState(element);
     const [category, setCategory] = useState<string>('');
         const [error, setError] = useState<string | null>(null);
     const [status, setStatus] = useState<string>(elementData.status || 'active'); 
-    // const [isLoading, setIsLoading] = useState<boolean>(false);
-    const [description, setDescription] = useState<string>(elementData.description ?? '');
-    const [name, setName] = useState<string>(elementData.name);
-    
+    const queryClient = useQueryClient();
+
     
     const { data: categories } = useQuery({
             queryKey: ["categories_data_flat"],
@@ -55,15 +55,9 @@ const EditElementDialog: React.FC<LibraryManagerDialogProps> = ({
         }, [elementData, categories])
 
    
-    const {mutate: shapeComponentMutation} = useMutation({mutationFn: updateShapesComponent, mutationKey:  ['updatedShape']})
+    const {mutate: shapeComponentMutation, isPending: isShapeMutationPending} = useMutation({mutationFn: updateShapesComponent, mutationKey:  ['updatedShape']})
 
-    const handleSubmit = async () => {
-        if (!category.trim()) {
-            setError("Category is required");
-            return;
-        }
-    };
-
+   
     // Update tags handler
     const handleTagsChange = (updatedTags: string[]) => {
         setElementData((prev) => ({
@@ -74,9 +68,44 @@ const EditElementDialog: React.FC<LibraryManagerDialogProps> = ({
 
     const handleStatusChange = (newStatus: string) => {
         setStatus(newStatus);
+        setElementData((prev)=> ({
+            ...prev,
+            status: newStatus as "active" | "inactive"
+        }))
     };
     
-    console.log(elementData, 'elementData')
+    const handleSubmit = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+        if (!category.trim()) {
+            setError("Category is required");
+            return;
+        }
+        e.preventDefault()
+        shapeComponentMutation({...elementData, category},{onSuccess:()=>{
+            queryClient.setQueryData(['shapes_data', activeCategory], (oldData: { 
+                shapes: Shape[];
+                components: Component[];
+                total: number;
+            }) => {
+
+                if (!oldData) return; // Ensure oldData exists
+                const updatedShapes = oldData.shapes.map((shape) =>
+                    shape.name === elementData.name ? ({...elementData, 
+                        path: categories?.data.find((el)=>category == el._id)?.path
+                    } as Shape) : shape
+    
+                  );
+                
+                  const updatedComponents = oldData.components.map((component) =>
+                    component.name === elementData.name ? ({...elementData, 
+                        path: categories?.data.find((el)=>category == el._id)?.path
+                    } as Component) : component
+                  );
+                  return {shapes: updatedShapes, components: updatedComponents, total: oldData.total}
+              });
+            onClose()
+        }})
+    }
+
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] w-[800px] max-h-[80vh] bg-gray-800 text-white overflow-hidden">
@@ -105,7 +134,7 @@ const EditElementDialog: React.FC<LibraryManagerDialogProps> = ({
 
                     <div className="space-y-2 text-white">
                         <Label>Description</Label>
-                        <Input
+                        <Textarea
                             id="description"
                             value={elementData.description}
                             onChange={(e) =>
@@ -202,10 +231,8 @@ const EditElementDialog: React.FC<LibraryManagerDialogProps> = ({
                             Cancel
                         </Button>
                         <Button
-                        onClick={(e)=>{
-                            e.preventDefault()
-                            shapeComponentMutation({...elementData, category})
-                        }}
+                        onClick={handleSubmit}
+                        disabled={isShapeMutationPending}
                         >Update</Button>
                     </DialogFooter>
                 </form>

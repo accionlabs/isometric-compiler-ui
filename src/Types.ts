@@ -125,7 +125,7 @@ export type UnifiedResponse = {
     _id: string;
     createdAt: string;
     updatedAt: string;
-    status: string;
+    status: "active" | "inactive";
     name: string;
     type: "3D" | "2D" | "COMPONENT" | "LAYERS";
     attachTo: string | null;
