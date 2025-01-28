@@ -113,12 +113,12 @@ const EditElementDialog: React.FC<LibraryManagerDialogProps> = ({
                     <DialogTitle>Update : {elementData.name}</DialogTitle>
                 </DialogHeader>
 
-                <form className="space-y-4">
+                <form className="space-y-4 mt-4">
  
                     {/* Version Field */}
 
-                    <div className="space-y-2 text-white">
-                        <Label>Version</Label>
+                    <div>
+                        <Label  className="block text-sm font-medium text-gray-200 mb-1">Version</Label>
                         <Input
                             value={elementData.version || ""}
                             onChange={(e) =>
@@ -132,8 +132,21 @@ const EditElementDialog: React.FC<LibraryManagerDialogProps> = ({
                     </div>
 
 
-                    <div className="space-y-2 text-white">
-                        <Label>Description</Label>
+                    {/* Tags Field */}
+
+                    <div >
+                        <Label  className="block text-sm font-medium text-gray-200 mb-1">Tags</Label>
+                        <ChipInput
+                            id="tags-input"
+                            currentValue={elementData.tags || []}
+                            handleNewSkill={handleTagsChange}
+                            placeholder="Add tags and press Enter"
+                            label="Tags"
+                        />
+                    </div>
+
+                    <div>
+                        <Label className="block text-sm font-medium text-gray-200 mb-1">Description</Label>
                         <Textarea
                             id="description"
                             value={elementData.description}
@@ -146,26 +159,13 @@ const EditElementDialog: React.FC<LibraryManagerDialogProps> = ({
                             autoComplete="off"
                             placeholder="Enter description"
                             aria-describedby="description of element"
-                            className="w-full bg-gray-700 text-white border-gray-600"
-                        />
-                    </div>
-
-                    {/* Tags Field */}
-
-                    <div className="space-y-2">
-                        <Label className="text-white">Tags</Label>
-                        <ChipInput
-                            id="tags-input"
-                            currentValue={elementData.tags || []}
-                            handleNewSkill={handleTagsChange}
-                            placeholder="Add tags and press Enter"
-                            label="Tags"
+                            className="w-full  text-white bg-customLightGray"
                         />
                     </div>
 
 
-                    <div className="space-y-2 text-white">
-                        <Label >Category</Label>
+                    <div>
+                        <Label  className="block text-sm font-medium text-gray-200 mb-1">Category</Label>
                         <RadixSelect
                             options={
                                 categories?.data.map((category) => ({
@@ -185,8 +185,8 @@ const EditElementDialog: React.FC<LibraryManagerDialogProps> = ({
                     </div>
 
                      {/* Status Field */}
-                     <div className="space-y-2 text-white">
-                        <Label>Status</Label>
+                     <div>
+                        <Label  className="block text-sm font-medium text-gray-200 mb-1">Status</Label>
                         <RadixSelect
                             options={[
                                 { label: "Active", value: "active" },
