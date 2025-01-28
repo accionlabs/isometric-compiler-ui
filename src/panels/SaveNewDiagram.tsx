@@ -125,7 +125,7 @@ const SaveNewDiagram: React.FC<SaveComponentDialogProps> = ({
                                 className="bg-blue-600 hover:bg-blue-700"
                                 disabled={!name.trim() || isPending}
                             >
-                                {isPending ? "Saving..." : "Save Component"}
+                                {isPending ? "Saving..." : "Save Diagram"}
                             </Button>
                         </div>
                     </div>
