@@ -104,7 +104,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
     );
     const [isEditDialog, setIsEditDialog] = useState(false);
     const [currentShapeDetails, setCurrentShapeDetails] = useState<
-        Shape | Component | null
+        Shape | Component | UnifiedElement | null
     >(null);
     const isAddDisabled: Record<ElementType, boolean> = {
         "3D": diagramComponents.length > 0 && selected3DShape === null,
