@@ -104,8 +104,17 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
     );
     const [isEditDialog, setIsEditDialog] = useState(false);
     const [currentShapeDetails, setCurrentShapeDetails] = useState<
-        Shape | Component | null
+        Shape | Component | UnifiedElement | null
     >(null);
+
+    useEffect(()=>{
+        const updatedCurrentComponentDetails = components.find((component)=>component.name === currentShapeDetails?.name)
+        if(updatedCurrentComponentDetails) {setCurrentShapeDetails(updatedCurrentComponentDetails)}
+
+        const updatedCurrentShapeDetails = shapesByCategory.find((shape)=>shape.name === currentShapeDetails?.name)
+        if(updatedCurrentShapeDetails) {setCurrentShapeDetails(updatedCurrentShapeDetails)}
+    },[components, shapesByCategory])
+
     const isAddDisabled: Record<ElementType, boolean> = {
         "3D": diagramComponents.length > 0 && selected3DShape === null,
         LAYERS: diagramComponents.length > 0 && selected3DShape === null,
@@ -496,7 +505,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                     </div>
                 </div>
                 <div className="flex gap-2 float-end mt-2">
-                    {/* <Button
+                    <Button
                         onClick={(e) => {
                             e.stopPropagation();
                             setIsEditDialog(true);
@@ -504,7 +513,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                         className="flex gap-2 text-sm"
                     >
                         Edit <Edit />
-                    </Button> */}
+                    </Button>
                     <Button
                         disabled={isAddDisabled[elementType]}
                         onClick={(e) => {
@@ -627,7 +636,8 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                 <EditElementDialog
                     isOpen={isEditDialog}
                     onClose={() => setIsEditDialog(false)}
-                    element={currentShapeDetails as Shape | Component}
+                    activeCategory={activeCategory}
+                    element={currentShapeDetails as UnifiedElement}
                 />
             )}
         </div>
