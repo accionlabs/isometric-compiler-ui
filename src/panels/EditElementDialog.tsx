@@ -221,11 +221,10 @@ const EditElementDialog: React.FC<LibraryManagerDialogProps> = ({
                         </div>
                     )}
 
-                    <DialogFooter>
+<div className="flex justify-end space-x-2">
                         <Button
                             type="button"
-                            variant="outline"
-                            className="bg-gray-700 hover:bg-gray-600"
+                            className="bg-gray-600 hover:bg-gray-700"
                             onClick={onClose}
                         >
                             Cancel
@@ -234,7 +233,7 @@ const EditElementDialog: React.FC<LibraryManagerDialogProps> = ({
                         onClick={handleSubmit}
                         disabled={isShapeMutationPending}
                         >Update</Button>
-                    </DialogFooter>
+                    </div>
                 </form>
             </DialogContent>
         </Dialog>
