@@ -1,12 +1,20 @@
-import { DiagramComponent, DiagramInfo } from "@/Types";
-import { SquarePlus } from "lucide-react";
-import React, { useState } from "react";
+import { DiagramComponent, DiagramInfo, User } from "@/Types";
+import { Copy, Edit, MoreVertical, SquarePlus, Trash } from "lucide-react";
 import SaveNewDiagram from "./SaveNewDiagram";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { getDiagrams, saveDiagram, updateDiagram } from "@/services/diagrams";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { deleteDiagram, getDiagrams, saveDiagram } from "@/services/diagrams";
 import { calculateSVGBoundingBox } from "@/lib/svgUtils";
 import SVGPreview from "@/components/ui/SVGPreview";
-import useDebounce from "@/hooks/useDebounceHook";
+import {
+    DropdownMenu,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+    DropdownMenuContent
+} from "@/components/ui/DropDownMenu";
+import { Button } from "@/components/ui/Button";
+import { useState } from "react";
+
+type Mode = "save" | "clone" | "edit_details" | "delete";
 export default function DiagramPanel({
     currentDiagramInfo,
     setCurrentDiagramInfo,
@@ -16,12 +24,15 @@ export default function DiagramPanel({
     handleLoadDiagramFromJSON
 }: {
     currentDiagramInfo: DiagramInfo | null;
-    setCurrentDiagramInfo: (diagramInfo: DiagramInfo) => void;
+    setCurrentDiagramInfo: (diagramInfo: DiagramInfo | null) => void;
     diagramComponents: DiagramComponent[];
     composedSVG: string;
     canvasSize: { width: number; height: number };
     handleLoadDiagramFromJSON: (loadedComponents: DiagramComponent[]) => void;
 }) {
+    const queryClient = useQueryClient();
+    const user = queryClient.getQueryData<User>(["user"]);
+
     const {
         data: diagrams,
         refetch,
@@ -30,6 +41,15 @@ export default function DiagramPanel({
         queryKey: ["saved_diagrams"],
         queryFn: getDiagrams
     });
+
+    const { mutate: deleteMutation, isPending: isDeletionPending } =
+        useMutation({
+            mutationFn: deleteDiagram,
+            onSettled: () => {
+                refetch();
+                setIsOpen(false);
+            }
+        });
     const { mutate, isPending } = useMutation({
         mutationFn: saveDiagram,
         onSettled: (res) => {
@@ -40,7 +60,16 @@ export default function DiagramPanel({
     });
 
     const [isOpen, setIsOpen] = useState(false);
-
+    const [mode, setMode] = useState<Mode>("save");
+    const [tempDiagramInfo, setTempDiagramInfo] = useState<DiagramInfo | null>(
+        null
+    );
+    const getPendingState: Record<Mode, boolean> = {
+        save: isPending,
+        delete: isDeletionPending,
+        edit_details: true,
+        clone: isPending
+    };
     const handleDiagramSave = (name: string, description: string) => {
         const boundingBox = calculateSVGBoundingBox(
             composedSVG,
@@ -59,38 +88,134 @@ export default function DiagramPanel({
 `;
         mutate({ name, description, diagramComponents, svgContent });
     };
+    const handleDiagramClone = (name: string, description: string) => {
+        mutate({
+            name,
+            description,
+            diagramComponents: tempDiagramInfo?.diagramComponents ?? [],
+            svgContent: tempDiagramInfo?.metadata?.svgContent ?? ""
+        });
+    };
 
+    const handleSubmitAccordingToMode = (name: string, description: string) => {
+        if (mode === "save") handleDiagramSave(name, description);
+        if (mode === "clone") handleDiagramClone(name, description);
+        if (mode === "delete") handleDeleteDiagram();
+    };
+
+    const handleDialogOperations = (element: DiagramInfo, mode: Mode) => {
+        setTempDiagramInfo({
+            ...element,
+            name: mode === "clone" ? element.name + " clone" : element.name
+        });
+        setMode(mode);
+        setIsOpen(true);
+    };
+
+    const handleDeleteDiagram = () => {
+        if (!tempDiagramInfo?._id) return;
+        if (currentDiagramInfo?._id === tempDiagramInfo._id) {
+            handleLoadDiagramFromJSON([]);
+            setCurrentDiagramInfo(null);
+        }
+        deleteMutation(tempDiagramInfo?._id);
+    };
     const DiagramDetails = ({ result }: { result: DiagramInfo }) => {
+        const isMyDiagram = user?._id === result.author;
+
         return (
             <li
-                onClick={() => {
-                    setCurrentDiagramInfo(result);
-                    handleLoadDiagramFromJSON(result.diagramComponents);
-                }}
-                className={`flex items-center px-4 py-3 rounded-md gap-4 hover:bg-customLightGray cursor-pointer ${
+                className={`flex rounded-md items-center  mx-4 my-3 
+                hover:bg-customLightGray cursor-pointer
+                ${
                     result._id === currentDiagramInfo?._id
                         ? "bg-customLightGray"
                         : ""
                 }`}
+                onClick={() => {
+                    setCurrentDiagramInfo(result);
+                    handleLoadDiagramFromJSON(result.diagramComponents);
+                }}
             >
-                <div className="w-[76px] h-[76px]">
-                    <SVGPreview
-                        svgContent={result.metadata?.svgContent ?? ""}
-                        className="w-full h-full object-cover bg-white"
-                    />
-                </div>
-                <div>
-                    <div className="text-white font-semibold">
-                        {result.name}
+                <div className={`flex flex-grow items-center gap-4`}>
+                    <div className="w-[76px] h-[76px]">
+                        <SVGPreview
+                            svgContent={result.metadata?.svgContent ?? ""}
+                            className="w-full h-full object-cover bg-white"
+                        />
                     </div>
-                    <p className="text-gray-400 text-xs">
-                        {result.metadata?.description}
-                    </p>
-                    <span
-                        className={`mt-2 inline-block text-xs font-medium ${"text-blue-400"}`}
+                    <div>
+                        <div className="text-white font-semibold">
+                            {result.name}
+                        </div>
+                        <p className="text-gray-400 text-xs">
+                            {result.metadata?.description}
+                        </p>
+                        <span
+                            className={`mt-2 inline-block text-xs font-medium ${"text-blue-400"}`}
+                        >
+                            {result.version}
+                        </span>
+                    </div>
+                </div>
+                <div className="flex items-center gap-1 pr-4">
+                    {/* <Button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                        }}
+                        variant="ghost"
                     >
-                        {result.version}
-                    </span>
+                        Edit Diagram
+                    </Button> */}
+
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                                <MoreVertical className="w-5 h-5" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-32">
+                            {isMyDiagram && (
+                                <DropdownMenuItem
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+
+                                        handleDialogOperations(
+                                            result,
+                                            "edit_details"
+                                        );
+                                    }}
+                                    className="flex items-center gap-2 cursor-pointer"
+                                >
+                                    <Edit size={16} />
+                                    Edit Details
+                                </DropdownMenuItem>
+                            )}
+
+                            <DropdownMenuItem
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDialogOperations(result, "clone");
+                                }}
+                                className="flex items-center gap-2 cursor-pointer"
+                            >
+                                <Copy size={16} />
+                                Clone
+                            </DropdownMenuItem>
+                            {/* {isMyDiagram && ( */}
+                            <DropdownMenuItem
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDialogOperations(result, "delete");
+                                }}
+                                className="flex items-center gap-2 text-red-500 cursor-pointer"
+                            >
+                                <Trash size={16} />
+                                Delete
+                            </DropdownMenuItem>
+                            {/* )} */}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
             </li>
         );
@@ -118,13 +243,19 @@ export default function DiagramPanel({
             ))}
         </ul>
     );
+
     return (
         <div className="flex flex-col h-full">
             <div className="flex-grow overflow-hidden flex flex-col">
                 <div className="flex justify-between items-center p-4">
                     <h2 className="text-xl font-semibold">Diagrams</h2>
                     <button
-                        onClick={() => setIsOpen(true)}
+                        onClick={() => {
+                            setTempDiagramInfo(null);
+                            setMode("save");
+
+                            setIsOpen(true);
+                        }}
                         className="hover:bg-customLightGray rounded"
                     >
                         <SquarePlus />
@@ -141,10 +272,12 @@ export default function DiagramPanel({
                 </div>
             </div>
             <SaveNewDiagram
+                mode={mode}
                 isOpen={isOpen}
-                isPending={isPending}
+                isPending={getPendingState[mode]}
                 onClose={() => setIsOpen(false)}
-                onSave={handleDiagramSave}
+                onSubmit={handleSubmitAccordingToMode}
+                diagramInfo={tempDiagramInfo}
             />
         </div>
     );

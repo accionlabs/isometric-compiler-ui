@@ -51,9 +51,9 @@ import { calculateSVGBoundingBox } from "./lib/svgUtils";
 type PanelType = "diagrams" | "shapes" | "composition" | "chat";
 
 const panels: Array<{ id: PanelType; label: string }> = [
-    { id: "diagrams", label: "Diagrams" },
     { id: "shapes", label: "Shapes" },
     { id: "composition", label: "Composition" },
+    { id: "diagrams", label: "Diagrams" },
     { id: "chat", label: "AI Model" }
 ];
 interface ImprovedLayoutProps {

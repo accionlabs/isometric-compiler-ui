@@ -47,7 +47,7 @@ export interface Shape {
     path?: string;
     version?: string;
     tags?: string[];
-    status?: "active" | 'inactive';
+    status?: "active" | "inactive";
 }
 
 export interface DependencyResult {
@@ -94,7 +94,7 @@ export interface Component {
     created: Date;
     lastModified: Date;
     tags?: string[];
-    status?: 'active' | 'inactive'
+    status?: "active" | "inactive";
 }
 type Metadata = {
     description: string;
@@ -341,6 +341,7 @@ export interface DiagramInfo {
     _id?: string;
     name: string;
     version: string;
+    author: string;
     metadata?: {
         description: string;
         svgContent: string;
