@@ -59,8 +59,8 @@ const ProgressPopup = ({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl flex justify-center items-center gap-4">
         {/* Animated Icon */}
-        <BrainCircuit 
-          className="animate-pulse text-blue-500" 
+        <BrainCircuit
+          className="animate-pulse text-blue-500"
           size={40}
         />
 
