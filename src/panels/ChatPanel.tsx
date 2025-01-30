@@ -133,28 +133,22 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
 
     const LoadMeessagesWithImage : { time: number; message: string; }[] = [
         { time: 0, message: 'Image is uploading...' },
-        { time: 3, message: 'Generating JSON for diagram...' },
-        { time: 6, message: 'Generating final image...' }
+        { time: 1, message: 'Generating JSON for diagram...' },
+        { time: 2, message: 'Generating final image...' }
       ];
 
-    const LoadMessagesWithoutImage : { time: number; message: string; }[] = [
-        { time: 0, message: 'Generating JSON for diagram...' },
-        { time: 3, message: 'Generating final image...' }
-    ]
-
-      const messageDurationWithImage = 10;
-      const messageDurationWithoutImage = 6
+      const messageDurationWithImage = 4;
     return (
         <>
-        <ProgressPopup
+        {!!selectedImage && <ProgressPopup
             isOpen={isLoader}
             onClose={() => {
                 setIsLoader(isLoading)
                 setIsLoaderTimePassed(true)
             }}
-            messages={!!selectedImage ? LoadMeessagesWithImage : LoadMessagesWithoutImage}
-            duration={!!selectedImage ? messageDurationWithImage : messageDurationWithoutImage}
-        />
+            messages={LoadMeessagesWithImage}
+            duration={messageDurationWithImage}
+        />}
         <div className="p-4 flex h-full flex-col gap-4 ">
             {/* chat container */}
             <div className="flex-grow overflow-x-hidden flex flex-col gap-2">
