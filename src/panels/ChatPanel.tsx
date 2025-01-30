@@ -8,7 +8,8 @@ import { sendChatRequest, sendImageChatRequest } from "@/services/chat";
 import { useEnterSubmit } from "@/hooks/useEnterSubmit";
 import { Textarea } from "@/components/ui/Textarea";
 import { Paperclip, X } from "lucide-react";
-import ModalPopup from "@/components/ui/modelPopup";
+import ViewerPopup from "@/components/ui/ViewerPopup";
+import ProgressPopup from "@/components/ui/ProgressPopup";
 
 interface ChatPanelProps {
   handleLoadDiagramFromJSON: (loadedComponents: DiagramComponent[]) => void;
@@ -32,8 +33,8 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [modalContent, setModalContent] = useState<string | null>(null);
-  const [isModalOpen, setModalOpen] = useState(false);
+  const [viewerContent, setViewerContent] = useState<string | null>(null);
+  const [isViewerOpen, setViewerOpen] = useState(false);
   const [isImage, setIsImage] = useState(false);
 
   const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -47,17 +48,17 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
 
   const clearImage = () => setSelectedImage(null);
 
-  // Open Modal
-  const openModal = (content: string, isImage: boolean) => {
-    setModalContent(content);
+  // Open viewer
+  const openViewerPopup = (content: string, isImage: boolean) => {
+    setViewerContent(content);
     setIsImage(isImage);
-    setModalOpen(true);
+    setViewerOpen(true);
   };
 
-  // Close Modal
-  const closeModal = () => {
-    setModalOpen(false);
-    setModalContent(null);
+  // Close viewer
+  const closeViewerPopup = () => {
+    setViewerOpen(false);
+    setViewerContent(null);
   };
 
   // Scroll to the bottom when a new message is added
@@ -135,6 +136,23 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
       setLoading(false);
     }
   };
+  const [isLoader, setIsLoader] = useState(false);
+    const [isLoaderTimePassed, setIsLoaderTimePassed] = useState(false);
+
+    useEffect(() => {
+        if(isLoaderTimePassed) setIsLoader(isLoading)
+        else setIsLoader(isLoading)
+    }, [isLoading])
+
+    const LoadMeessagesWithImage : { time: number; message: string; }[] = [
+        { time: 0, message: 'Extracting components.' },
+        { time: 0.5, message: 'Mapping to Unified Model...' },
+        { time: 1, message: 'Optimizing layout...' },
+        { time: 2, message: 'Applying isometric view...' },
+        { time: 3, message: 'Finalizing diagram..' },
+      ];
+
+      const messageDurationWithImage = 4;
   return (
     <div className="p-4 flex flex-col gap-4 ">
       {/* chat container */}
@@ -151,7 +169,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         src={message.text}
         alt="Sent"
         className="w-20 h-20 cursor-pointer"
-        onClick={() => openModal(message.text, true)}
+        onClick={() => openViewerPopup(message.text, true)}
       />
     ) : message.isUser || message.isSystemQuery ? (
       <div 
@@ -166,7 +184,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     ) : (
         <div
         className="max-w-xs p-3 rounded-lg bg-gray-700 cursor-pointer border border-gray-500 hover:bg-gray-600 flex items-center"
-        onClick={() => openModal(message.text, false)}
+        onClick={() => openViewerPopup(message.text, false)}
       >
         <span className="text-blue-400 font-semibold">📄 View JSON Response</span>
       </div>
@@ -241,8 +259,17 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                 </div>
             </form>
 
-      {/* Modal Popup */}
-      <ModalPopup isOpen={isModalOpen} onClose={closeModal} content={modalContent || ""} isImage={isImage} />
+      {/* viewer Popup */}
+      <ViewerPopup isOpen={isViewerOpen} onClose={closeViewerPopup} content={viewerContent || ""} isImage={isImage} />
+      {!!selectedImage && <ProgressPopup
+            isOpen={isLoader}
+            onClose={() => {
+                setIsLoader(isLoading)
+                setIsLoaderTimePassed(true)
+            }}
+            messages={LoadMeessagesWithImage}
+            duration={messageDurationWithImage}
+        />}
     </div>
   );
 };

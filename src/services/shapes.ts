@@ -136,3 +136,35 @@ export async function saveComponent(payload: Component, category: string) {
         console.error("Error:", error);
     }
 }
+
+
+export async function updateShapesComponent(payload: UnifiedElement & {category: string}) {
+    const body = {
+        svgContent: payload.svgContent,
+        version: payload.version,
+        category: payload.category,
+        metadata: {
+            description: payload.description
+        },
+        tags: payload.tags,
+        status: payload.status
+    };
+
+    const url = `${config.isometricApiUrl}/shapes/${payload._id}`;
+    try {
+        const response = await fetch(url, {
+            method: "PUT",
+            body: JSON.stringify(body),
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${keycloak.token}`,
+            }
+        });
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return await response.json(); // Parse the JSON response
+    } catch (error) {
+        console.error("Error:", error);
+    }
+}

@@ -46,6 +46,9 @@ export interface Shape {
     description?: string;
     path?: string;
     version?: string;
+    tags?: string[];
+    status?: "active" | 'inactive';
+    _id: string;
 }
 
 export interface DependencyResult {
@@ -91,6 +94,8 @@ export interface Component {
     version?: string;
     created: Date;
     lastModified: Date;
+    tags?: string[];
+    status?: 'active' | 'inactive'
 }
 type Metadata = {
     description: string;
@@ -114,12 +119,14 @@ export interface UnifiedElement {
     version?: string;
     created?: Date;
     lastModified?: Date;
+    tags?: string[];
+    status: "active" | "inactive";
 }
 export type UnifiedResponse = {
     _id: string;
     createdAt: string;
     updatedAt: string;
-    status: string;
+    status: "active" | "inactive";
     name: string;
     type: "3D" | "2D" | "COMPONENT" | "LAYERS";
     attachTo: string | null;
@@ -321,7 +328,7 @@ export interface WorkerResponse {
     };
 }
 
-export interface User { 
+export interface User {
     _id: string;
     email: string;
     firstName: string;
@@ -329,4 +336,17 @@ export interface User {
     role: string;
     createdAt: string;
     updatedAt: string;
+}
+
+export interface DiagramInfo {
+    _id?: string;
+    name: string;
+    version: string;
+    metadata?: {
+        description: string;
+        svgContent: string;
+        project: string;
+        priority: string;
+    } | null;
+    diagramComponents: DiagramComponent[];
 }
