@@ -1,16 +1,16 @@
-// @/components/ui/ModalPopup.tsx
+// @/components/ui/ModelPopup.tsx
 
 import React from "react";
 import { X } from "lucide-react";
 
-interface ModalPopupProps {
+interface ViewerPopupProps {
   isOpen: boolean;
   onClose: () => void;
   content: string;
   isImage?: boolean;
 }
 
-const ModalPopup: React.FC<ModalPopupProps> = ({ isOpen, onClose, content, isImage }) => {
+const ViewerPopup: React.FC<ViewerPopupProps> = ({ isOpen, onClose, content, isImage }) => {
   if (!isOpen) return null;
 
   return (
@@ -21,7 +21,7 @@ const ModalPopup: React.FC<ModalPopupProps> = ({ isOpen, onClose, content, isIma
           <X className="w-5 h-5" />
         </button>
 
-        {/* Modal Content */}
+        {/* Model Content */}
         {isImage ? (
           <img src={content} alt="Preview" className="w-full h-auto rounded-md" />
         ) : (
@@ -34,4 +34,4 @@ const ModalPopup: React.FC<ModalPopupProps> = ({ isOpen, onClose, content, isIma
   );
 };
 
-export default ModalPopup;
+export default ViewerPopup;
