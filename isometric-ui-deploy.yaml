@@ -72,7 +72,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   annotations:
-    konghq.com/plugins: cors
+    konghq.com/plugins: cors,security-headers
     konghq.com/strip-path: "true"
     plugins.konghq.com: jwt, cors
   name: ${MICROSERVICE_NAME}-ing
