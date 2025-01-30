@@ -1,5 +1,3 @@
-// @/panels/ChatPanel.tsx
-
 "use client";
 import React, { useEffect, useRef, useState } from "react";
 import { Button } from "../components/ui/Button";
@@ -10,155 +8,183 @@ import { sendChatRequest, sendImageChatRequest } from "@/services/chat";
 import { useEnterSubmit } from "@/hooks/useEnterSubmit";
 import { Textarea } from "@/components/ui/Textarea";
 import { Paperclip, X } from "lucide-react";
+import ModalPopup from "@/components/ui/modelPopup";
+
 interface ChatPanelProps {
-    handleLoadDiagramFromJSON: (loadedComponents: DiagramComponent[]) => void;
-    diagramComponents: DiagramComponent[];
-    addHistory: (diagramComponent: DiagramComponent[]) => void;
+  handleLoadDiagramFromJSON: (loadedComponents: DiagramComponent[]) => void;
+  diagramComponents: DiagramComponent[];
+  addHistory: (diagramComponent: DiagramComponent[]) => void;
 }
 
 const ChatPanel: React.FC<ChatPanelProps> = ({
-    handleLoadDiagramFromJSON,
-    diagramComponents,
-    addHistory
+  handleLoadDiagramFromJSON,
+  diagramComponents,
+  addHistory
 }) => {
-    const { messages, setMessages } = useChat();
-    const { formRef, onKeyDown } = useEnterSubmit();
+  const { messages, setMessages } = useChat();
+  const { formRef, onKeyDown } = useEnterSubmit();
 
-    const [input, setInput] = useState("");
-    const [isLoading, setLoading] = useState(false);
-    const messagesEndRef = useRef<HTMLDivElement>(null);
-    const inputRef = React.useRef<HTMLTextAreaElement>(null);
+  const [input, setInput] = useState("");
+  const [isLoading, setLoading] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = React.useRef<HTMLTextAreaElement>(null);
 
-    const [selectedImage, setSelectedImage] = useState<string | null>(null);
-    const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-        if (event.target.files && event.target.files[0]) {
-            const file = event.target.files[0];
-            const reader = new FileReader();
-            reader.onload = () => setSelectedImage(reader.result as string);
-            reader.readAsDataURL(file);
-        }
-    };
+  const [modalContent, setModalContent] = useState<string | null>(null);
+  const [isModalOpen, setModalOpen] = useState(false);
+  const [isImage, setIsImage] = useState(false);
 
-    const clearImage = () => setSelectedImage(null);
+  const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files[0]) {
+      const file = event.target.files[0];
+      const reader = new FileReader();
+      reader.onload = () => setSelectedImage(reader.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
 
+  const clearImage = () => setSelectedImage(null);
 
-    // Scroll to the bottom when a new message is added
-    useEffect(() => {
-        messages.length > 0 &&
-            messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, [messages]);
+  // Open Modal
+  const openModal = (content: string, isImage: boolean) => {
+    setModalContent(content);
+    setIsImage(isImage);
+    setModalOpen(true);
+  };
 
-    const handleSend = async (e: { preventDefault: () => void }) => {
-        e.preventDefault();
-        if(selectedImage) {
-            setLoading(true);
-            try{
-                const res = await sendImageChatRequest(selectedImage);
-                handleLoadDiagramFromJSON(res);
-                clearImage();
-                setLoading(false);
-                setMessages((prev) => [
-                    ...prev,
-                    {
-                        text: JSON.stringify(res, null, 2),
-                        isUser: false,
-                        isSystemQuery: false
-                    }
-                ]);
-            }catch(error){
-                console.error(error)
-            }finally{
-                setLoading(false);
-            }
-        }
-        else if (input.trim()) {
-            setMessages((prev) => [
-                ...prev,
-                { text: input, isUser: true, isSystemQuery: false }
-            ]);
-            handleResponse(input);
-            setInput("");
-        }
-    };
+  // Close Modal
+  const closeModal = () => {
+    setModalOpen(false);
+    setModalContent(null);
+  };
 
-    const handleResponse = async (input: string) => {
+  // Scroll to the bottom when a new message is added
+  useEffect(() => {
+    messages.length > 0 && 
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  const handleSend = async (e: { preventDefault: () => void }) => {
+    e.preventDefault();
+    if(selectedImage) {
         setLoading(true);
-        try {
-            const res = await sendChatRequest(input, diagramComponents);
-            if (res.needFeedback) {
-                setMessages((prev) => [
-                    ...prev,
-                    { text: res.feedback, isUser: false, isSystemQuery: true }
-                ]);
-            } else {
-                handleLoadDiagramFromJSON(res.result);
-                setMessages((prev) => [
-                    ...prev,
-                    { text: res.feedback, isUser: false, isSystemQuery: true }
-                ]);
-                setMessages((prev) => [
-                    ...prev,
-                    {
-                        text: JSON.stringify(res.result, null, 2),
-                        isUser: false,
-                        isSystemQuery: false
-                    }
-                ]);
+        try{
+          const res = await sendImageChatRequest(selectedImage);
+          handleLoadDiagramFromJSON(res);
+          clearImage();
+          setLoading(false);
+          setMessages((prev) => [
+            ...prev,
+            { text: selectedImage, isUser: true, isImage: true }, // Mark it as an image
+            {
+              text: JSON.stringify(res, null, 2),
+              isUser: false,
+              isSystemQuery: false
             }
-        } catch (error) {
-            console.error("Error in handleResponse:", error);
-            setMessages((prev) => [
-                ...prev,
-                {
-                    text: "An error occurred. Please try again.",
-                    isUser: false,
-                    isSystemQuery: true
-                }
-            ]);
-        } finally {
-            setLoading(false);
+          ]);
+        }catch(error){
+          console.error(error)
+        }finally{
+          setLoading(false);
         }
-    };
-    return (
-        <div className="p-4 flex flex-col gap-4 ">
-            {/* chat container */}
-            <div className="h-[82vh]  overflow-x-hidden flex flex-col gap-2">
-                {messages.map((message, index) => (
-                    <div
-                        key={index}
-                        className={`flex ${
-                            message.isUser ? "justify-end" : "justify-start"
-                        }`}
-                    >
-                        {message.isUser || message.isSystemQuery ? (
-                            <div
-                                className={`max-w-xs px-4 py-2 rounded-lg break-words ${
-                                    message.isUser
-                                        ? "bg-blue-600"
-                                        : "bg-gray-700"
-                                }`}
-                            >
-                                {message.text}
-                            </div>
-                        ) : (
-                            <CodeBlock language="JSON" value={message.text} />
-                        )}
-                    </div>
-                ))}
-                {isLoading && (
-                    <div
-                        className={`max-w-xs px-4 py-2 rounded-lg  bg-gray-700"}`}
-                    >
-                        AI Thinking....
-                    </div>
-                )}
-                <div ref={messagesEndRef} />
-            </div>
+      }
+       else if (input.trim()) {
+      setMessages((prev) => [
+        ...prev, 
+        { text: input, isUser: true, isSystemQuery: false }
+    ]);
+      handleResponse(input);
+      setInput("");
+    }
+  };
 
-            {/* input container */}
-            <form onSubmit={handleSend} ref={formRef}>
+  const handleResponse = async (input: string) => {
+    setLoading(true);
+    try {
+      const res = await sendChatRequest(input, diagramComponents);
+      if (res.needFeedback) {
+        setMessages((prev) => [
+          ...prev,
+          { text: res.feedback, isUser: false, isSystemQuery: true }
+        ]);
+      } else {
+        handleLoadDiagramFromJSON(res.result);
+        setMessages((prev) => [
+          ...prev,
+          { text: res.feedback, isUser: false, isSystemQuery: true },
+          {
+            text: JSON.stringify(res.result, null, 2),
+            isUser: false,
+            isSystemQuery: false
+          }
+        ]);
+      }
+    } catch (error) {
+      console.error("Error in handleResponse:", error);
+      setMessages((prev) => [
+        ...prev,
+        { 
+            text: "An error occurred. Please try again.", 
+            isUser: false, 
+            isSystemQuery: true 
+        }
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+  return (
+    <div className="p-4 flex flex-col gap-4 ">
+      {/* chat container */}
+      <div className="h-[82vh]  overflow-x-hidden flex flex-col gap-2">
+      {messages.map((message, index) => (
+  <div 
+  key={index} 
+  className={`flex ${
+    message.isUser ? "justify-end" : "justify-start"
+    }`}
+    >
+        {message.isImage ? (
+      <img
+        src={message.text}
+        alt="Sent"
+        className="w-20 h-20 cursor-pointer"
+        onClick={() => openModal(message.text, true)}
+      />
+    ) : message.isUser || message.isSystemQuery ? (
+      <div 
+      className={`max-w-xs px-4 py-2 rounded-lg break-words ${
+        message.isUser 
+        ? "bg-blue-600" 
+        : "bg-gray-700"
+        }`}
+        >
+        {message.text}
+      </div>
+    ) : (
+        <div
+        className="max-w-xs p-3 rounded-lg bg-gray-700 cursor-pointer border border-gray-500 hover:bg-gray-600 flex items-center"
+        onClick={() => openModal(message.text, false)}
+      >
+        <span className="text-blue-400 font-semibold">📄 View JSON Response</span>
+      </div>
+    )}
+  </div>
+))}
+        {isLoading && (
+        <div 
+        className={`max-w-xs px-4 py-2 rounded-lg  bg-gray-700"}`}
+        >
+            AI Thinking....
+            </div>
+            )}
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* input container */}
+      <form onSubmit={handleSend} ref={formRef}>
                 <div className="relative flex max-h-60 w-full grow flex-col overflow-hidden bg-background px-8 sm:rounded-md sm:border sm:p-1 sm:pr-20">
                     <Textarea
                         id="messageInput"
@@ -214,7 +240,10 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                     </div>
                 </div>
             </form>
-        </div>
-    );
+
+      {/* Modal Popup */}
+      <ModalPopup isOpen={isModalOpen} onClose={closeModal} content={modalContent || ""} isImage={isImage} />
+    </div>
+  );
 };
 export default ChatPanel;
