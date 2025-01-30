@@ -1,9 +1,8 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
 import { Button } from "../components/ui/Button";
-import { CodeBlock } from "./CodeBlockCard";
 import { DiagramComponent } from "@/Types";
-import { useChat } from "@/hooks/useChatProvider";
+import { Message, useChat } from "@/hooks/useChatProvider";
 import { sendChatRequest, sendImageChatRequest } from "@/services/chat";
 import { useEnterSubmit } from "@/hooks/useEnterSubmit";
 import { Textarea } from "@/components/ui/Textarea";
@@ -33,9 +32,8 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [viewerContent, setViewerContent] = useState<string | null>(null);
+  const [viewerContent, setViewerContent] = useState<React.ReactNode | null>(null);
   const [isViewerOpen, setViewerOpen] = useState(false);
-  const [isImage, setIsImage] = useState(false);
 
   const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
@@ -48,11 +46,19 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
 
   const clearImage = () => setSelectedImage(null);
 
+  const getViewerContent = (message: Message) => {
+    if(message.isImage){
+        return (<img src={message.text} alt="Preview" className="w-full h-auto rounded-md" />)
+    }else{
+        return (<pre className="max-h-96 overflow-auto bg-gray-100 p-4 rounded-md text-sm text-black whitespace-pre-wrap">
+            {JSON.stringify(JSON.parse(message.text), null, 2)}
+          </pre>)
+    }
+  }
   // Open viewer
-  const openViewerPopup = (content: string, isImage: boolean) => {
-    setViewerContent(content);
-    setIsImage(isImage);
-    setViewerOpen(true);
+  const openViewerPopup = (message: Message) => {
+    setViewerContent(getViewerContent(message))
+        setViewerOpen(true);
   };
 
   // Close viewer
@@ -169,7 +175,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         src={message.text}
         alt="Sent"
         className="w-20 h-20 cursor-pointer"
-        onClick={() => openViewerPopup(message.text, true)}
+        onClick={() => openViewerPopup(message)}
       />
     ) : message.isUser || message.isSystemQuery ? (
       <div 
@@ -184,7 +190,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     ) : (
         <div
         className="max-w-xs p-3 rounded-lg bg-gray-700 cursor-pointer border border-gray-500 hover:bg-gray-600 flex items-center"
-        onClick={() => openViewerPopup(message.text, false)}
+        onClick={() => openViewerPopup(message)}
       >
         <span className="text-blue-400 font-semibold">📄 View JSON Response</span>
       </div>
@@ -260,7 +266,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             </form>
 
       {/* viewer Popup */}
-      <ViewerPopup isOpen={isViewerOpen} onClose={closeViewerPopup} content={viewerContent || ""} isImage={isImage} />
+      <ViewerPopup isOpen={isViewerOpen} onClose={closeViewerPopup} content={viewerContent || ""} />
       {!!selectedImage && <ProgressPopup
             isOpen={isLoader}
             onClose={() => {

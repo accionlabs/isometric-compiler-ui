@@ -6,11 +6,10 @@ import { X } from "lucide-react";
 interface ViewerPopupProps {
   isOpen: boolean;
   onClose: () => void;
-  content: string;
-  isImage?: boolean;
+  content: React.ReactNode
 }
 
-const ViewerPopup: React.FC<ViewerPopupProps> = ({ isOpen, onClose, content, isImage }) => {
+const ViewerPopup: React.FC<ViewerPopupProps> = ({ isOpen, onClose, content }) => {
   if (!isOpen) return null;
 
   return (
@@ -22,13 +21,7 @@ const ViewerPopup: React.FC<ViewerPopupProps> = ({ isOpen, onClose, content, isI
         </button>
 
         {/* Model Content */}
-        {isImage ? (
-          <img src={content} alt="Preview" className="w-full h-auto rounded-md" />
-        ) : (
-          <pre className="max-h-96 overflow-auto bg-gray-100 p-4 rounded-md text-sm text-black whitespace-pre-wrap">
-            {JSON.stringify(JSON.parse(content), null, 2)}
-          </pre>
-        )}
+        {content}
       </div>
     </div>
   );
