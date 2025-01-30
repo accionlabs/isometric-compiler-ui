@@ -9,7 +9,7 @@ import React, {
   createContext,
 } from "react";
 
-type Message = { text: string; isUser: boolean; isSystemQuery: boolean};
+type Message = { text?: string; isUser: boolean; isSystemQuery: boolean, imageUrl?: string; };
 interface ChatProviderProps {
   children: ReactNode;
 }

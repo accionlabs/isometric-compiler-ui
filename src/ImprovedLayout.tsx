@@ -42,6 +42,7 @@ import { ChevronDown, Redo, Undo } from "lucide-react";
 import { MenuIcon } from "./components/ui/IconGroup";
 import { useKeycloak } from "@react-keycloak/web";
 import CustomTooltip from "./components/flow/CustomToolTip";
+import Modal from "./panels/modal";
 
 type PanelType = "shapes" | "composition" | "chat";
 
@@ -213,6 +214,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     } | null>(null);
     const [saveLoadMessage, setSaveLoadMessage] = useState<string | null>(null);
 
+    const [modalImage, setModalImage] = useState<string | null>(null);
     useEffect(() => {
         const handleMessage = (event: MessageEvent) => {
             try {
@@ -369,6 +371,11 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     return (
         <ChatProvider>
             <div className="flex flex-row h-screen w-screen  text-white">
+
+                {/* Render Modal outside the main layout */}
+           {/*  {modalImage && (
+                <Modal children={modalImage} onClose={() => setModalImage(null)} />
+            )} */}
                 {/* Left side control panels */}
                 {!isReadModeEnabled && (
                     <div className="flex flex-col border-r bg-customGray border-gray-700 w-1/3">
@@ -546,6 +553,8 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                     handleLoadDiagramFromJSON={
                                         handleLoadDiagramFromJSON
                                     }
+                                    modalImage={modalImage}
+                                    setModalImage={setModalImage}
                                 />
                             )}
                         </div>

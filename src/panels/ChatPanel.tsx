@@ -1,5 +1,3 @@
-// @/panels/ChatPanel.tsx
-
 "use client";
 import React, { useEffect, useRef, useState } from "react";
 import { Button } from "../components/ui/Button";
@@ -10,16 +8,23 @@ import { sendChatRequest, sendImageChatRequest } from "@/services/chat";
 import { useEnterSubmit } from "@/hooks/useEnterSubmit";
 import { Textarea } from "@/components/ui/Textarea";
 import { Paperclip, X } from "lucide-react";
+import ReactDOM from "react-dom";
+import Modal from "./modal";
+
 interface ChatPanelProps {
     handleLoadDiagramFromJSON: (loadedComponents: DiagramComponent[]) => void;
     diagramComponents: DiagramComponent[];
     addHistory: (diagramComponent: DiagramComponent[]) => void;
+    modalImage: string | null;
+    setModalImage: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
 const ChatPanel: React.FC<ChatPanelProps> = ({
     handleLoadDiagramFromJSON,
     diagramComponents,
-    addHistory
+    addHistory,
+    modalImage,
+    setModalImage
 }) => {
     const { messages, setMessages } = useChat();
     const { formRef, onKeyDown } = useEnterSubmit();
@@ -31,15 +36,24 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
 
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    
+    // const [modalImage, setModalImage] = useState<string | null>(null); // For modal
 
     const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event.target.files && event.target.files[0]) {
             const file = event.target.files[0];
             const reader = new FileReader();
-            reader.onload = () => setSelectedImage(reader.result as string);
+            reader.onload = () => {
+                const result = reader.result;
+                if (typeof result === "string") {
+                    setSelectedImage(result);  // Ensure only string is assigned
+                }else {
+                    console.error("FileReader result is not a string");
+                }
+            };
             reader.readAsDataURL(file);
         }
-    };
+    };    
 
     const clearImage = () => setSelectedImage(null);
 
@@ -52,13 +66,24 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
 
     const handleSend = async (e: { preventDefault: () => void }) => {
         e.preventDefault();
-        if(selectedImage) {
+    
+        if (selectedImage) {
+            // Show image in chat before sending
+            setMessages((prev) => [
+                ...prev,
+                {
+                    text: "",  // Ensure text exists
+                    imageUrl: selectedImage,
+                    isUser: true,
+                    isSystemQuery: false,
+                }
+            ]);
+    
             setLoading(true);
             try{
                 const res = await sendImageChatRequest(selectedImage);
                 handleLoadDiagramFromJSON(res);
                 clearImage();
-                setLoading(false);
                 setMessages((prev) => [
                     ...prev,
                     {
@@ -132,7 +157,14 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                             message.isUser ? "justify-end" : "justify-start"
                         }`}
                     >
-                        {message.isUser || message.isSystemQuery ? (
+                        {message.imageUrl ? (
+                            <img
+                                src={message.imageUrl}
+                                alt="Sent"
+                                className="w-32 h-32 rounded-lg cursor-pointer border"
+                                onClick={() => setModalImage(message.imageUrl ?? null)}
+                            />
+                        ) : message.isUser || message.isSystemQuery ? (
                             <div
                                 className={`max-w-xs px-4 py-2 rounded-lg break-words ${
                                     message.isUser
@@ -143,7 +175,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                                 {message.text}
                             </div>
                         ) : (
-                            <CodeBlock language="JSON" value={message.text} />
+                            <CodeBlock language="JSON" value={message.text ?? ""} />
                         )}
                     </div>
                 ))}
@@ -177,24 +209,26 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                         onChange={(e) => setInput(e.target.value)}
                     />
 
+                    {/* Image Preview Before Sending */}
                     {selectedImage && (
-                    <div className="absolute top-2 left-2 flex items-center space-x-2">
-                        <div className="relative w-12 h-12">
-                            <img
-                                src={selectedImage}
-                                alt="Selected"
-                                className="w-full h-full object-cover rounded-sm border"
-                            />
-                            <button
-                                type="button"
-                                className="absolute top-0 right-0 p-1 bg-white rounded-full shadow"
-                                onClick={clearImage}
-                            >
-                                <X className="w-4 h-4 text-red-600" />
-                            </button>
+                        <div className="absolute top-2 left-2 flex items-center space-x-2">
+                            <div className="relative w-12 h-12">
+                                <img
+                                    src={selectedImage}
+                                    alt="Selected"
+                                    className="w-full h-full object-cover rounded-sm border cursor-pointer"
+                                    onClick={() => setModalImage(selectedImage)}
+                                />
+                                <button
+                                    type="button"
+                                    className="absolute top-0 right-0 p-1 bg-white rounded-full shadow"
+                                    onClick={clearImage}
+                                >
+                                    <X className="w-4 h-4 text-red-600" />
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                )}
+                    )}
 
 
                     <div className="flex gap-1 justify-center align-middle absolute right-0 top-[13px] sm:right-4">
@@ -214,7 +248,29 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                     </div>
                 </div>
             </form>
+
+            
+            {modalImage && (
+    <Modal onClose={() => setModalImage(null)}>
+        <img src={modalImage} alt="Full Size" className="max-w-full max-h-full object-contain border border-black rounded-lg" />
+    </Modal>
+)}
+            {/* Image Modal using React Portal */}
+            {/* {modalImage &&
+    ReactDOM.createPortal(
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-75">
+            <img src={modalImage} alt="Full Size" className="max-w-full max-h-full object-contain" />
+            <button
+                className="absolute top-2 right-2 bg-white p-2 rounded-full shadow"
+                onClick={() => setModalImage(null)}
+            >
+                <X className="w-6 h-6 text-black" />
+            </button>
+        </div>,
+        document.body
+    )} */}
         </div>
     );
 };
+
 export default ChatPanel;
