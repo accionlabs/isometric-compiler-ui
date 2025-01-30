@@ -10,6 +10,8 @@ import { sendChatRequest, sendImageChatRequest } from "@/services/chat";
 import { useEnterSubmit } from "@/hooks/useEnterSubmit";
 import { Textarea } from "@/components/ui/Textarea";
 import { Paperclip, X } from "lucide-react";
+import ProgressPopup from "@/components/ui/ProgressPopup";
+
 interface ChatPanelProps {
     handleLoadDiagramFromJSON: (loadedComponents: DiagramComponent[]) => void;
     diagramComponents: DiagramComponent[];
@@ -121,7 +123,38 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             setLoading(false);
         }
     };
+    const [isLoader, setIsLoader] = useState(false);
+    const [isLoaderTimePassed, setIsLoaderTimePassed] = useState(false);
+
+    useEffect(() => {
+        if(isLoaderTimePassed) setIsLoader(isLoading)
+        else setIsLoader(isLoading)
+    }, [isLoading])
+
+    const LoadMeessagesWithImage : { time: number; message: string; }[] = [
+        { time: 0, message: 'Image is uploading...' },
+        { time: 3, message: 'Generating JSON for diagram...' },
+        { time: 6, message: 'Generating final image...' }
+      ];
+
+    const LoadMessagesWithoutImage : { time: number; message: string; }[] = [
+        { time: 0, message: 'Generating JSON for diagram...' },
+        { time: 3, message: 'Generating final image...' }
+    ]
+
+      const messageDurationWithImage = 10;
+      const messageDurationWithoutImage = 6
     return (
+        <>
+        <ProgressPopup
+            isOpen={isLoader}
+            onClose={() => {
+                setIsLoader(isLoading)
+                setIsLoaderTimePassed(true)
+            }}
+            messages={!!selectedImage ? LoadMeessagesWithImage : LoadMessagesWithoutImage}
+            duration={!!selectedImage ? messageDurationWithImage : messageDurationWithoutImage}
+        />
         <div className="p-4 flex h-full flex-col gap-4 ">
             {/* chat container */}
             <div className="flex-grow overflow-x-hidden flex flex-col gap-2">
@@ -215,6 +248,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                 </div>
             </form>
         </div>
+        </>
     );
 };
 export default ChatPanel;
