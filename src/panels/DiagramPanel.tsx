@@ -2,7 +2,12 @@ import { DiagramComponent, DiagramInfo, User } from "@/Types";
 import { Copy, Edit, MoreVertical, SquarePlus, Trash } from "lucide-react";
 import SaveNewDiagram from "./SaveNewDiagram";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { deleteDiagram, getDiagrams, saveDiagram } from "@/services/diagrams";
+import {
+    deleteDiagram,
+    getDiagrams,
+    saveDiagram,
+    updateDiagram
+} from "@/services/diagrams";
 import { calculateSVGBoundingBox } from "@/lib/svgUtils";
 import SVGPreview from "@/components/ui/SVGPreview";
 import {
@@ -21,7 +26,8 @@ export default function DiagramPanel({
     diagramComponents,
     composedSVG,
     canvasSize,
-    handleLoadDiagramFromJSON
+    handleLoadDiagramFromJSON,
+    autoSaveState
 }: {
     currentDiagramInfo: DiagramInfo | null;
     setCurrentDiagramInfo: (diagramInfo: DiagramInfo | null) => void;
@@ -29,10 +35,14 @@ export default function DiagramPanel({
     composedSVG: string;
     canvasSize: { width: number; height: number };
     handleLoadDiagramFromJSON: (loadedComponents: DiagramComponent[]) => void;
+    autoSaveState: [
+        autoSaveMode: boolean,
+        setAutoSaveMode: (vlaue: boolean) => void
+    ];
 }) {
     const queryClient = useQueryClient();
     const user = queryClient.getQueryData<User>(["user"]);
-
+    const [autoSaveMode, setAutoSaveMode] = autoSaveState;
     const {
         data: diagrams,
         refetch,
@@ -59,6 +69,16 @@ export default function DiagramPanel({
         }
     });
 
+    const { mutate: updateElement, isPending: isUpdatePending } = useMutation({
+        mutationFn: updateDiagram,
+        onSettled: (res) => {
+            refetch();
+            if (res?._id && currentDiagramInfo?._id === res._id)
+                setCurrentDiagramInfo(res);
+
+            setIsOpen(false);
+        }
+    });
     const [isOpen, setIsOpen] = useState(false);
     const [mode, setMode] = useState<Mode>("save");
     const [tempDiagramInfo, setTempDiagramInfo] = useState<DiagramInfo | null>(
@@ -67,7 +87,7 @@ export default function DiagramPanel({
     const getPendingState: Record<Mode, boolean> = {
         save: isPending,
         delete: isDeletionPending,
-        edit_details: true,
+        edit_details: isUpdatePending,
         clone: isPending
     };
     const handleDiagramSave = (name: string, description: string) => {
@@ -88,18 +108,22 @@ export default function DiagramPanel({
 `;
         mutate({ name, description, diagramComponents, svgContent });
     };
-    const handleDiagramClone = (name: string, description: string) => {
-        mutate({
+    const handleDiagramCloneAndEdit = (name: string, description: string) => {
+        const payload = {
             name,
             description,
             diagramComponents: tempDiagramInfo?.diagramComponents ?? [],
             svgContent: tempDiagramInfo?.metadata?.svgContent ?? ""
-        });
+        };
+        if (mode === "clone") mutate(payload);
+        if (mode === "edit_details")
+            updateElement({ ...payload, id: tempDiagramInfo?._id ?? "" });
     };
 
     const handleSubmitAccordingToMode = (name: string, description: string) => {
         if (mode === "save") handleDiagramSave(name, description);
-        if (mode === "clone") handleDiagramClone(name, description);
+        if (mode === "clone" || mode === "edit_details")
+            handleDiagramCloneAndEdit(name, description);
         if (mode === "delete") handleDeleteDiagram();
     };
 
@@ -159,14 +183,11 @@ export default function DiagramPanel({
                     </div>
                 </div>
                 <div className="flex items-center gap-1 pr-4">
-                    {/* <Button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                        }}
-                        variant="ghost"
-                    >
-                        Edit Diagram
-                    </Button> */}
+                    <div>
+                        {autoSaveMode &&
+                            currentDiagramInfo?._id === result._id &&
+                            "Editing"}
+                    </div>
 
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -191,7 +212,6 @@ export default function DiagramPanel({
                                     Edit Details
                                 </DropdownMenuItem>
                             )}
-
                             <DropdownMenuItem
                                 onClick={(e) => {
                                     e.stopPropagation();
@@ -202,18 +222,21 @@ export default function DiagramPanel({
                                 <Copy size={16} />
                                 Clone
                             </DropdownMenuItem>
-                            {/* {isMyDiagram && ( */}
-                            <DropdownMenuItem
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDialogOperations(result, "delete");
-                                }}
-                                className="flex items-center gap-2 text-red-500 cursor-pointer"
-                            >
-                                <Trash size={16} />
-                                Delete
-                            </DropdownMenuItem>
-                            {/* )} */}
+                            {isMyDiagram && (
+                                <DropdownMenuItem
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDialogOperations(
+                                            result,
+                                            "delete"
+                                        );
+                                    }}
+                                    className="flex items-center gap-2 text-red-500 cursor-pointer"
+                                >
+                                    <Trash size={16} />
+                                    Delete
+                                </DropdownMenuItem>
+                            )}
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
@@ -261,7 +284,7 @@ export default function DiagramPanel({
                         <SquarePlus />
                     </button>
                 </div>
-                <div className="flex-grow overflow-auto p-4">
+                <div className="flex-grow overflow-auto p-4 scrollbar-thin scrollbar-thumb-customLightGray scrollbar-track-transparent scrollbar-thumb-rounded custom-scrollbar">
                     {isLoading ? (
                         <LoaderSearchSkeleton />
                     ) : (

@@ -122,7 +122,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     return (
         <div className="p-4 flex h-full flex-col gap-4 ">
             {/* chat container */}
-            <div className="flex-grow overflow-x-hidden flex flex-col gap-2">
+            <div className="flex-grow overflow-x-hidden flex flex-col gap-2 scrollbar-thin scrollbar-thumb-customLightGray scrollbar-track-transparent scrollbar-thumb-rounded custom-scrollbar">
                 {messages.map((message, index) => (
                     <div
                         key={index}

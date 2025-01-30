@@ -220,6 +220,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
         loadedFiles: number;
         totalFiles: number;
     } | null>(null);
+    const [autoSaveMode, setAutoSaveMode] = useState(false);
     // const debouncedDiagramComponents = useDebounce(diagramComponents, 2000);
     // const debouncedComposedSVG = useDebounce(composedSVG, 2000);
 
@@ -615,6 +616,10 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                     setCurrentDiagramInfo={
                                         setCurrentDiagramInfo
                                     }
+                                    autoSaveState={[
+                                        autoSaveMode,
+                                        setAutoSaveMode
+                                    ]}
                                     diagramComponents={diagramComponents}
                                     composedSVG={composedSVG}
                                     canvasSize={canvasSize}
@@ -639,7 +644,9 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                     {/* Heading */}
                     <div className="flex h-14 justify-between items-center bg-customGray p-4 z-10">
                         <h2 className="text-xl  font-semibold ">
-                            Composed SVG
+                            {autoSaveMode && currentDiagramInfo?._id
+                                ? currentDiagramInfo.name
+                                : "Composed SVG"}
                         </h2>
                         <div className="flex gap-4">
                             <CustomTooltip
