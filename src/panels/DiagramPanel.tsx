@@ -1,7 +1,7 @@
 import { DiagramComponent, DiagramInfo, User } from "@/Types";
 import { Copy, Edit, MoreVertical, SquarePlus, Trash } from "lucide-react";
 import SaveNewDiagram from "./SaveNewDiagram";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import {
     deleteDiagram,
     getDiagrams,
@@ -17,7 +17,7 @@ import {
     DropdownMenuContent
 } from "@/components/ui/DropDownMenu";
 import { Button } from "@/components/ui/Button";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 type Mode = "save" | "clone" | "edit_details" | "delete";
 export default function DiagramPanel({
@@ -27,21 +27,25 @@ export default function DiagramPanel({
     composedSVG,
     canvasSize,
     handleLoadDiagramFromJSON,
-    autoSaveState
+    autoSaveState,
+    user
 }: {
     currentDiagramInfo: DiagramInfo | null;
     setCurrentDiagramInfo: (diagramInfo: DiagramInfo | null) => void;
     diagramComponents: DiagramComponent[];
     composedSVG: string;
     canvasSize: { width: number; height: number };
-    handleLoadDiagramFromJSON: (loadedComponents: DiagramComponent[]) => void;
+    handleLoadDiagramFromJSON: (
+        loadedComponents: DiagramComponent[]
+    ) => Promise<void>;
     autoSaveState: [
         autoSaveMode: boolean,
         setAutoSaveMode: (vlaue: boolean) => void
     ];
+    user: User | undefined;
 }) {
-    const queryClient = useQueryClient();
-    const user = queryClient.getQueryData<User>(["user"]);
+    const timeoutIdRef = useRef<NodeJS.Timeout | null>(null);
+
     const [autoSaveMode, setAutoSaveMode] = autoSaveState;
     const {
         data: diagrams,
@@ -136,13 +140,20 @@ export default function DiagramPanel({
         setIsOpen(true);
     };
 
-    const handleDeleteDiagram = () => {
+    const handleDeleteDiagram = async () => {
         if (!tempDiagramInfo?._id) return;
         if (currentDiagramInfo?._id === tempDiagramInfo._id) {
-            handleLoadDiagramFromJSON([]);
+            await handleLoadDiagramFromJSON([]);
             setCurrentDiagramInfo(null);
         }
         deleteMutation(tempDiagramInfo?._id);
+    };
+
+    const handleLoadDiagram = async (element: DiagramInfo) => {
+        await handleLoadDiagramFromJSON(element.diagramComponents);
+        if (element._id === currentDiagramInfo?._id) return;
+        setCurrentDiagramInfo(element);
+        setAutoSaveMode(user?._id === element.author);
     };
     const DiagramDetails = ({ result }: { result: DiagramInfo }) => {
         const isMyDiagram = user?._id === result.author;
@@ -156,20 +167,17 @@ export default function DiagramPanel({
                         ? "bg-customLightGray"
                         : ""
                 }`}
-                onClick={() => {
-                    setCurrentDiagramInfo(result);
-                    handleLoadDiagramFromJSON(result.diagramComponents);
-                }}
+                onClick={() => handleLoadDiagram(result)}
             >
                 <div className={`flex flex-grow items-center gap-4`}>
-                    <div className="w-[76px] h-[76px]">
+                    <div className="w-[76px] h-[76px] flex-shrink-0">
                         <SVGPreview
                             svgContent={result.metadata?.svgContent ?? ""}
                             className="w-full h-full object-cover bg-white"
                         />
                     </div>
-                    <div>
-                        <div className="text-white font-semibold">
+                    <div className="flex-1">
+                        <div className="text-white font-semibold ">
                             {result.name}
                         </div>
                         <p className="text-gray-400 text-xs">
@@ -184,9 +192,11 @@ export default function DiagramPanel({
                 </div>
                 <div className="flex items-center gap-1 pr-4">
                     <div>
-                        {autoSaveMode &&
-                            currentDiagramInfo?._id === result._id &&
-                            "Editing"}
+                        {isMyDiagram &&
+                            autoSaveMode &&
+                            currentDiagramInfo?._id === result._id && (
+                                <Edit size={16} />
+                            )}
                     </div>
 
                     <DropdownMenu>
@@ -251,7 +261,7 @@ export default function DiagramPanel({
                     key={index}
                     className="animate-pulse flex items-center p-4  rounded-md gap-4 hover:bg-customLightGray cursor-pointer"
                 >
-                    <div className="w-[76px] h-[76px] bg-gray-300 rounded-md flex-shrink-0">
+                    <div className="w-[76px] h-[76px]  bg-gray-300 rounded-md flex-shrink-0">
                         <SVGPreview
                             className="w-full h-full object-cover bg-white"
                             svgContent=""

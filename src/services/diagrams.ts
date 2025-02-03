@@ -95,6 +95,7 @@ export async function updateDiagram(payload: {
     diagramComponents: DiagramComponent[];
     svgContent: string;
 }): Promise<DiagramInfo | undefined> {
+    console.log("called after throttle");
     const url = `${config.isometricApiUrl}/diagram/${payload.id}`;
     const body = {
         name: payload.name,

@@ -78,7 +78,6 @@ const SaveNewDiagram: React.FC<SaveComponentDialogProps> = ({
         setError(null);
         onClose();
     };
-    console.log("diagramInfo", diagramInfo);
     useEffect(() => {
         setName(diagramInfo?.name ?? "");
         setDescription(diagramInfo?.metadata?.description ?? "");

@@ -11,7 +11,9 @@ import { useEnterSubmit } from "@/hooks/useEnterSubmit";
 import { Textarea } from "@/components/ui/Textarea";
 import { Paperclip, X } from "lucide-react";
 interface ChatPanelProps {
-    handleLoadDiagramFromJSON: (loadedComponents: DiagramComponent[]) => void;
+    handleLoadDiagramFromJSON: (
+        loadedComponents: DiagramComponent[]
+    ) => Promise<void>;
     diagramComponents: DiagramComponent[];
     addHistory: (diagramComponent: DiagramComponent[]) => void;
 }
