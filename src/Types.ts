@@ -48,6 +48,7 @@ export interface Shape {
     version?: string;
     tags?: string[];
     status?: "active" | "inactive";
+    _id?: string;
 }
 
 export interface DependencyResult {

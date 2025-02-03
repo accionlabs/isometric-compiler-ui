@@ -19,7 +19,8 @@ export const segregateShapesAndComponents = (response: UnifiedResponse[]) => {
                 path: item.categoryDetails?.path ?? "",
                 version: item.version ?? "",
                 description: item?.metadata?.description ?? "",
-                tags: item?.tags ?? []
+                tags: item?.tags ?? [],
+                _id: item._id
             });
         }
 
@@ -77,7 +78,8 @@ export const transformToUnifiedResponse = (
             svgContent: item.svgContent ?? "",
             path: item.categoryDetails?.path ?? "",
             version: item.version ?? "",
-            status: item.status
+            status: item.status,
+            _id: item._id
         };
     });
 };
