@@ -1,7 +1,6 @@
 // @/ImprovedLayout.tsx
 
 import React, { useState, useCallback, useEffect, useRef } from "react";
-import { Node } from "@xyflow/react";
 import {
     Dialog,
     DialogContent,
@@ -39,7 +38,14 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger
 } from "@/components/ui/DropDownMenu";
-import { CheckCircle, ChevronDown, Loader2, Redo, Undo } from "lucide-react";
+import {
+    CheckCircle,
+    ChevronDown,
+    FilePlus,
+    Loader2,
+    Redo,
+    Undo
+} from "lucide-react";
 import { MenuIcon } from "./components/ui/IconGroup";
 import { useKeycloak } from "@react-keycloak/web";
 import CustomTooltip from "./components/flow/CustomToolTip";
@@ -407,7 +413,11 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
             console.error("Error in handleSaveDiagram:", error);
         }
     };
-
+    const handleOpenNewCanvas = () => {
+        setAutoSaveMode(false);
+        setCurrentDiagramInfo(null);
+        handleLoadDiagramFromJSON([]);
+    };
     useEffect(() => {
         const handleMessage = (event: MessageEvent) => {
             try {
@@ -657,7 +667,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                 ? currentDiagramInfo.name
                                 : "Composed SVG"}
                         </h2>
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center">
                             {isPending ? (
                                 <Loader2 className="animate-spin text-white" />
                             ) : showUpdateSuccess ? (
@@ -665,6 +675,20 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                             ) : (
                                 ""
                             )}
+                            <CustomTooltip
+                                action={
+                                    <button
+                                        disabled={!diagramComponents.length}
+                                        onClick={handleOpenNewCanvas}
+                                        className="hover:bg-customLightGray p-2 rounded disabled:cursor-not-allowed disabled:opacity-50"
+                                        title="Undo"
+                                    >
+                                        <FilePlus />
+                                    </button>
+                                }
+                                header="New canvas"
+                                side="top"
+                            />
                             <CustomTooltip
                                 action={
                                     <button

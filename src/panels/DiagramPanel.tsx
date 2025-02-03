@@ -17,7 +17,14 @@ import {
     DropdownMenuContent
 } from "@/components/ui/DropDownMenu";
 import { Button } from "@/components/ui/Button";
-import { useRef, useState } from "react";
+import { useState } from "react";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle
+} from "@/components/ui/Dialog";
 
 type Mode = "save" | "clone" | "edit_details" | "delete";
 export default function DiagramPanel({
@@ -44,8 +51,7 @@ export default function DiagramPanel({
     ];
     user: User | undefined;
 }) {
-    const timeoutIdRef = useRef<NodeJS.Timeout | null>(null);
-
+    const [isMyDiagramLoading, setIsDiagramLoading] = useState(false);
     const [autoSaveMode, setAutoSaveMode] = autoSaveState;
     const {
         data: diagrams,
@@ -68,7 +74,9 @@ export default function DiagramPanel({
         mutationFn: saveDiagram,
         onSettled: (res) => {
             refetch();
-            if (res?._id) setCurrentDiagramInfo(res);
+            if (res?._id) {
+                handleLoadDiagram(res);
+            }
             setIsOpen(false);
         }
     });
@@ -77,8 +85,9 @@ export default function DiagramPanel({
         mutationFn: updateDiagram,
         onSettled: (res) => {
             refetch();
-            if (res?._id && currentDiagramInfo?._id === res._id)
-                setCurrentDiagramInfo(res);
+            if (res?._id && currentDiagramInfo?._id === res._id) {
+                handleLoadDiagram(res);
+            }
 
             setIsOpen(false);
         }
@@ -150,7 +159,10 @@ export default function DiagramPanel({
     };
 
     const handleLoadDiagram = async (element: DiagramInfo) => {
+        if (isMyDiagramLoading) return;
+        if (currentDiagramInfo?._id !== element._id) setIsDiagramLoading(true);
         await handleLoadDiagramFromJSON(element.diagramComponents);
+        setIsDiagramLoading(false);
         if (element._id === currentDiagramInfo?._id) return;
         setCurrentDiagramInfo(element);
         setAutoSaveMode(user?._id === element.author);
@@ -304,6 +316,16 @@ export default function DiagramPanel({
                     )}
                 </div>
             </div>
+            <Dialog open={isMyDiagramLoading}>
+                <DialogContent className="bg-gray-800 text-white">
+                    <DialogHeader>
+                        <DialogTitle>Loading Diagram</DialogTitle>
+                        <DialogDescription className="text-gray-300 animate-ping">
+                            loading...
+                        </DialogDescription>
+                    </DialogHeader>
+                </DialogContent>
+            </Dialog>
             <SaveNewDiagram
                 mode={mode}
                 isOpen={isOpen}
