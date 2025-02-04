@@ -4,7 +4,7 @@ import { useKeycloak } from "@react-keycloak/web";
 export default function Login() {
     // const auth = useAuth();
 
-    const { keycloak, initialized } = useKeycloak();
+    const { keycloak } = useKeycloak();
 
     return (
         <div className="flex justify-center items-center content-center gap-12 bg-customBlack h-screen w-screen px-16">

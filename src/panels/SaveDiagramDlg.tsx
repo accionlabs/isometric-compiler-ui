@@ -7,20 +7,9 @@ import {
     DialogHeader,
     DialogTitle
 } from "@/components/ui/Dialog";
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle
-} from "@/components/ui/AlertDialog";
+
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { Textarea } from "@/components/ui/Textarea";
-import { componentLibraryManager } from "@/lib/componentLib";
 
 interface SaveDiagramDialogProps {
     isOpen: boolean;

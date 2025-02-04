@@ -25,6 +25,16 @@ import {
     DialogHeader,
     DialogTitle
 } from "@/components/ui/Dialog";
+import { AlertDialog } from "@radix-ui/react-alert-dialog";
+import {
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle
+} from "@/components/ui/AlertDialog";
 
 type Mode = "save" | "clone" | "edit_details" | "delete";
 export default function DiagramPanel({
@@ -52,6 +62,7 @@ export default function DiagramPanel({
     user: User | undefined;
 }) {
     const [isMyDiagramLoading, setIsDiagramLoading] = useState(false);
+    const [error, setError] = useState({ isError: false, message: "" });
     const [autoSaveMode, setAutoSaveMode] = autoSaveState;
     const {
         data: diagrams,
@@ -72,24 +83,31 @@ export default function DiagramPanel({
         });
     const { mutate, isPending } = useMutation({
         mutationFn: saveDiagram,
-        onSettled: (res) => {
-            refetch();
+        onSettled: (res, error) => {
             if (res?._id) {
+                refetch();
                 handleLoadDiagram(res);
+                setIsOpen(false);
+                setError({ isError: false, message: "" });
             }
-            setIsOpen(false);
+            if (error) {
+                setError({ isError: true, message: error.message });
+            }
         }
     });
 
     const { mutate: updateElement, isPending: isUpdatePending } = useMutation({
         mutationFn: updateDiagram,
-        onSettled: (res) => {
-            refetch();
+        onSettled: (res, error) => {
             if (res?._id && currentDiagramInfo?._id === res._id) {
+                refetch();
                 handleLoadDiagram(res);
+                setIsOpen(false);
+                setError({ isError: false, message: "" });
             }
-
-            setIsOpen(false);
+            if (error) {
+                setError({ isError: true, message: error.message });
+            }
         }
     });
     const [isOpen, setIsOpen] = useState(false);
@@ -167,6 +185,7 @@ export default function DiagramPanel({
         setCurrentDiagramInfo(element);
         setAutoSaveMode(user?._id === element.author);
     };
+
     const DiagramDetails = ({ result }: { result: DiagramInfo }) => {
         const isMyDiagram = user?._id === result.author;
 
@@ -288,7 +307,7 @@ export default function DiagramPanel({
             ))}
         </ul>
     );
-
+    const closeAlert = () => setError({ isError: false, message: "" });
     return (
         <div className="flex flex-col h-full">
             <div className="flex-grow overflow-hidden flex flex-col">
@@ -326,6 +345,21 @@ export default function DiagramPanel({
                     </DialogHeader>
                 </DialogContent>
             </Dialog>
+            <AlertDialog open={error.isError} onOpenChange={closeAlert}>
+                <AlertDialogContent className="bg-gray-800 text-white">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Error</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            {error.message}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={closeAlert}>
+                            Cancel
+                        </AlertDialogCancel>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
             <SaveNewDiagram
                 mode={mode}
                 isOpen={isOpen}

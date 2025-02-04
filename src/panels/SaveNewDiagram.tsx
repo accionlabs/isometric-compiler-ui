@@ -53,12 +53,14 @@ const SaveNewDiagram: React.FC<SaveComponentDialogProps> = ({
         edit_details: "Editing...",
         delete: "Deleting..."
     };
+
     const getDescription: Record<Mode, string> = {
         save: "Create a new diagram with current composition",
         clone: "Clone existing diagram with current composition",
         edit_details: "Edit existing diagram details with current composition",
         delete: "Delete existing diagram"
     };
+
     const handleSubmit = () => {
         if (!name.trim()) {
             setError("Component name and category is required");
@@ -78,6 +80,7 @@ const SaveNewDiagram: React.FC<SaveComponentDialogProps> = ({
         setError(null);
         onClose();
     };
+
     useEffect(() => {
         setName(diagramInfo?.name ?? "");
         setDescription(diagramInfo?.metadata?.description ?? "");

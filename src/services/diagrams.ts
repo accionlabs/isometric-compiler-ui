@@ -76,15 +76,11 @@ export async function saveDiagram(payload: {
                 Authorization: `Bearer ${keycloak.token}`
             }
         });
-
-        // Check if the response is ok (status code in the range 200-299)
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
+        if (!response.ok) throw await response.json();
         return await response.json(); // Parse the JSON response
     } catch (error) {
         console.error("Error:", error); // Handle errors
+        throw error;
     }
 }
 
@@ -116,13 +112,10 @@ export async function updateDiagram(payload: {
             }
         });
 
-        // Check if the response is ok (status code in the range 200-299)
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
+        if (!response.ok) throw await response.json();
         return await response.json(); // Parse the JSON response
     } catch (error) {
         console.error("Error:", error); // Handle errors
+        throw error;
     }
 }
