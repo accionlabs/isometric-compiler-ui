@@ -146,9 +146,9 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     const [isLoaderTimePassed, setIsLoaderTimePassed] = useState(false);
 
     useEffect(() => {
-        if (isLoaderTimePassed) setIsLoader(isLoading)
-        else setIsLoader(isLoading)
-    }, [isLoading])
+        setIsLoader(isLoading)
+        if(!isLoading) setIsLoaderTimePassed(false)
+    }, [isLoaderTimePassed, isLoading])
 
     const LoadMeessagesWithImage: { time: number; message: string; }[] = [
         { time: 0, message: 'Extracting components.' },
@@ -206,15 +206,34 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             </div>
 
             {/* input container */}
-            <form onSubmit={handleSend} ref={formRef}>
-                <div className="relative flex max-h-60 w-full grow flex-col overflow-hidden bg-background px-8 sm:rounded-md sm:border sm:p-1 sm:pr-20">
+            <form onSubmit={handleSend} ref={formRef} className="w-full">
+                <div className="relative flex max-h-60 w-full grow items-center overflow-hidden bg-background px-8 sm:rounded-md sm:border sm:p-1 sm:pr-20">
+                    {/* Image on the left side */}
+                    {selectedImage && (
+                        <div className="relative w-12 h-12 flex-shrink-0">
+                            <img
+                                src={selectedImage}
+                                alt="Selected"
+                                className="w-full h-full object-cover rounded-sm border"
+                            />
+                            <button
+                                type="button"
+                                className="absolute -top-1 -right-1 p-[0.125rem] bg-white rounded-full shadow"
+                                onClick={clearImage}
+                            >
+                                <X className="w-2 h-2 text-customGray" />
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Text input next to image */}
                     <Textarea
                         id="messageInput"
                         ref={inputRef}
                         tabIndex={0}
                         onKeyDown={onKeyDown}
                         placeholder="Send a message."
-                        className="min-h-[60px] w-full resize-none bg-transparent px-4 py-[1.3rem] focus-within:outline-none sm:text-sm"
+                        className="ml-1 min-h-[60px] w-full resize-none bg-transparent px-4 py-[1.3rem] focus-within:outline-none sm:text-sm scrollbar-hide"
                         autoFocus
                         spellCheck={false}
                         autoComplete="off"
@@ -225,29 +244,8 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                         onChange={(e) => setInput(e.target.value)}
                     />
 
-                    {selectedImage && (
-                        <div className="absolute top-2 left-2 flex items-center space-x-2">
-                            <div className="relative w-12 h-12">
-                                <img
-                                    src={selectedImage}
-                                    alt="Selected"
-                                    className="w-full h-full object-cover rounded-sm border"
-                                />
-                                <button
-                                    type="button"
-                                    className="absolute top-0 right-0 p-1 bg-white rounded-full shadow"
-                                    onClick={clearImage}
-                                >
-                                    <X className="w-4 h-4 text-red-600" />
-                                </button>
-                            </div>
-                        </div>
-                    )}
-
-
-                    <div className="flex gap-1 justify-center align-middle absolute right-0 top-[13px] sm:right-4">
+                    <div className="flex gap-1 justify-center items-center absolute right-0 top-[13px] sm:right-4">
                         <Paperclip className="mt-1 cursor-pointer" onClick={() => fileInputRef.current?.click()} />
-
                         <input
                             type="file"
                             accept="image/*"
@@ -262,6 +260,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                     </div>
                 </div>
             </form>
+
 
             {/* viewer Popup */}
             <ViewerPopup isOpen={isViewerOpen} onClose={closeViewerPopup} content={viewerContent || ""} />
