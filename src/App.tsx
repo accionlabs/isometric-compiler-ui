@@ -486,7 +486,31 @@ const App: React.FC = () => {
         },
         [diagramComponents, fileName, folderPath, storageType]
     );
+    const handleMissingDependencies = async (
+        diagramComponents: DiagramComponent[]
+    ) => {
+        const missingDependencies = new Set<string>();
 
+        for (const element of diagramComponents) {
+            if (
+                (element.source === "component" &&
+                    !componentLibraryManager.getComponent(element.id)) ||
+                (element.source === "shape" &&
+                    !shapesLibraryManager.getShape(element.id))
+            ) {
+                missingDependencies.add(element.shape);
+            }
+        }
+
+        if (missingDependencies.size === 0) return;
+
+        const response = await getShapesByName(Array.from(missingDependencies));
+        if (!response) return;
+
+        const { shapes = [], components = [] } = response;
+        shapesLibraryManager.deserializeShapesLib(shapes);
+        componentLibraryManager.deserializeComponentLib(components);
+    };
     const handleLoadDiagram = useCallback(
         async (fileOrPath?: File) => {
             try {
@@ -515,18 +539,10 @@ const App: React.FC = () => {
                 componentLibraryManager.deserializeComponentLib(
                     parsedData.serializedComponentLib
                 );
-
-                const response = await getShapesByName(
-                    parsedData.serializedDiagramComponents?.map(
-                        (component: DiagramComponent) => component.shape
-                    )
+                await handleMissingDependencies(
+                    parsedData.serializedDiagramComponents
                 );
 
-                if (response) {
-                    const { shapes = [], components = [] } = response;
-                    shapesLibraryManager.deserializeShapesLib(shapes);
-                    componentLibraryManager.deserializeComponentLib(components);
-                }
                 setComponents(componentLibraryManager.getAllComponents());
                 setDiagramComponents(deserializedComponents);
                 setErrorMessage(null);
@@ -542,9 +558,10 @@ const App: React.FC = () => {
         [fileName, folderPath, storageType, svgLibrary]
     );
 
-    const handleLoadDiagramFromJSON = (
+    const handleLoadDiagramFromJSON = async (
         loadedComponents: DiagramComponent[]
     ) => {
+        await handleMissingDependencies(loadedComponents);
         const { svgContent, processedComponents } =
             diagramComponentsLib.compileDiagram(
                 loadedComponents,

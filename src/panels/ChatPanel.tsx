@@ -11,7 +11,9 @@ import ViewerPopup from "@/components/ui/ViewerPopup";
 import ProgressPopup from "@/components/ui/ProgressPopup";
 
 interface ChatPanelProps {
-    handleLoadDiagramFromJSON: (loadedComponents: DiagramComponent[]) => void;
+    handleLoadDiagramFromJSON: (
+        loadedComponents: DiagramComponent[]
+    ) => Promise<void>;
     diagramComponents: DiagramComponent[];
     addHistory: (diagramComponent: DiagramComponent[]) => void;
 }
@@ -32,7 +34,9 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const [viewerContent, setViewerContent] = useState<React.ReactNode | null>(null);
+    const [viewerContent, setViewerContent] = useState<React.ReactNode | null>(
+        null
+    );
     const [isViewerOpen, setViewerOpen] = useState(false);
 
     const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -48,16 +52,24 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
 
     const getViewerContent = (message: Message) => {
         if (message.isImage) {
-            return (<img src={message.text} alt="Preview" className="w-full h-auto rounded-md" />)
+            return (
+                <img
+                    src={message.text}
+                    alt="Preview"
+                    className="w-full h-auto rounded-md"
+                />
+            );
         } else {
-            return (<pre className="max-h-96 overflow-auto bg-gray-100 p-4 rounded-md text-sm text-black whitespace-pre-wrap">
-                {JSON.stringify(JSON.parse(message.text), null, 2)}
-            </pre>)
+            return (
+                <pre className="max-h-96 overflow-auto bg-gray-100 p-4 rounded-md text-sm text-black whitespace-pre-wrap">
+                    {JSON.stringify(JSON.parse(message.text), null, 2)}
+                </pre>
+            );
         }
-    }
+    };
     // Open viewer
     const openViewerPopup = (message: Message) => {
-        setViewerContent(getViewerContent(message))
+        setViewerContent(getViewerContent(message));
         setViewerOpen(true);
     };
 
@@ -92,12 +104,11 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                     }
                 ]);
             } catch (error) {
-                console.error(error)
+                console.error(error);
             } finally {
                 setLoading(false);
             }
-        }
-        else if (input.trim()) {
+        } else if (input.trim()) {
             setMessages((prev) => [
                 ...prev,
                 { text: input, isUser: true, isSystemQuery: false }
@@ -150,24 +161,25 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         if(!isLoading) setIsLoaderTimePassed(false)
     }, [isLoaderTimePassed, isLoading])
 
-    const LoadMeessagesWithImage: { time: number; message: string; }[] = [
-        { time: 0, message: 'Extracting components.' },
-        { time: 0.5, message: 'Mapping to Unified Model...' },
-        { time: 1, message: 'Optimizing layout...' },
-        { time: 2, message: 'Applying isometric view...' },
-        { time: 3, message: 'Finalizing diagram..' },
+    const LoadMeessagesWithImage: { time: number; message: string }[] = [
+        { time: 0, message: "Extracting components." },
+        { time: 0.5, message: "Mapping to Unified Model..." },
+        { time: 1, message: "Optimizing layout..." },
+        { time: 2, message: "Applying isometric view..." },
+        { time: 3, message: "Finalizing diagram.." }
     ];
 
     const messageDurationWithImage = 4;
     return (
-        <div className="p-4 flex flex-col gap-4 ">
+        <div className="p-4 h-full flex flex-col gap-4 ">
             {/* chat container */}
-            <div className="h-[82vh]  overflow-x-hidden flex flex-col gap-2">
+            <div className="flex-grow overflow-x-hidden flex flex-col gap-2 scrollbar-thin scrollbar-thumb-customLightGray scrollbar-track-transparent scrollbar-thumb-rounded custom-scrollbar">
                 {messages.map((message, index) => (
                     <div
                         key={index}
-                        className={`flex ${message.isUser ? "justify-end" : "justify-start"
-                            }`}
+                        className={`flex ${
+                            message.isUser ? "justify-end" : "justify-start"
+                        }`}
                     >
                         {message.isImage ? (
                             <img
@@ -178,10 +190,11 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                             />
                         ) : message.isUser || message.isSystemQuery ? (
                             <div
-                                className={`max-w-xs px-4 py-2 rounded-lg break-words ${message.isUser
+                                className={`max-w-xs px-4 py-2 rounded-lg break-words ${
+                                    message.isUser
                                         ? "bg-blue-600"
                                         : "bg-gray-700"
-                                    }`}
+                                }`}
                             >
                                 {message.text}
                             </div>
@@ -190,7 +203,9 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                                 className="max-w-xs p-3 rounded-lg bg-gray-700 cursor-pointer border border-gray-500 hover:bg-gray-600 flex items-center"
                                 onClick={() => openViewerPopup(message)}
                             >
-                                <span className="text-blue-400 font-semibold">📄 View JSON Response</span>
+                                <span className="text-blue-400 font-semibold">
+                                    📄 View JSON Response
+                                </span>
                             </div>
                         )}
                     </div>
@@ -253,7 +268,10 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                             className="hidden"
                             onChange={handleImageSelect}
                         />
-                        <Button type="submit" disabled={(!input && !selectedImage) || isLoading}>
+                        <Button
+                            type="submit"
+                            disabled={(!input && !selectedImage) || isLoading}
+                        >
                             send
                             <span className="sr-only">Send message</span>
                         </Button>
@@ -263,16 +281,22 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
 
 
             {/* viewer Popup */}
-            <ViewerPopup isOpen={isViewerOpen} onClose={closeViewerPopup} content={viewerContent || ""} />
-            {!!selectedImage && <ProgressPopup
-                isOpen={isLoader}
-                onClose={() => {
-                    setIsLoader(isLoading)
-                    setIsLoaderTimePassed(true)
-                }}
-                messages={LoadMeessagesWithImage}
-                duration={messageDurationWithImage}
-            />}
+            <ViewerPopup
+                isOpen={isViewerOpen}
+                onClose={closeViewerPopup}
+                content={viewerContent || ""}
+            />
+            {!!selectedImage && (
+                <ProgressPopup
+                    isOpen={isLoader}
+                    onClose={() => {
+                        setIsLoader(isLoading);
+                        setIsLoaderTimePassed(true);
+                    }}
+                    messages={LoadMeessagesWithImage}
+                    duration={messageDurationWithImage}
+                />
+            )}
         </div>
     );
 };

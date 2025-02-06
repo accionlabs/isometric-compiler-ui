@@ -1,7 +1,6 @@
 // @/ImprovedLayout.tsx
 
 import React, { useState, useCallback, useEffect, useRef } from "react";
-import { Node } from "@xyflow/react";
 import {
     Dialog,
     DialogContent,
@@ -21,7 +20,8 @@ import {
     CanvasSettings,
     Category,
     UnifiedElement,
-    DiagramInfo
+    DiagramInfo,
+    User
 } from "./Types";
 import ChatPanel from "./panels/ChatPanel";
 import { ChatProvider } from "./hooks/useChatProvider";
@@ -38,22 +38,29 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger
 } from "@/components/ui/DropDownMenu";
-import { ChevronDown, Redo, Undo } from "lucide-react";
+import {
+    CheckCircle,
+    ChevronDown,
+    FilePlus,
+    Loader2,
+    Redo,
+    Undo
+} from "lucide-react";
 import { MenuIcon } from "./components/ui/IconGroup";
 import { useKeycloak } from "@react-keycloak/web";
 import CustomTooltip from "./components/flow/CustomToolTip";
 import DiagramPanel from "./panels/DiagramPanel";
 import { updateDiagram } from "./services/diagrams";
-import { useMutation } from "@tanstack/react-query";
-import useDebounce from "./hooks/useDebounceHook";
 import { calculateSVGBoundingBox } from "./lib/svgUtils";
+import { useCancelLatestCalls } from "./hooks/useCancelLatestCalls";
+import { useQueryClient } from "@tanstack/react-query";
 
 type PanelType = "diagrams" | "shapes" | "composition" | "chat";
 
 const panels: Array<{ id: PanelType; label: string }> = [
-    { id: "diagrams", label: "Diagrams" },
     { id: "shapes", label: "Shapes" },
     { id: "composition", label: "Composition" },
+    { id: "diagrams", label: "Diagrams" },
     { id: "chat", label: "AI Model" }
 ];
 interface ImprovedLayoutProps {
@@ -104,7 +111,9 @@ interface ImprovedLayoutProps {
     setErrorMessage: (message: string | null) => void;
     onSaveDiagram: (fileName: string, onComplete: () => void) => Promise<void>;
     onLoadDiagram: (file?: File) => Promise<void>;
-    handleLoadDiagramFromJSON: (loadedComponents: DiagramComponent[]) => void;
+    handleLoadDiagramFromJSON: (
+        loadedComponents: DiagramComponent[]
+    ) => Promise<void>;
     folderPath: string;
     setFolderPath: (path: string) => void;
     showAttachmentPoints: boolean;
@@ -199,7 +208,8 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     handleRedo
 }) => {
     const { keycloak } = useKeycloak();
-
+    const queryClient = useQueryClient();
+    const user = queryClient.getQueryData<User>(["user"]);
     const params = new URLSearchParams(window.location.search);
     const isReadModeEnabled = params.get("mode") === "read";
 
@@ -220,62 +230,59 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
         loadedFiles: number;
         totalFiles: number;
     } | null>(null);
-    // const debouncedDiagramComponents = useDebounce(diagramComponents, 2000);
-    // const debouncedComposedSVG = useDebounce(composedSVG, 2000);
+    const [autoSaveMode, setAutoSaveMode] = useState(false);
+    const [showUpdateSuccess, setShowUpdateSuccess] = useState(false);
 
-    // const { mutate: updateElement } = useMutation({
-    //     mutationFn: updateDiagram
-    // });
     const [saveLoadMessage, setSaveLoadMessage] = useState<string | null>(null);
-    const [lastSavedComponents, setLastSavedComponents] = useState<
-        DiagramComponent[]
-    >([]);
-    const [lastSavedSVG, setLastSavedSVG] = useState<string>("");
+    const [isPending, setIsPending] = useState(false);
+    const timeoutIdRef = useRef<NodeJS.Timeout | null>(null);
 
-    // const hasUnsavedChanges = useCallback(() => {
-    //     if (!currentDiagramInfo) return false;
+    const updateDiagramWithRateLimit = useCancelLatestCalls(updateDiagram);
 
-    //     const svgChanged = composedSVG !== lastSavedSVG;
+    const handleAutoSave = useCallback(async () => {
+        if (!currentDiagramInfo?._id) return;
 
-    //     return svgChanged;
-    // }, [currentDiagramInfo, composedSVG, lastSavedComponents, lastSavedSVG]);
+        const boundingBox = calculateSVGBoundingBox(
+            composedSVG,
+            canvasSize
+        ) || {
+            x: 0,
+            y: 0,
+            width: "100%",
+            height: "100%"
+        };
 
-    // const debouncedUpdate = useCallback(async () => {
-    //     console.log("got hereee for updating!!!!!123", hasUnsavedChanges());
-    //     if (!currentDiagramInfo?._id || !hasUnsavedChanges()) return;
+        const svgContent: string = `
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="${boundingBox.x} ${boundingBox.y} ${boundingBox.width} ${boundingBox.height}" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+            ${composedSVG}
+        </svg>
+    `;
+        setIsPending(true);
+        const res = await updateDiagramWithRateLimit({
+            id: currentDiagramInfo._id,
+            diagramComponents: diagramComponents,
+            svgContent,
+            name: currentDiagramInfo.name,
+            description: currentDiagramInfo.metadata?.description || ""
+        });
+        setShowUpdateSuccess(true);
+        setIsPending(false);
+        if (timeoutIdRef.current) {
+            clearTimeout(timeoutIdRef.current);
+        }
+        timeoutIdRef.current = setTimeout(() => {
+            setShowUpdateSuccess(false);
+        }, 1000);
 
-    //     const boundingBox = calculateSVGBoundingBox(
-    //         composedSVG,
-    //         canvasSize
-    //     ) || {
-    //         x: 0,
-    //         y: 0,
-    //         width: "100%",
-    //         height: "100%"
-    //     };
+        const updatedDiagramComponents =
+            res?.diagramComponents ?? diagramComponents;
 
-    //     const svgContent: string = `
-    //     <svg xmlns="http://www.w3.org/2000/svg" viewBox="${boundingBox.x} ${boundingBox.y} ${boundingBox.width} ${boundingBox.height}" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
-    //         ${debouncedComposedSVG}
-    //     </svg>
-    // `;
-    //     console.log("got hereee for updating!!!!!");
-    //     // updateElement({
-    //     //     id: currentDiagramInfo._id,
-    //     //     diagramComponents: debouncedDiagramComponents,
-    //     //     svgContent,
-    //     //     name: currentDiagramInfo.name,
-    //     //     description: currentDiagramInfo.metadata?.description || ""
-    //     // });
-
-    //     setLastSavedComponents(debouncedDiagramComponents);
-    //     setLastSavedSVG(debouncedComposedSVG);
-    // }, [
-    //     debouncedDiagramComponents,
-    //     debouncedComposedSVG,
-    //     currentDiagramInfo,
-    //     hasUnsavedChanges
-    // ]);
+        currentDiagramInfo &&
+            setCurrentDiagramInfo({
+                ...currentDiagramInfo,
+                diagramComponents: updatedDiagramComponents
+            });
+    }, [currentDiagramInfo, composedSVG]);
 
     const handleSelect3DShape = useCallback(
         (id: string | null) => {
@@ -406,7 +413,11 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
             console.error("Error in handleSaveDiagram:", error);
         }
     };
-
+    const handleOpenNewCanvas = () => {
+        setAutoSaveMode(false);
+        setCurrentDiagramInfo(null);
+        handleLoadDiagramFromJSON([]);
+    };
     useEffect(() => {
         const handleMessage = (event: MessageEvent) => {
             try {
@@ -428,11 +439,19 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
         };
     }, []);
 
-    // Trigger debouncedUpdate whenever the debounced values change
+    // Trigger autoSave whenever the diagram composed svg changes
+    useEffect(() => {
+        if (user?._id !== currentDiagramInfo?.author) return;
+        if (!autoSaveMode) return;
+        if (!diagramComponents.length || !currentDiagramInfo?._id) return;
+        if (
+            JSON.stringify(currentDiagramInfo?.diagramComponents) ===
+            JSON.stringify(diagramComponents)
+        )
+            return;
 
-    // useEffect(() => {
-    //     debouncedUpdate();
-    // }, [debouncedUpdate]);
+        handleAutoSave();
+    }, [autoSaveMode, currentDiagramInfo, composedSVG]);
 
     return (
         <ChatProvider>
@@ -615,12 +634,17 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                     setCurrentDiagramInfo={
                                         setCurrentDiagramInfo
                                     }
+                                    autoSaveState={[
+                                        autoSaveMode,
+                                        setAutoSaveMode
+                                    ]}
                                     diagramComponents={diagramComponents}
                                     composedSVG={composedSVG}
                                     canvasSize={canvasSize}
                                     handleLoadDiagramFromJSON={
                                         handleLoadDiagramFromJSON
                                     }
+                                    user={user}
                                 />
                             )}
                             {activePanel === "chat" && (
@@ -639,9 +663,32 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                     {/* Heading */}
                     <div className="flex h-14 justify-between items-center bg-customGray p-4 z-10">
                         <h2 className="text-xl  font-semibold ">
-                            Composed SVG
+                            {autoSaveMode && currentDiagramInfo?._id
+                                ? currentDiagramInfo.name
+                                : "Composed SVG"}
                         </h2>
-                        <div className="flex gap-4">
+                        <div className="flex items-center">
+                            {isPending ? (
+                                <Loader2 className="animate-spin text-white" />
+                            ) : showUpdateSuccess ? (
+                                <CheckCircle className="text-green-500  transition-opacity duration-1000 animate-pulse" />
+                            ) : (
+                                ""
+                            )}
+                            <CustomTooltip
+                                action={
+                                    <button
+                                        disabled={!diagramComponents.length}
+                                        onClick={handleOpenNewCanvas}
+                                        className="hover:bg-customLightGray p-2 rounded disabled:cursor-not-allowed disabled:opacity-50"
+                                        title="Undo"
+                                    >
+                                        <FilePlus />
+                                    </button>
+                                }
+                                header="New canvas"
+                                side="top"
+                            />
                             <CustomTooltip
                                 action={
                                     <button
@@ -751,7 +798,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                             <div className="mt-4 text-white">
                                 <p>Loading: {loadingProgress.currentFile}</p>
                                 <p>
-                                    Progress: {loadingProgress.loadedFiles} /{" "}
+                                    Progress: {loadingProgress.loadedFiles} /
                                     {loadingProgress.totalFiles}
                                 </p>
                                 <div className="w-full bg-gray-700 rounded-full h-2.5 mt-2">

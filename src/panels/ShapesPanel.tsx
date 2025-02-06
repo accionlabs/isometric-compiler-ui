@@ -107,13 +107,21 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
         Shape | Component | UnifiedElement | null
     >(null);
 
-    useEffect(()=>{
-        const updatedCurrentComponentDetails = components.find((component)=>component.name === currentShapeDetails?.name)
-        if(updatedCurrentComponentDetails) {setCurrentShapeDetails(updatedCurrentComponentDetails)}
+    useEffect(() => {
+        const updatedCurrentComponentDetails = components.find(
+            (component) => component.name === currentShapeDetails?.name
+        );
+        if (updatedCurrentComponentDetails) {
+            setCurrentShapeDetails(updatedCurrentComponentDetails);
+        }
 
-        const updatedCurrentShapeDetails = shapesByCategory.find((shape)=>shape.name === currentShapeDetails?.name)
-        if(updatedCurrentShapeDetails) {setCurrentShapeDetails(updatedCurrentShapeDetails)}
-    },[components, shapesByCategory])
+        const updatedCurrentShapeDetails = shapesByCategory.find(
+            (shape) => shape.name === currentShapeDetails?.name
+        );
+        if (updatedCurrentShapeDetails) {
+            setCurrentShapeDetails(updatedCurrentShapeDetails);
+        }
+    }, [components, shapesByCategory]);
 
     const isAddDisabled: Record<ElementType, boolean> = {
         "3D": diagramComponents.length > 0 && selected3DShape === null,
@@ -331,7 +339,9 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
 
                     {/* Hover Effect */}
                     <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm opacity-0 hover:opacity-100 transition-opacity">
-                        <span className="text-white text-3xl">+</span>
+                        <span className="text-white text-3xl select-none">
+                            +
+                        </span>
                     </div>
                 </div>
 

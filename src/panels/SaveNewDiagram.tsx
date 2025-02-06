@@ -1,44 +1,65 @@
 // @/panels/SaveComponentDialog.tsx
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
     Dialog,
     DialogContent,
     DialogHeader,
     DialogTitle
 } from "@/components/ui/Dialog";
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle
-} from "@/components/ui/AlertDialog";
+
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
 import { componentLibraryManager } from "@/lib/componentLib";
-
+import { DiagramInfo } from "@/Types";
+type Mode = "save" | "clone" | "edit_details" | "delete";
 interface SaveComponentDialogProps {
     isOpen: boolean;
     isPending: boolean;
+    mode: Mode;
     onClose: () => void;
-    onSave: (name: string, description: string) => void;
+    onSubmit: (name: string, description: string) => void;
+    diagramInfo: DiagramInfo | null;
 }
 
 const SaveNewDiagram: React.FC<SaveComponentDialogProps> = ({
     isOpen,
     onClose,
-    onSave,
-    isPending
+    mode,
+    onSubmit,
+    isPending,
+    diagramInfo
 }) => {
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
     const [error, setError] = useState<string | null>(null);
-    const [showOverwriteDialog, setShowOverwriteDialog] = useState(false);
+
+    const getheading: Record<Mode, string> = {
+        save: "Save New Diagram",
+        clone: "Clone Existing Diagram",
+        edit_details: "Edit Diagram Details",
+        delete: `Delete Diagram with name ${diagramInfo?.name}?`
+    };
+    const getSubmitButtonName: Record<Mode, string> = {
+        save: "Save Diagram",
+        clone: "Clone Diagram",
+        edit_details: "Edit Diagram",
+        delete: "Delete Diagram"
+    };
+    const getSubmitLoadingName: Record<Mode, string> = {
+        save: "Saving...",
+        clone: "Cloning...",
+        edit_details: "Editing...",
+        delete: "Deleting..."
+    };
+
+    const getDescription: Record<Mode, string> = {
+        save: "Create a new diagram with current composition",
+        clone: "Clone existing diagram with current composition",
+        edit_details: "Edit existing diagram details with current composition",
+        delete: "Delete existing diagram"
+    };
 
     const handleSubmit = () => {
         if (!name.trim()) {
@@ -50,21 +71,20 @@ const SaveNewDiagram: React.FC<SaveComponentDialogProps> = ({
             return;
         }
 
-        // Check if component with this name already exists
-        if (componentLibraryManager.hasComponent(name)) {
-            setShowOverwriteDialog(true);
-            return;
-        }
-        onSave(name, description);
+        onSubmit(name, description);
     };
 
     const handleClose = () => {
         setName("");
         setDescription("");
         setError(null);
-        setShowOverwriteDialog(false);
         onClose();
     };
+
+    useEffect(() => {
+        setName(diagramInfo?.name ?? "");
+        setDescription(diagramInfo?.metadata?.description ?? "");
+    }, [diagramInfo]);
     return (
         <>
             <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -73,44 +93,52 @@ const SaveNewDiagram: React.FC<SaveComponentDialogProps> = ({
                     aria-describedby="dialog-description"
                 >
                     <DialogHeader>
-                        <DialogTitle>Save New Diagram</DialogTitle>
+                        <DialogTitle>{getheading[mode]}</DialogTitle>
                     </DialogHeader>
 
                     {/* Hidden description for screen readers */}
                     <span id="dialog-description" className="sr-only">
-                        Create a new diagram with current composition
+                        {getDescription[mode]}
                     </span>
 
                     <div className="space-y-4 mt-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-200 mb-1">
-                                Diagram Name *
-                            </label>
-                            <Input
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
-                                placeholder="Enter component name"
-                                className="w-full bg-customLightGray text-white border-gray-600"
-                            />
-                            {error && (
-                                <div className="text-red-400 text-sm mt-1">
-                                    {error}
+                        {mode !== "delete" && (
+                            <>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-200 mb-1">
+                                        Diagram Name *
+                                    </label>
+                                    <Input
+                                        value={name}
+                                        onChange={(e) =>
+                                            setName(e.target.value)
+                                        }
+                                        placeholder="Enter component name"
+                                        className="w-full bg-customLightGray text-white border-gray-600"
+                                    />
+                                    {error && (
+                                        <div className="text-red-400 text-sm mt-1">
+                                            {error}
+                                        </div>
+                                    )}
                                 </div>
-                            )}
-                        </div>
 
-                        <div>
-                            <label className="block text-sm font-medium text-gray-200 mb-1">
-                                Description
-                            </label>
-                            <Textarea
-                                value={description}
-                                onChange={(e) => setDescription(e.target.value)}
-                                placeholder="Enter diagram description"
-                                className="w-full  text-white bg-customLightGray"
-                                rows={3}
-                            />
-                        </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-200 mb-1">
+                                        Description
+                                    </label>
+                                    <Textarea
+                                        value={description}
+                                        onChange={(e) =>
+                                            setDescription(e.target.value)
+                                        }
+                                        placeholder="Enter diagram description"
+                                        className="w-full  text-white bg-customLightGray"
+                                        rows={3}
+                                    />
+                                </div>
+                            </>
+                        )}
 
                         <div className="flex justify-end space-x-2">
                             <Button
@@ -125,41 +153,14 @@ const SaveNewDiagram: React.FC<SaveComponentDialogProps> = ({
                                 className="bg-blue-600 hover:bg-blue-700"
                                 disabled={!name.trim() || isPending}
                             >
-                                {isPending ? "Saving..." : "Save Diagram"}
+                                {isPending
+                                    ? getSubmitLoadingName[mode]
+                                    : getSubmitButtonName[mode]}
                             </Button>
                         </div>
                     </div>
                 </DialogContent>
             </Dialog>
-
-            <AlertDialog
-                open={showOverwriteDialog}
-                onOpenChange={setShowOverwriteDialog}
-            >
-                <AlertDialogContent className="bg-gray-800 text-white">
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>
-                            Overwrite Existing Component?
-                        </AlertDialogTitle>
-                        <AlertDialogDescription>
-                            A component with the name "{name}" already exists.
-                            Do you want to overwrite it?
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel
-                            onClick={() => setShowOverwriteDialog(false)}
-                        >
-                            Cancel
-                        </AlertDialogCancel>
-                        <AlertDialogAction
-                            onClick={() => onSave(name, description)}
-                        >
-                            Overwrite
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
         </>
     );
 };
