@@ -3,12 +3,14 @@ import React, { useEffect, useRef, useState } from "react";
 import { Button } from "../components/ui/Button";
 import { DiagramComponent } from "@/Types";
 import { Message, useChat } from "@/hooks/useChatProvider";
-import { sendChatRequest, sendImageChatRequest } from "@/services/chat";
+import { sendChatRequest, sendChatRequestV2, sendImageChatRequest } from "@/services/chat";
 import { useEnterSubmit } from "@/hooks/useEnterSubmit";
 import { Textarea } from "@/components/ui/Textarea";
-import { Paperclip, X } from "lucide-react";
+import { FileText, Paperclip, X } from "lucide-react";
 import ViewerPopup from "@/components/ui/ViewerPopup";
 import ProgressPopup from "@/components/ui/ProgressPopup";
+import { set } from "yaml/dist/schema/yaml-1.1/set";
+import { useMutation } from "@tanstack/react-query";
 
 interface ChatPanelProps {
     handleLoadDiagramFromJSON: (
@@ -27,34 +29,93 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     const { formRef, onKeyDown } = useEnterSubmit();
 
     const [input, setInput] = useState("");
-    const [isLoading, setLoading] = useState(false);
+    // const [isLoading, setLoading] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = React.useRef<HTMLTextAreaElement>(null);
 
-    const [selectedImage, setSelectedImage] = useState<string | null>(null);
+    // const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const [viewerContent, setViewerContent] = useState<React.ReactNode | null>(
         null
     );
     const [isViewerOpen, setViewerOpen] = useState(false);
+    const [selectedFile, setSelectedFile] = React.useState<{ file: File | null; src: string; fileType: 'image' | 'pdf' | null }>({
+        file: null,
+        src: '',
+        fileType: null,
+    });
 
-    const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const { mutate: sendChatMutaion, isPending: isLoading } = useMutation({
+        mutationFn: sendChatRequestV2,
+        onSettled: (res, error) => {
+            console.log("send message response", res, error);
+            if (res) {
+                if (res.metadata.needFeedback) {
+                    setMessages((prev) => [
+                        ...prev,
+                        { text: res.message, isUser: false, isSystemQuery: true, metaData: {} }
+                    ]);
+                } else {
+                    handleLoadDiagramFromJSON(res.metadata.content ?? []);
+                    setMessages((prev) => [
+                        ...prev,
+                        {
+                            text: res.message,
+                            isUser: false,
+                            isSystemQuery: false,
+                            metaData: { content: res.metadata.content }
+                        }
+                    ]);
+                }
+            }
+            if (error) {
+                setMessages((prev) => [
+                    ...prev,
+                    { text: 'something went wrong. Please try again', isUser: false, isSystemQuery: true, metaData: {} }
+                ]);
+                // setError({ isError: true, message: error.message });
+            }
+        }
+    })
+
+    console.log("isLoading", isLoading);
+
+
+    const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event.target.files && event.target.files[0]) {
             const file = event.target.files[0];
+            console.log(file.name, 'Selected file');
+    
             const reader = new FileReader();
-            reader.onload = () => setSelectedImage(reader.result as string);
-            reader.readAsDataURL(file);
+            if (file.type.startsWith('image/')) {
+                // Read image as Data URL for preview
+                reader.onload = () =>
+                    setSelectedFile({
+                        file,
+                        fileType: 'image',
+                        src: reader.result as string,
+                    });
+                reader.readAsDataURL(file);
+            } else if (file.type === 'application/pdf') {
+                console.log('PDF file selected', file);
+                // Set PDF file without preview
+                setSelectedFile({
+                    file,
+                    src: '',
+                    fileType: 'pdf',
+                });
+            }
         }
     };
 
-    const clearImage = () => setSelectedImage(null);
+    const clearFile = () => setSelectedFile({ file: null, src: '', fileType: null });
 
     const getViewerContent = (message: Message) => {
-        if (message.isImage) {
+        if (message.metaData.fileType === 'image') {
             return (
                 <img
-                    src={message.text}
+                    src={message.metaData.fileUrl}
                     alt="Preview"
                     className="w-full h-auto rounded-md"
                 />
@@ -62,7 +123,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         } else {
             return (
                 <pre className="max-h-96 overflow-auto bg-gray-100 p-4 rounded-md text-sm text-black whitespace-pre-wrap">
-                    {JSON.stringify(JSON.parse(message.text), null, 2)}
+                    {JSON.stringify(message.metaData.content, null, 2)}
                 </pre>
             );
         }
@@ -87,72 +148,83 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
 
     const handleSend = async (e: { preventDefault: () => void }) => {
         e.preventDefault();
-        if (selectedImage) {
-            setLoading(true);
-            try {
-                const res = await sendImageChatRequest(selectedImage);
-                handleLoadDiagramFromJSON(res);
-                clearImage();
-                setLoading(false);
-                setMessages((prev) => [
-                    ...prev,
-                    { text: selectedImage, isUser: true, isImage: true }, // Mark it as an image
-                    {
-                        text: JSON.stringify(res, null, 2),
-                        isUser: false,
-                        isSystemQuery: false
-                    }
-                ]);
-            } catch (error) {
-                console.error(error);
-            } finally {
-                setLoading(false);
+        if (!input && !selectedFile.file) return;
+        setMessages((prev) => [
+            ...prev,
+            { text: input, isUser: true, isSystemQuery: false, metaData: { fileUrl: selectedFile.src, fileType: selectedFile.fileType ?? undefined, fileName: selectedFile.file?.name } }
+        ]);
+        sendChatMutaion(
+            {
+                query: input,
+                currentState: diagramComponents,
+                file: selectedFile.file ?? undefined
             }
-        } else if (input.trim()) {
-            setMessages((prev) => [
-                ...prev,
-                { text: input, isUser: true, isSystemQuery: false }
-            ]);
-            handleResponse(input);
-            setInput("");
-        }
+        );
+        // if (selectedImage) {
+        //     setLoading(true);
+        //     try {
+        //         const res = await sendImageChatRequest(selectedImage);
+        //         handleLoadDiagramFromJSON(res);
+        //         setLoading(false);
+        //         setMessages((prev) => [
+        //             ...prev,
+        //             { text: selectedImage, isUser: true, isImage: true }, // Mark it as an image
+        //             {
+        //                 text: JSON.stringify(res, null, 2),
+        //                 isUser: false,
+        //                 isSystemQuery: false
+        //             }
+        //         ]);
+        //     } catch (error) {
+        //         console.error(error);
+        //     } finally {
+        //         setLoading(false);
+        //     }
+        // } else if (input.trim()) {
+        //     setMessages((prev) => [
+        //         ...prev,
+        //         { text: input, isUser: true, isSystemQuery: false }
+        //     ]);
+        //     handleResponse(input);
+        //     setInput("");
+        // }
     };
 
-    const handleResponse = async (input: string) => {
-        setLoading(true);
-        try {
-            const res = await sendChatRequest(input, diagramComponents);
-            if (res.needFeedback) {
-                setMessages((prev) => [
-                    ...prev,
-                    { text: res.feedback, isUser: false, isSystemQuery: true }
-                ]);
-            } else {
-                handleLoadDiagramFromJSON(res.result);
-                setMessages((prev) => [
-                    ...prev,
-                    { text: res.feedback, isUser: false, isSystemQuery: true },
-                    {
-                        text: JSON.stringify(res.result, null, 2),
-                        isUser: false,
-                        isSystemQuery: false
-                    }
-                ]);
-            }
-        } catch (error) {
-            console.error("Error in handleResponse:", error);
-            setMessages((prev) => [
-                ...prev,
-                {
-                    text: "An error occurred. Please try again.",
-                    isUser: false,
-                    isSystemQuery: true
-                }
-            ]);
-        } finally {
-            setLoading(false);
-        }
-    };
+    // const handleResponse = async (input: string) => {
+    //     setLoading(true);
+    //     try {
+    //         const res = await sendChatRequest(input, diagramComponents);
+    //         if (res.needFeedback) {
+    //             setMessages((prev) => [
+    //                 ...prev,
+    //                 { text: res.feedback, isUser: false, isSystemQuery: true }
+    //             ]);
+    //         } else {
+    //             handleLoadDiagramFromJSON(res.result);
+    //             setMessages((prev) => [
+    //                 ...prev,
+    //                 { text: res.feedback, isUser: false, isSystemQuery: true },
+    //                 {
+    //                     text: JSON.stringify(res.result, null, 2),
+    //                     isUser: false,
+    //                     isSystemQuery: false
+    //                 }
+    //             ]);
+    //         }
+    //     } catch (error) {
+    //         console.error("Error in handleResponse:", error);
+    //         setMessages((prev) => [
+    //             ...prev,
+    //             {
+    //                 text: "An error occurred. Please try again.",
+    //                 isUser: false,
+    //                 isSystemQuery: true
+    //             }
+    //         ]);
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // };
     const [isLoader, setIsLoader] = useState(false);
     const [isLoaderTimePassed, setIsLoaderTimePassed] = useState(false);
 
@@ -181,9 +253,42 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                             message.isUser ? "justify-end" : "justify-start"
                         }`}
                     >
-                        {message.isImage ? (
+                        {message.metaData.fileType === 'image' && 
                             <img
-                                src={message.text}
+                            src={message.metaData.fileUrl}
+                            alt="Sent"
+                            className="w-20 h-20 cursor-pointer"
+                            onClick={() => openViewerPopup(message)}
+                        />
+                        }
+                        {message.metaData.fileType === 'pdf' && 
+                            <div className="w-20 h-20 flex flex-col items-center justify-center bg-gray-100 rounded-sm border">
+                                <FileText className="w-5 h-5 text-gray-700" />
+                            <span className="text-[10px] text-gray-800 truncate max-w-[40px] text-center">{message.metaData.fileName}</span>
+                        </div>
+                        }
+                        <div
+                                className={`max-w-xs px-4 py-2 rounded-lg break-words ${
+                                    message.isUser
+                                        ? "bg-blue-600"
+                                        : "bg-gray-700"
+                                }`}
+                            >
+                                {message.text}
+                        </div>
+                        {
+                            message.metaData.content && <div
+                            className="max-w-xs p-3 rounded-lg bg-gray-700 cursor-pointer border border-gray-500 hover:bg-gray-600 flex items-center"
+                            onClick={() => openViewerPopup(message)}
+                        >
+                            <span className="text-blue-400 font-semibold">
+                                📄 View JSON Response
+                            </span>
+                        </div>
+                        }
+                        {/* {message.fileType === 'image' ? (
+                            <img
+                                src={message.fileUrl}
                                 alt="Sent"
                                 className="w-20 h-20 cursor-pointer"
                                 onClick={() => openViewerPopup(message)}
@@ -207,7 +312,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                                     📄 View JSON Response
                                 </span>
                             </div>
-                        )}
+                        )} */}
                     </div>
                 ))}
                 {isLoading && (
@@ -224,22 +329,31 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             <form onSubmit={handleSend} ref={formRef} className="w-full">
                 <div className="relative flex max-h-60 w-full grow items-center overflow-hidden bg-background px-8 sm:rounded-md sm:border sm:p-1 sm:pr-20">
                     {/* Image on the left side */}
-                    {selectedImage && (
+                    {selectedFile.file && (
                         <div className="relative w-12 h-12 flex-shrink-0">
-                            <img
-                                src={selectedImage}
-                                alt="Selected"
-                                className="w-full h-full object-cover rounded-sm border"
-                            />
+                            {selectedFile.fileType === 'image' ? (
+                                <img
+                                    src={selectedFile.src}
+                                    alt="Selected"
+                                    className="w-full h-full object-cover rounded-sm border"
+                                />
+                            ) : (
+                                <div className="w-full h-full flex flex-col items-center justify-center bg-gray-100 rounded-sm border">
+                                    <FileText className="w-5 h-5 text-gray-700" />
+                                    <span className="text-[10px] text-gray-800 truncate max-w-[40px] text-center">{selectedFile.file?.name}</span>
+                                </div>
+                            )}
+
                             <button
                                 type="button"
                                 className="absolute -top-1 -right-1 p-[0.125rem] bg-white rounded-full shadow"
-                                onClick={clearImage}
+                                onClick={() => clearFile()}
                             >
                                 <X className="w-2 h-2 text-customGray" />
                             </button>
                         </div>
                     )}
+
 
                     {/* Text input next to image */}
                     <Textarea
@@ -263,14 +377,14 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                         <Paperclip className="mt-1 cursor-pointer" onClick={() => fileInputRef.current?.click()} />
                         <input
                             type="file"
-                            accept="image/*"
+                            accept="image/*,.pdf"
                             ref={fileInputRef}
                             className="hidden"
-                            onChange={handleImageSelect}
+                            onChange={handleFileSelect}
                         />
                         <Button
                             type="submit"
-                            disabled={(!input && !selectedImage) || isLoading}
+                            disabled={(!input && !selectedFile.file) || isLoading}
                         >
                             send
                             <span className="sr-only">Send message</span>
@@ -286,7 +400,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                 onClose={closeViewerPopup}
                 content={viewerContent || ""}
             />
-            {!!selectedImage && (
+            {!!selectedFile.file && (
                 <ProgressPopup
                     isOpen={isLoader}
                     onClose={() => {

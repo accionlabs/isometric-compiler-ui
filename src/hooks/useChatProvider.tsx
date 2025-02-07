@@ -9,7 +9,9 @@ import React, {
   createContext,
 } from "react";
 
-export type Message = { text: string; isUser: boolean; isSystemQuery?: boolean, isImage?: boolean; };
+export type Message = { text: string; isUser: boolean; isSystemQuery?: boolean, metaData: {
+  fileUrl?: string, fileType?: 'image' | 'pdf', fileName?: string, content?: any ;
+} };
 interface ChatProviderProps {
   children: ReactNode;
 }

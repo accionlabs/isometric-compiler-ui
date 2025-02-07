@@ -351,3 +351,24 @@ export interface DiagramInfo {
     } | null;
     diagramComponents: DiagramComponent[];
 }
+
+export interface MessageResponse {
+        uuid: string,
+        message: string,
+        messageType: "json" | "text" | "file",
+        metadata: {
+            "content": any[],
+            "action": MessageAction[],
+            "needFeedback": boolean
+        },
+        role: "user" | "system",
+}
+
+interface MessageAction {
+        name: string,
+        action: "add" | "remove" | "update",
+        shapeType: "3D" | "2D" | "COMPONENT" | "LAYERS",
+        shapeName: string,
+        "position": "top" | "front-right" | "front-left" ,
+        "relativeTo3dShapeId": string
+}

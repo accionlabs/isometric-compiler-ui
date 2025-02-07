@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 import { getShapesByName } from "./shapes";
 import { shapesLibraryManager } from "../lib/shapesLib";
 import { componentLibraryManager } from "../lib/componentLib";
-import { DiagramComponent } from "@/Types";
+import { DiagramComponent, MessageResponse } from "@/Types";
 const newUUID = uuidv4();
 
 export async function sendChatRequest(
@@ -89,3 +89,46 @@ export async function sendImageChatRequest(image: string) {
         }
         return result
 }
+
+export async function sendChatRequestV2({query, currentState, file}:{
+    query: string,
+    currentState?: DiagramComponent[],
+    file?: File,
+}): Promise<MessageResponse> {
+    const formData = new FormData();
+        if (file) {
+            formData.append('file', file);
+        }
+        if (currentState) {
+            formData.append('currentState', JSON.stringify(currentState));
+        }
+        formData.append('query', query);
+        formData.append('uuid', newUUID);
+
+        const response = await fetch(`${config.gatewayApiUrl}/isometric/chat`, {
+            method: 'POST',
+            body: formData,
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to send the message.');
+        }
+
+        const shapeNames = [];
+        const res: MessageResponse = await response.json(); // Parse the JSON response
+        for (let i = 0; i < res.metadata.action?.length; i++) {
+            if (res.metadata.action[i].shapeName && res.metadata.action[i].action === "add") {
+                shapeNames.push(res.metadata.action[i].shapeName);
+            }
+        }
+        if (shapeNames.length>0) {
+            const shapes = await getShapesByName(shapeNames);
+            if (shapes) {
+                shapesLibraryManager.deserializeShapesLib(shapes.shapes);
+                componentLibraryManager.deserializeComponentLib(
+                    shapes.components
+                );
+            }
+        }
+        return res;
+}   
