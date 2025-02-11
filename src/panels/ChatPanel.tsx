@@ -3,13 +3,13 @@ import React, { useEffect, useRef, useState } from "react";
 import { Button } from "../components/ui/Button";
 import { DiagramComponent } from "@/Types";
 import { Message, useChat } from "@/hooks/useChatProvider";
-import { sendChatRequestV2 } from "@/services/chat";
+import { getChatByuuid, sendChatRequestV2 } from "@/services/chat";
 import { useEnterSubmit } from "@/hooks/useEnterSubmit";
 import { Textarea } from "@/components/ui/Textarea";
 import { FileText, Paperclip, X } from "lucide-react";
 import ViewerPopup from "@/components/ui/ViewerPopup";
 import ProgressPopup from "@/components/ui/ProgressPopup";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 
 interface ChatPanelProps {
     handleLoadDiagramFromJSON: (
@@ -44,7 +44,14 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         src: '',
         fileType: null,
     });
-
+    const currentUrl = new URL(window.location.href);
+    const existinguuid = currentUrl.searchParams.get('uuid')
+    console.log(existinguuid,'existinguuid')
+    // get api using useQuery
+    const {data: existingChatData, isLoading: isExistingChatLoading} = useQuery({queryKey: ['getChatByuuid', existinguuid], queryFn: ()=>{
+        return getChatByuuid(existinguuid || '')
+    }, enabled: !!existinguuid})
+    console.log(existingChatData,'existingChatData')
     const { mutate: sendChatMutaion, isPending: isLoading } = useMutation({
         mutationFn: sendChatRequestV2,
         onSettled: (res, error) => {
@@ -77,6 +84,21 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         }
     })
 
+    useEffect(()=>{
+        if(existingChatData?.chats.length){
+            const existingMessages = existingChatData.chats.map((chat)=>{
+                const existingMessage : Message = {
+                    text: chat.message,
+                    isUser: chat.role === 'user',
+                    isSystemQuery: chat.role === 'system',
+                    metaData: chat.metadata
+                }
+                return existingMessage
+            })
+            setMessages(existingMessages)
+        }
+    },[existingChatData])
+
 
     const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event.target.files && event.target.files[0]) {
@@ -107,6 +129,8 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
 
     const getViewerContent = (message: Message) => {
         if (message.metaData.fileType === 'image') {
+            //get signed url for image - useQuery, rplace src = signUrl
+
             return (
                 <img
                     src={message.metaData.fileUrl}
@@ -142,7 +166,8 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
 
     const handleSend = async (e: { preventDefault: () => void }) => {
         e.preventDefault();
-        if (!input && !selectedFile.file) return;
+        if(!existinguuid) return
+        if (!input && !selectedFile.file ) return;
         setMessages((prev) => [
             ...prev,
             { text: input, isUser: true, isSystemQuery: false, metaData: { fileUrl: selectedFile.src, fileType: selectedFile.fileType ?? undefined, fileName: selectedFile.file?.name } }
@@ -150,6 +175,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         sendChatMutaion(
             {
                 query: input,
+                uuid: existinguuid,
                 currentState: diagramComponents,
                 file: selectedFile.file ?? undefined
             }
@@ -194,6 +220,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                             alt="Sent"
                             className="w-20 h-20 cursor-pointer"
                             onClick={() => openViewerPopup(message)}
+                            onError={(e) => (e.currentTarget.src = "/images/placeholder.jpg")} 
                         />
                     )}
                 

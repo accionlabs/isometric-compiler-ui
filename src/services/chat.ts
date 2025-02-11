@@ -8,6 +8,23 @@ import { componentLibraryManager } from "../lib/componentLib";
 import { DiagramComponent, MessageResponse } from "@/Types";
 const newUUID = uuidv4();
 
+interface Chat {
+    id:string
+    message:string
+    messageType:'text' | 'json' | 'file'
+    createdAt: string
+    role: 'system' | 'user'
+    metadata: {
+        fileUrl?: string
+        fileType?: 'image' | 'pdf'
+        fileName?: string
+        content?: any
+    }
+}
+interface ChatResponse {
+chats: Chat[]
+}
+
 export async function sendChatRequest(
     query: string,
     currentState: DiagramComponent[]
@@ -90,8 +107,9 @@ export async function sendImageChatRequest(image: string) {
         return result
 }
 
-export async function sendChatRequestV2({query, currentState, file}:{
+export async function sendChatRequestV2({query,uuid, currentState, file}:{
     query: string,
+    uuid:string,
     currentState?: DiagramComponent[],
     file?: File,
 }): Promise<MessageResponse> {
@@ -103,7 +121,7 @@ export async function sendChatRequestV2({query, currentState, file}:{
             formData.append('currentState', JSON.stringify(currentState));
         }
         formData.append('query', query);
-        formData.append('uuid', newUUID);
+        formData.append('uuid', uuid);
 
         const response = await fetch(`${config.gatewayApiUrl}/isometric/chat`, {
             method: 'POST',
@@ -132,3 +150,17 @@ export async function sendChatRequestV2({query, currentState, file}:{
         }
         return res;
 }   
+
+export async function getChatByuuid(uuid: string): Promise<ChatResponse> {
+    const url = `${config.gatewayApiUrl}/isometric/chat/${uuid}`;
+
+        const response = await fetch(url);
+        
+        // Check if the response is ok (status code in the range 200-299)
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result =  await response.json(); 
+        return result.data
+}

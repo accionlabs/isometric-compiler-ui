@@ -54,6 +54,9 @@ import { updateDiagram } from "./services/diagrams";
 import { calculateSVGBoundingBox } from "./lib/svgUtils";
 import { useCancelLatestCalls } from "./hooks/useCancelLatestCalls";
 import { useQueryClient } from "@tanstack/react-query";
+import { v4 as uuidv4 } from "uuid";
+const newUUID = uuidv4();
+
 
 type PanelType = "diagrams" | "shapes" | "composition" | "chat";
 
@@ -238,6 +241,17 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     const timeoutIdRef = useRef<NodeJS.Timeout | null>(null);
 
     const updateDiagramWithRateLimit = useCancelLatestCalls(updateDiagram);
+
+    function setPanel(id: PanelType){
+        if(id == 'chat'){
+            const currentUrl = new URL(window.location.href);
+            const existinguuid = currentUrl.searchParams.get('uuid')
+            if(!existinguuid) currentUrl.searchParams.append('uuid', newUUID);
+            window.history.pushState({}, '', currentUrl);
+        }
+        
+        setActivePanel(id)
+    }
 
     const handleAutoSave = useCallback(async () => {
         if (!currentDiagramInfo?._id) return;
@@ -552,7 +566,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                 {panels.map((panel) => (
                                     <button
                                         key={panel.id}
-                                        onClick={() => setActivePanel(panel.id)}
+                                        onClick={() => setPanel(panel.id)}
                                         className={`relative rounded px-2 py-1 
             ${
                 activePanel === panel.id
