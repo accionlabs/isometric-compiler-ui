@@ -10,6 +10,7 @@ import { FileText, Paperclip, X } from "lucide-react";
 import ViewerPopup from "@/components/ui/ViewerPopup";
 import ProgressPopup from "@/components/ui/ProgressPopup";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import Markdown from "react-markdown";
 
 interface ChatPanelProps {
     handleLoadDiagramFromJSON: (
@@ -246,7 +247,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                                 message.isUser ? "bg-blue-600" : "bg-gray-700"
                             }`}
                         >
-                            {message.text}
+                            <Markdown>{message.text}</Markdown>
                         </div>
                     )}
                 
