@@ -164,3 +164,16 @@ export async function getChatByuuid(uuid: string): Promise<ChatResponse> {
         const result =  await response.json(); 
         return result.data
 }
+
+export async function getSignedUrl(path: string){
+    const url = `${config.gatewayApiUrl}/isometric/get-signed-url/${encodeURIComponent(path)}`;
+    const response = await fetch(url);
+        
+        // Check if the response is ok (status code in the range 200-299)
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result =  await response.text(); 
+        return result
+}

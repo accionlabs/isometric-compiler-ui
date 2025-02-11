@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Button } from "../components/ui/Button";
 import { DiagramComponent } from "@/Types";
 import { Message, useChat } from "@/hooks/useChatProvider";
-import { getChatByuuid, sendChatRequestV2 } from "@/services/chat";
+import { getChatByuuid, getSignedUrl, sendChatRequestV2 } from "@/services/chat";
 import { useEnterSubmit } from "@/hooks/useEnterSubmit";
 import { Textarea } from "@/components/ui/Textarea";
 import { FileText, Paperclip, X } from "lucide-react";
@@ -46,12 +46,10 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     });
     const currentUrl = new URL(window.location.href);
     const existinguuid = currentUrl.searchParams.get('uuid')
-    console.log(existinguuid,'existinguuid')
     // get api using useQuery
     const {data: existingChatData, isLoading: isExistingChatLoading} = useQuery({queryKey: ['getChatByuuid', existinguuid], queryFn: ()=>{
         return getChatByuuid(existinguuid || '')
     }, enabled: !!existinguuid})
-    console.log(existingChatData,'existingChatData')
     const { mutate: sendChatMutaion, isPending: isLoading } = useMutation({
         mutationFn: sendChatRequestV2,
         onSettled: (res, error) => {
@@ -127,13 +125,20 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
 
     const clearFile = () => setSelectedFile({ file: null, src: '', fileType: null });
 
-    const getViewerContent = (message: Message) => {
+    const getViewerContent = async (message: Message) => {
         if (message.metaData.fileType === 'image') {
-            //get signed url for image - useQuery, rplace src = signUrl
-
+            let signedUrl
+            if(message.metaData.fileUrl?.startsWith('https://')){
+                const urlArray = message.metaData.fileUrl.split('/')
+                const imageKey = urlArray[urlArray.length - 1]
+                 signedUrl= await getSignedUrl(imageKey)
+                
+            }else{
+                signedUrl = message.metaData.fileUrl
+            }
             return (
                 <img
-                    src={message.metaData.fileUrl}
+                    src={signedUrl}
                     alt="Preview"
                     className="w-full h-auto rounded-md"
                 />
@@ -147,8 +152,8 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         }
     };
     // Open viewer
-    const openViewerPopup = (message: Message) => {
-        setViewerContent(getViewerContent(message));
+    const openViewerPopup = async (message: Message) => {
+        setViewerContent(await getViewerContent(message));
         setViewerOpen(true);
     };
 
