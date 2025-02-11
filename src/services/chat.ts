@@ -116,6 +116,7 @@ export async function sendChatRequestV2({query,uuid, currentState, file}:{
     const formData = new FormData();
         if (file) {
             formData.append('file', file);
+
         }
         if (currentState) {
             formData.append('currentState', JSON.stringify(currentState));

@@ -40,6 +40,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         null
     );
     const [isViewerOpen, setViewerOpen] = useState(false);
+    const [showLoader, setShowLoader] = useState(false);
     const [selectedFile, setSelectedFile] = React.useState<{ file: File | null; src: string; fileType: 'image' | 'pdf' | null }>({
         file: null,
         src: '',
@@ -173,7 +174,11 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     const handleSend = async (e: { preventDefault: () => void }) => {
         e.preventDefault();
         if(!existinguuid) return
-        if (!input && !selectedFile.file ) return;
+        if (!input) return;
+        if(selectedFile.file) {
+            setShowLoader(true);
+            setIsLoader(true);
+        }
         setMessages((prev) => [
             ...prev,
             { text: input, isUser: true, isSystemQuery: false, metaData: { fileUrl: selectedFile.src, fileType: selectedFile.fileType ?? undefined, fileName: selectedFile.file?.name } }
@@ -194,9 +199,12 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     const [isLoaderTimePassed, setIsLoaderTimePassed] = useState(false);
 
     useEffect(() => {
-        setIsLoader(isLoading)
-        if(!isLoading) setIsLoaderTimePassed(false)
-    }, [isLoaderTimePassed, isLoading])
+        if(isLoaderTimePassed) {
+            setIsLoader(false);
+            setShowLoader(false);
+            setIsLoaderTimePassed(false);
+        }
+    }, [isLoading, isLoaderTimePassed])
 
     const LoadMeessagesWithImage: { time: number; message: string }[] = [
         { time: 0, message: "Extracting components." },
@@ -332,7 +340,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                         />
                         <Button
                             type="submit"
-                            disabled={(!input && !selectedFile.file) || isLoading}
+                            disabled={(!input) || isLoading}
                         >
                             send
                             <span className="sr-only">Send message</span>
@@ -348,7 +356,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                 onClose={closeViewerPopup}
                 content={viewerContent || ""}
             />
-            {!!selectedFile.file && (
+            {showLoader && (
                 <ProgressPopup
                     isOpen={isLoader}
                     onClose={() => {
