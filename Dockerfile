@@ -1,4 +1,4 @@
-# Stage 1: Build the React app
+# Stage 1: Build the React app.
 FROM node:18 as builder
 WORKDIR /app
 COPY package.json package-lock.json ./
