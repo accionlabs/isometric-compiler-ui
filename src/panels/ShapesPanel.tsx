@@ -13,7 +13,6 @@ import { CirclePlus, ArrowLeft, X, Search } from "lucide-react";
 
 import SVGPreview from "../components/ui/SVGPreview";
 import { componentLibraryManager } from "../lib/componentLib";
-import { Folder, RootFolder } from "@/components/ui/IconGroup";
 import { Button } from "@/components/ui/Button";
 import EditElementDialog from "./EditElementDialog";
 import CategoriesPanel from "./CategoriesPanel";
@@ -23,6 +22,7 @@ import {
 } from "@/components/ui/LoaderSkeletons";
 import { Badge } from "@/components/ui/Badge";
 import clsx from "clsx";
+import { CUSTOM_SCROLLBAR } from "@/Constants";
 
 type ElementType = "3D" | "2D" | "LAYERS" | "COMPONENT";
 
@@ -55,13 +55,33 @@ interface ShapesPanelProps {
         isShapesLoading: boolean;
     };
 }
-const filterOptions = ["All", "2D", "3D", "Layers", "Component"];
-const filterColors = {
-    All: "white",
-    "3D": "custom3D",
-    LAYERS: "customLayer",
-    "2D": "custom2D",
-    COMPONENT: "customComponent"
+const filterOptionsWithColor = [
+    {
+        name: "All",
+        color: "text-white"
+    },
+    {
+        name: "2D",
+        color: "text-custom2D"
+    },
+    {
+        name: "3D",
+        color: "text-custom3D"
+    },
+    {
+        name: "Layers",
+        color: "text-customLayer"
+    },
+    {
+        name: "Component",
+        color: "text-customComponent"
+    }
+];
+const filterBgColors = {
+    "3D": "bg-custom3D",
+    LAYERS: "bg-customLayer",
+    "2D": "bg-custom2D",
+    COMPONENT: "bg-customComponent"
 };
 const ShapesPanel: React.FC<ShapesPanelProps> = ({
     svgLibrary,
@@ -257,9 +277,9 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                 <div className="flex items-start gap-2 mt-2 ">
                     <div
                         className={clsx(
-                            `w-2 h-2 bg-${
-                                filterColors[
-                                    elementType.toLocaleUpperCase() as keyof typeof filterColors
+                            `w-2 h-2 ${
+                                filterBgColors[
+                                    elementType.toLocaleUpperCase() as keyof typeof filterBgColors
                                 ]
                             } rounded-full shrink-0 mt-1.5`
                         )}
@@ -284,9 +304,9 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                         <div className="flex items-center gap-2 mt-2 ">
                             <div
                                 className={clsx(
-                                    `w-3 h-3 bg-${
-                                        filterColors[
-                                            elementType.toUpperCase() as keyof typeof filterColors
+                                    `w-3 h-3 ${
+                                        filterBgColors[
+                                            elementType.toUpperCase() as keyof typeof filterBgColors
                                         ]
                                     } rounded-full shrink-0`
                                 )}
@@ -349,6 +369,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                 <div className="flex items-center bg-[#3B3B3B] rounded-md gap-2 border-customDarkGray border-2 border-solid">
                     <input
                         value={inputQuery}
+                        autoComplete="off"
                         onChange={handleInputChange}
                         type="text"
                         name="search"
@@ -368,35 +389,33 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                     </button>
                 </div>
                 <div className="flex mt-3 space-x-1 flex-wrap justify-end  ">
-                    {filterOptions.map((item) => (
+                    {filterOptionsWithColor.map((item) => (
                         <button
-                            key={item}
+                            key={item.name}
                             className={clsx(
                                 "relative px-2 py-1 rounded focus:outline-none text-",
 
-                                filterColors[
-                                    item.toUpperCase() as keyof typeof filterColors
-                                ], // Apply text color safely
-                                selectedFilter === item
+                                item.color, // Apply text color safely
+                                selectedFilter === item.name
                                     ? "bg-customLightGray"
                                     : "bg-customGray"
                             )}
-                            onClick={() => setselectedFilter(item)}
+                            onClick={() => setselectedFilter(item.name)}
                         >
                             {/* Hidden bold reference text - always maintains maximum space */}
                             <span
                                 aria-hidden="true"
                                 className="block font-bold invisible whitespace-nowrap"
                             >
-                                {item}
+                                {item.name}
                             </span>
 
                             {/* Visible text that sits on top */}
                             <span
                                 className={`absolute inset-0 flex items-center justify-center
-              ${selectedFilter === item ? "font-bold" : "font-normal"}`}
+              ${selectedFilter === item.name ? "font-bold" : "font-normal"}`}
                             >
-                                {item}
+                                {item.name}
                             </span>
                         </button>
                     ))}
@@ -404,7 +423,9 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
             </div>
 
             {inputQuery && (
-                <section className="flex-grow overflow-auto bg-[#1A1A1A] px-4 py-3 rounded-lg">
+                <section
+                    className={`flex-grow overflow-auto  bg-[#1A1A1A] px-4 py-3 rounded-lg ${CUSTOM_SCROLLBAR}`}
+                >
                     {groupedSearchedElements.total} Result Found
                     {isSearchLoading ? (
                         <SearchLoadingSkeleton />
@@ -440,7 +461,9 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
             )}
 
             {!inputQuery && !currentShapeDetails && (
-                <section className="flex-grow overflow-auto">
+                <section
+                    className={`flex-grow overflow-auto ${CUSTOM_SCROLLBAR}`}
+                >
                     {isShapesLoading ? (
                         <ShapesGroupLoadingSkeleton />
                     ) : shapesByCategory.length > 0 || components.length > 0 ? (
@@ -460,7 +483,9 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
             )}
 
             {!inputQuery && currentShapeDetails && (
-                <section className="flex-grow overflow-auto">
+                <section
+                    className={`flex-grow overflow-auto ${CUSTOM_SCROLLBAR}`}
+                >
                     <button
                         onClick={() => setCurrentShapeDetails(null)}
                         className="flex gap-2 text-base items-center"

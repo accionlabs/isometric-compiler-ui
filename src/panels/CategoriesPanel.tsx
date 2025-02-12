@@ -2,6 +2,7 @@ import { MenuIcon } from "@/components/ui/IconGroup";
 import { useState } from "react";
 import { ChevronRight, ChevronLeft } from "lucide-react";
 import { Category } from "@/Types";
+import { CUSTOM_SCROLLBAR } from "@/Constants";
 
 export default function CategoriesPanel({
     categories,
@@ -101,7 +102,9 @@ export default function CategoriesPanel({
                 ))}
             </div>
 
-            <div className="flex items-center py-4 overflow-x-auto w-full">
+            <div
+                className={`flex items-center py-4 overflow-x-auto  w-full ${CUSTOM_SCROLLBAR}`}
+            >
                 {/* Parent / Selected */}
                 <div className="flex items-center gap-2">
                     <button

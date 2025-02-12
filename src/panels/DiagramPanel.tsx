@@ -327,7 +327,7 @@ export default function DiagramPanel({
                         <SquarePlus />
                     </button>
                 </div>
-                <div className="flex-grow overflow-auto p-4 scrollbar-thin scrollbar-thumb-customLightGray scrollbar-track-transparent scrollbar-thumb-rounded custom-scrollbar">
+                <div className="flex-grow overflow-auto p-4 ">
                     {isLoading ? (
                         <LoaderSearchSkeleton />
                     ) : (

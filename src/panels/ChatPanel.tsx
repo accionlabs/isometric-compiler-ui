@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/Textarea";
 import { Paperclip, X } from "lucide-react";
 import ViewerPopup from "@/components/ui/ViewerPopup";
 import ProgressPopup from "@/components/ui/ProgressPopup";
+import { CUSTOM_SCROLLBAR } from "@/Constants";
 
 interface ChatPanelProps {
     handleLoadDiagramFromJSON: (
@@ -173,7 +174,9 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     return (
         <div className="p-4 h-full flex flex-col gap-4 ">
             {/* chat container */}
-            <div className="flex-grow overflow-x-hidden flex flex-col gap-2 scrollbar-thin scrollbar-thumb-customLightGray scrollbar-track-transparent scrollbar-thumb-rounded custom-scrollbar">
+            <div
+                className={`flex-grow overflow-x-hidden flex flex-col gap-2 ${CUSTOM_SCROLLBAR}`}
+            >
                 {messages.map((message, index) => (
                     <div
                         key={index}
