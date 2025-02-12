@@ -16,7 +16,7 @@ export default function CategoriesPanel({
         categories[0].children || []
     );
     const [parentHistory, setParentHistory] = useState<string[]>([]);
-
+    const selectedCategory = selectedChild || selected;
     const categoryMap: Record<string, Category> = {};
     categories.forEach((cat) => {
         if (cat.children) {
@@ -27,9 +27,10 @@ export default function CategoriesPanel({
         }
         categoryMap[cat._id] = cat;
     });
+    const showPath = () => selectedCategory.path.split("/").slice(1).slice(-2);
 
     const handleSelect = (category: Category) => {
-        // onCategoryChange(category._id);
+        onCategoryChange(category._id);
         if (selected._id === category._id) {
             setSelectedChild(null);
             return;
@@ -46,23 +47,21 @@ export default function CategoriesPanel({
     };
 
     const handleBack = () => {
-        if (parentHistory.length > 0) {
-            const previousParentId = parentHistory[parentHistory.length - 1];
-            setParentHistory(parentHistory.slice(0, -1));
-            setSelected(categoryMap[previousParentId]);
-            setCurrentChildren(categoryMap[previousParentId].children || []);
-        }
+        if (!parentHistory.length) return;
+
+        const previousParentId = parentHistory[parentHistory.length - 1];
+        setParentHistory(parentHistory.slice(0, -1));
+        setSelected(categoryMap[previousParentId]);
+        setCurrentChildren(categoryMap[previousParentId].children || []);
     };
 
     const categoryCard = (category: Category) => {
-        const isSelected = selectedChild
-            ? selectedChild?._id === category._id
-            : selected?._id === category._id;
+        const isSelected = selectedCategory._id === category._id;
 
         return (
             <div
-                className={`flex flex-col items-center justify-center gap-2 
-                            h-32  p-2 rounded-lg shadow-md min-w-28 max-w-fit 
+                className={`flex flex-col items-center justify-start gap-2 
+                            p-2 rounded-lg h-32
                             ${
                                 isSelected
                                     ? "bg-customBlue"
@@ -71,27 +70,37 @@ export default function CategoriesPanel({
             >
                 {/* Icon */}
                 <MenuIcon className="w-6 h-6" />
-                {/* Ensure icon doesn't shrink */}
-                {/* Category Name - Centers & Ensures No Shrinking */}
-                <div className="text-sm font-medium text-center line-clamp-2">
-                    {category.name}
-                </div>
-                {/* Shape Count */}
-                <div className="text-xs text-gray-500">
-                    {category.shapeCount} Shapes
+
+                <div className="flex flex-col min-w-20">
+                    <span className="text-sm font-medium text-center whitespace-normal line-clamp-3">
+                        {category.name}
+                    </span>
+                    <span className="text-xs mt-1">
+                        {category.shapeCount} Shapes
+                    </span>
                 </div>
             </div>
         );
     };
-
     return (
         <section>
-            <h1 className="text-lg font-thin bg-customGray text-white">
+            <h1 className="text-md font-medium bg-customGray text-white">
                 Categories
             </h1>
-            <h2 className="text-lg font-thin bg-customGray text-white">
-                {selected.path}
-            </h2>
+            <div className="flex">
+                {showPath().map((path, index, array) => (
+                    <div
+                        key={index}
+                        className="flex items-center text-xs font-thin bg-customGray text-white"
+                    >
+                        <p>{path}</p>
+                        {index < array.length - 1 && (
+                            <span className="mx-1"> / </span>
+                        )}
+                    </div>
+                ))}
+            </div>
+
             <div className="flex items-center py-4 overflow-x-auto w-full">
                 {/* Parent / Selected */}
                 <div className="flex items-center gap-2">

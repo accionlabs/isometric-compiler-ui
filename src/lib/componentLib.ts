@@ -711,7 +711,6 @@ class ComponentLibraryManager {
         if (!this.validateComponentLibrary(components)) {
             throw new Error("Invalid component library structure");
         }
-        console.trace();
 
         components.forEach((component) => {
             const now = new Date();

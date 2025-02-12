@@ -4,6 +4,7 @@ module.exports = {
     theme: {
         extend: {
             colors: {
+                customDarkGray: "#3E3D3D",
                 customGray: "#2E2E2E",
                 customLightGray: "#4A4A4A",
                 customBorderColor: "#575757",
@@ -15,6 +16,7 @@ module.exports = {
                 customBlack: "#020C19",
                 customBlue: "#044ED6"
             },
+
             borderRadius: {
                 lg: "var(--radius)",
                 md: "calc(var(--radius) - 2px)",

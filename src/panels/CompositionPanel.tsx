@@ -125,9 +125,12 @@ const CompositionPanel: React.FC<CompositionPanelProps> = ({
     return (
         <div className="flex flex-col h-full">
             <div className="flex-grow overflow-hidden flex flex-col">
-                <div className="flex justify-between items-center p-4">
+                {/* <div className="flex justify-between items-center p-4">
                     <h2 className="text-xl font-semibold">Composition</h2>
-                </div>
+                </div> */}
+                <h1 className="px-4 py-3 text-md font-medium bg-customGray text-white">
+                    Composition
+                </h1>
                 <div className="flex-grow overflow-auto p-4">
                     <div className="space-y-4">
                         {nonCutComponents.map((component, ind) => (

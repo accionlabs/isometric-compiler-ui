@@ -27,3 +27,26 @@ export const ShapesGroupLoadingSkeleton = () => {
         </div>
     );
 };
+
+export const SearchLoadingSkeleton = () => (
+    <ul>
+        {Array.from({ length: 10 }).map((_, index) => (
+            <li
+                key={index}
+                className="animate-pulse flex items-center p-4 rounded-md gap-4 hover:bg-customLightGray cursor-pointer"
+            >
+                <div className="w-[76px] h-[76px] bg-gray-300 rounded-md flex-shrink-0">
+                    <SVGPreview
+                        className="w-full h-full object-cover bg-white"
+                        svgContent=""
+                    />
+                </div>
+                <div className="flex flex-col gap-1 flex-grow">
+                    <div className="h-5 bg-gray-300 rounded-md my-1"></div>
+                    <div className="h-2 bg-gray-300 rounded-md w-1/2"></div>
+                    <div className="h-1 bg-gray-300 rounded-md w-1/3"></div>
+                </div>
+            </li>
+        ))}
+    </ul>
+);

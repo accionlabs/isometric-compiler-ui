@@ -55,7 +55,7 @@ export const transformToUnifiedResponse = (
                 _id: item._id,
                 id: item.name,
                 name: item.name,
-                description: item.category, // Assuming category as description
+                description: item.metadata?.description ?? "",
                 type: "COMPONENT",
                 diagramComponents: item.diagram_components,
                 attachmentPoints: item.attachment_points,
@@ -69,9 +69,9 @@ export const transformToUnifiedResponse = (
         }
 
         return {
-            id: item.name, // Provide a unique id
+            id: item.name,
             name: item.name,
-            description: "", // Provide a default empty description
+            description: item.metadata?.description ?? "",
             type: item.type as "2D" | "3D" | "LAYERS",
             attachTo: item.attachTo ?? undefined,
             svgFile: item.svgFile ?? "",

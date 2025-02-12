@@ -311,8 +311,10 @@ export default function DiagramPanel({
     return (
         <div className="flex flex-col h-full">
             <div className="flex-grow overflow-hidden flex flex-col">
-                <div className="flex justify-between items-center p-4">
-                    <h2 className="text-xl font-semibold">Diagrams</h2>
+                <div className="flex justify-between items-center px-4 py-3">
+                    <h1 className=" text-md font-medium bg-customGray text-white">
+                        Composition
+                    </h1>
                     <button
                         onClick={() => {
                             setTempDiagramInfo(null);
