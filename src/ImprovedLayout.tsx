@@ -210,6 +210,10 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     handleUndo,
     handleRedo
 }) => {
+    const currentUrl = new URL(window.location.href);
+    const existinguuid = currentUrl.searchParams.get('uuid')
+    if(!existinguuid) currentUrl.searchParams.append('uuid', newUUID);
+    window.history.pushState({}, '', currentUrl);
     const { keycloak } = useKeycloak();
     const queryClient = useQueryClient();
     const user = queryClient.getQueryData<User>(["user"]);
@@ -243,14 +247,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     const updateDiagramWithRateLimit = useCancelLatestCalls(updateDiagram);
 
     function setPanel(id: PanelType){
-        if(id == 'chat'){
-            const currentUrl = new URL(window.location.href);
-            const existinguuid = currentUrl.searchParams.get('uuid')
-            if(!existinguuid) currentUrl.searchParams.append('uuid', newUUID);
-            window.history.pushState({}, '', currentUrl);
-        }
-        
-        setActivePanel(id)
+       setActivePanel(id)
     }
 
     const handleAutoSave = useCallback(async () => {
@@ -396,6 +393,8 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
         fileInputRef.current?.click();
     };
 
+    
+
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
@@ -431,6 +430,11 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
         setAutoSaveMode(false);
         setCurrentDiagramInfo(null);
         handleLoadDiagramFromJSON([]);
+
+        currentUrl.searchParams.delete('uuid')
+        currentUrl.searchParams.append('uuid', uuidv4());
+        window.history.pushState({}, '', currentUrl);
+
     };
     useEffect(() => {
         const handleMessage = (event: MessageEvent) => {
@@ -493,6 +497,13 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                     className="w-[200px] bg-customGray"
                                 >
                                     <DropdownMenuGroup>
+                                    <DropdownMenuItem
+                                            onSelect={handleMenuSelect(
+                                                handleOpenNewCanvas
+                                            )}
+                                        >
+                                            New Diagram
+                                        </DropdownMenuItem>
                                         <DropdownMenuItem
                                             onSelect={handleMenuSelect(
                                                 handleFileSelect
@@ -500,13 +511,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                         >
                                             Load Diagram
                                         </DropdownMenuItem>
-                                        <DropdownMenuItem
-                                            onSelect={handleMenuSelect(
-                                                handleOpenSaveDialog
-                                            )}
-                                        >
-                                            Save Diagram
-                                        </DropdownMenuItem>
+                                        
                                         <DropdownMenuItem
                                             onSelect={handleMenuSelect(
                                                 handleOpenSaveComponentDialog
@@ -534,6 +539,13 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                         >
                                             Download PNG
                                         </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                            onSelect={handleMenuSelect(
+                                                handleOpenSaveDialog
+                                            )}
+                                        >
+                                            Download Diagram
+                                        </DropdownMenuItem>
                                     </DropdownMenuGroup>
                                     <DropdownMenuSeparator className="bg-customLightGray" />
                                     <DropdownMenuItem
@@ -545,10 +557,13 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                     </DropdownMenuItem>
                                     <DropdownMenuSeparator className="bg-customLightGray" />
                                     <DropdownMenuItem
-                                        onSelect={handleMenuSelect(() =>
+                                        onSelect={handleMenuSelect(() =>{
+                                            currentUrl.searchParams.delete('uuid')
                                             keycloak.logout({
-                                                logoutMethod: "POST"
+                                                logoutMethod: "POST",
+                                                redirectUri: currentUrl
                                             })
+                                        }
                                         )}
                                     >
                                         Logout
@@ -689,7 +704,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                             ) : (
                                 ""
                             )}
-                            <CustomTooltip
+                            {/* <CustomTooltip
                                 action={
                                     <button
                                         disabled={!diagramComponents.length}
@@ -702,7 +717,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                 }
                                 header="New canvas"
                                 side="top"
-                            />
+                            /> */}
                             <CustomTooltip
                                 action={
                                     <button

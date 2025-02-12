@@ -348,6 +348,7 @@ export interface DiagramInfo {
         svgContent: string;
         project: string;
         priority: string;
+        uuid:string
     } | null;
     diagramComponents: DiagramComponent[];
 }
