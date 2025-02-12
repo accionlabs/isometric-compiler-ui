@@ -22,6 +22,7 @@ import {
     ShapesGroupLoadingSkeleton
 } from "@/components/ui/LoaderSkeletons";
 import { Badge } from "@/components/ui/Badge";
+import clsx from "clsx";
 
 type ElementType = "3D" | "2D" | "LAYERS" | "COMPONENT";
 
@@ -230,11 +231,6 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
             setCurrentShapeDetails(element);
         };
 
-        const elementTypeColor =
-            "bg-" +
-            filterColors[
-                elementType.toLocaleUpperCase() as keyof typeof filterColors
-            ];
         return (
             <div
                 key={`${element.name}-${element.version}`}
@@ -260,7 +256,13 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
 
                 <div className="flex items-start gap-2 mt-2 ">
                     <div
-                        className={`w-2 h-2 ${elementTypeColor} rounded-full shrink-0 mt-1.5`}
+                        className={clsx(
+                            `w-2 h-2 bg-${
+                                filterColors[
+                                    elementType.toLocaleUpperCase() as keyof typeof filterColors
+                                ]
+                            } rounded-full shrink-0 mt-1.5`
+                        )}
                     />
                     <p className="h-10 text-white text-sm overflow-hidden text-ellipsis whitespace-pre-line line-clamp-2">
                         {element.name}
@@ -281,11 +283,13 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                     <div className="flex gap-2 flex-col">
                         <div className="flex items-center gap-2 mt-2 ">
                             <div
-                                className={`w-3 h-3 bg-${
-                                    filterColors[
-                                        elementType.toUpperCase() as keyof typeof filterColors
-                                    ]
-                                } rounded-full shrink-0`}
+                                className={clsx(
+                                    `w-3 h-3 bg-${
+                                        filterColors[
+                                            elementType.toUpperCase() as keyof typeof filterColors
+                                        ]
+                                    } rounded-full shrink-0`
+                                )}
                             />
                             <p className=" text-white text-base overflow-hidden text-ellipsis whitespace-pre-line line-clamp-1">
                                 {element.name}
@@ -367,14 +371,16 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                     {filterOptions.map((item) => (
                         <button
                             key={item}
-                            className={`relative px-2 py-1 text-${
+                            className={clsx(
+                                "relative px-2 py-1 rounded focus:outline-none text-",
+
                                 filterColors[
                                     item.toUpperCase() as keyof typeof filterColors
-                                ]
-                            } rounded focus:outline-none 
-            ${
-                selectedFilter === item ? "bg-customLightGray" : "bg-customGray"
-            }`}
+                                ], // Apply text color safely
+                                selectedFilter === item
+                                    ? "bg-customLightGray"
+                                    : "bg-customGray"
+                            )}
                             onClick={() => setselectedFilter(item)}
                         >
                             {/* Hidden bold reference text - always maintains maximum space */}
