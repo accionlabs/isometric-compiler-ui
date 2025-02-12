@@ -6,7 +6,7 @@ import { Message, useChat } from "@/hooks/useChatProvider";
 import { getChatByuuid, getSignedUrl, sendChatRequestV2 } from "@/services/chat";
 import { useEnterSubmit } from "@/hooks/useEnterSubmit";
 import { Textarea } from "@/components/ui/Textarea";
-import { FileText, Paperclip, X } from "lucide-react";
+import { Eye, FileText, Paperclip,  X } from "lucide-react";
 import ViewerPopup from "@/components/ui/ViewerPopup";
 import ProgressPopup from "@/components/ui/ProgressPopup";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -63,6 +63,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                     ]);
                 } else {
                     handleLoadDiagramFromJSON(res.metadata.content ?? []);
+                    addHistory(res.metadata.content ?? []);
                     setMessages((prev) => [
                         ...prev,
                         {
@@ -207,6 +208,11 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         }
     }, [isLoading, isLoaderTimePassed])
 
+    const loadDiagram = (content: DiagramComponent[]) => {
+        handleLoadDiagramFromJSON(content)
+        addHistory(content)
+    }
+
     const LoadMeessagesWithImage: { time: number; message: string }[] = [
         { time: 0, message: "Extracting components." },
         { time: 0.5, message: "Mapping to Unified Model..." },
@@ -262,11 +268,20 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                 
                     {/* JSON Response */}
                     {message.metaData.content && (
+                        <div className="flex items-center gap-2">
                         <div
                             className="max-w-xs p-3 rounded-lg bg-gray-700 cursor-pointer border border-gray-500 hover:bg-gray-600 flex items-center"
                             onClick={() => openViewerPopup(message)}
                         >
+                            
+                            
                             <span className="text-blue-400 font-semibold">📄 View JSON Response</span>
+                        
+                            
+                        </div>
+                        <Eye className="cursor-pointer" onClick={()=>{
+                           loadDiagram(message.metaData.content) 
+                        }}/>
                         </div>
                     )}
                 </div>
