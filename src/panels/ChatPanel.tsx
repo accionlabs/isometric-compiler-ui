@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/Textarea";
 import { FileText, Paperclip, X } from "lucide-react";
 import ViewerPopup from "@/components/ui/ViewerPopup";
 import ProgressPopup from "@/components/ui/ProgressPopup";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Markdown from "react-markdown";
 
 interface ChatPanelProps {
@@ -127,13 +127,14 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
 
     const clearFile = () => setSelectedFile({ file: null, src: '', fileType: null });
 
+    const queryClient = useQueryClient();
     const getViewerContent = async (message: Message) => {
         if (message.metaData.fileType === 'image') {
             let signedUrl
             if(message.metaData.fileUrl?.startsWith('https://')){
                 const urlArray = message.metaData.fileUrl.split('/')
                 const imageKey = urlArray[urlArray.length - 1]
-                 signedUrl= await getSignedUrl(imageKey)
+                signedUrl = await queryClient.fetchQuery({ queryKey: ['getSignedUrl', imageKey], queryFn: () => getSignedUrl(imageKey), staleTime: 300000  });
                 
             }else{
                 signedUrl = message.metaData.fileUrl
