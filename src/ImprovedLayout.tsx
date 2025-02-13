@@ -478,7 +478,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                 {!isReadModeEnabled && (
                     <div className="flex flex-col border-r bg-customGray border-gray-700 w-1/3">
                         {/* Tab buttons */}
-                        <div className="flex flex-row px-2 py-2 space-x-3 border-t-2 border-gray-700 items-center">
+                        <div className="flex flex-row px-4 py-3 space-x-3 border-t-2 border-gray-700 items-center justify-between">
                             <DropdownMenu
                                 open={isDropdownOpen}
                                 onOpenChange={setIsDropdownOpen}
