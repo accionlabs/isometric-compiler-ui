@@ -47,6 +47,7 @@
         "lucide-react": "^0.447.0",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
+        "react-markdown": "^9.0.3",
         "react-syntax-highlighter": "^15.6.1",
         "svgo": "^3.3.2",
         "tailwind-merge": "^2.6.0",

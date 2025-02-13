@@ -54,6 +54,9 @@ import { updateDiagram } from "./services/diagrams";
 import { calculateSVGBoundingBox } from "./lib/svgUtils";
 import { useCancelLatestCalls } from "./hooks/useCancelLatestCalls";
 import { useQueryClient } from "@tanstack/react-query";
+import { v4 as uuidv4 } from "uuid";
+const newUUID = uuidv4();
+
 
 type PanelType = "diagrams" | "shapes" | "composition" | "chat";
 
@@ -207,6 +210,10 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     handleUndo,
     handleRedo
 }) => {
+    const currentUrl = new URL(window.location.href);
+    const existinguuid = currentUrl.searchParams.get('uuid')
+    if(!existinguuid) currentUrl.searchParams.append('uuid', newUUID);
+    window.history.pushState({}, '', currentUrl);
     const { keycloak } = useKeycloak();
     const queryClient = useQueryClient();
     const user = queryClient.getQueryData<User>(["user"]);
@@ -238,6 +245,10 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     const timeoutIdRef = useRef<NodeJS.Timeout | null>(null);
 
     const updateDiagramWithRateLimit = useCancelLatestCalls(updateDiagram);
+
+    function setPanel(id: PanelType){
+       setActivePanel(id)
+    }
 
     const handleAutoSave = useCallback(async () => {
         if (!currentDiagramInfo?._id) return;
@@ -382,6 +393,8 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
         fileInputRef.current?.click();
     };
 
+    
+
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
@@ -417,6 +430,11 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
         setAutoSaveMode(false);
         setCurrentDiagramInfo(null);
         handleLoadDiagramFromJSON([]);
+
+        currentUrl.searchParams.delete('uuid')
+        currentUrl.searchParams.append('uuid', uuidv4());
+        window.history.pushState({}, '', currentUrl);
+
     };
     useEffect(() => {
         const handleMessage = (event: MessageEvent) => {
@@ -479,6 +497,13 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                     className="w-[200px] bg-customGray"
                                 >
                                     <DropdownMenuGroup>
+                                    <DropdownMenuItem
+                                            onSelect={handleMenuSelect(
+                                                handleOpenNewCanvas
+                                            )}
+                                        >
+                                            New Diagram
+                                        </DropdownMenuItem>
                                         <DropdownMenuItem
                                             onSelect={handleMenuSelect(
                                                 handleFileSelect
@@ -486,13 +511,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                         >
                                             Load Diagram
                                         </DropdownMenuItem>
-                                        <DropdownMenuItem
-                                            onSelect={handleMenuSelect(
-                                                handleOpenSaveDialog
-                                            )}
-                                        >
-                                            Save Diagram
-                                        </DropdownMenuItem>
+                                        
                                         <DropdownMenuItem
                                             onSelect={handleMenuSelect(
                                                 handleOpenSaveComponentDialog
@@ -520,6 +539,13 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                         >
                                             Download PNG
                                         </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                            onSelect={handleMenuSelect(
+                                                handleOpenSaveDialog
+                                            )}
+                                        >
+                                            Download Diagram
+                                        </DropdownMenuItem>
                                     </DropdownMenuGroup>
                                     <DropdownMenuSeparator className="bg-customLightGray" />
                                     <DropdownMenuItem
@@ -531,10 +557,13 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                     </DropdownMenuItem>
                                     <DropdownMenuSeparator className="bg-customLightGray" />
                                     <DropdownMenuItem
-                                        onSelect={handleMenuSelect(() =>
+                                        onSelect={handleMenuSelect(() =>{
+                                            currentUrl.searchParams.delete('uuid')
                                             keycloak.logout({
-                                                logoutMethod: "POST"
+                                                logoutMethod: "POST",
+                                                redirectUri: currentUrl
                                             })
+                                        }
                                         )}
                                     >
                                         Logout
@@ -552,7 +581,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                 {panels.map((panel) => (
                                     <button
                                         key={panel.id}
-                                        onClick={() => setActivePanel(panel.id)}
+                                        onClick={() => setPanel(panel.id)}
                                         className={`relative rounded px-2 py-1 
             ${
                 activePanel === panel.id
@@ -675,7 +704,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                             ) : (
                                 ""
                             )}
-                            <CustomTooltip
+                            {/* <CustomTooltip
                                 action={
                                     <button
                                         disabled={!diagramComponents.length}
@@ -688,7 +717,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                 }
                                 header="New canvas"
                                 side="top"
-                            />
+                            /> */}
                             <CustomTooltip
                                 action={
                                     <button
