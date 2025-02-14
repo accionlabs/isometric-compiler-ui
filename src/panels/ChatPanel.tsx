@@ -276,7 +276,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                         >
                             
                             
-                            <span className="text-blue-400 font-semibold">📄 View JSON Response</span>
+                            <span className="text-blue-400 font-semibold">📄 View Unified Model</span>
                         
                             
                         </div>
