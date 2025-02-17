@@ -1,5 +1,5 @@
 import { MenuIcon } from "@/components/ui/IconGroup";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { ChevronRight, ChevronLeft } from "lucide-react";
 import { Category } from "@/Types";
 import { CUSTOM_SCROLLBAR } from "@/Constants";
@@ -11,6 +11,8 @@ export default function CategoriesPanel({
     categories: Category[];
     onCategoryChange: (id: string) => void;
 }) {
+    const buttonRefs = useRef<Record<string, HTMLButtonElement | null>>({}); // Correctly typed refs
+
     const [selected, setSelected] = useState<Category>(categories[0]);
     const [selectedChild, setSelectedChild] = useState<Category | null>();
     const [currentChildren, setCurrentChildren] = useState<Category[]>(
@@ -131,7 +133,21 @@ export default function CategoriesPanel({
                     {currentChildren.map((child) => (
                         <button
                             key={child._id}
-                            onClick={() => handleSelect(child)}
+                            ref={(el) => (buttonRefs.current[child._id] = el)}
+                            onClick={(e) => {
+                                console.log();
+                                if (!(child.children.length > 0)) {
+                                    e.currentTarget.focus(); // Ensure focus
+                                    buttonRefs.current[
+                                        child._id
+                                    ]?.scrollIntoView({
+                                        behavior: "smooth",
+                                        block: "center",
+                                        inline: "center"
+                                    });
+                                }
+                                handleSelect(child);
+                            }}
                         >
                             {categoryCard(child)}
                         </button>

@@ -1,13 +1,7 @@
 // @/App.tsx
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
-import {
-    Shape,
-    DiagramComponent,
-    Component,
-    CanvasSettings,
-    DiagramInfo
-} from "./Types";
+import React, { useState, useEffect, useCallback } from "react";
+import { Shape, DiagramComponent, Component, CanvasSettings } from "./Types";
 import ImprovedLayout from "./ImprovedLayout";
 import { calculateSVGBoundingBox } from "./lib/svgUtils";
 import * as diagramComponentsLib from "./lib/diagramComponentsLib";
@@ -307,7 +301,8 @@ const App: React.FC = () => {
             diagramComponents,
             selected3DShape,
             selectedPosition,
-            selectedAttachmentPoint
+            selectedAttachmentPoint,
+            svgLibrary
         ]
     );
 

@@ -57,7 +57,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { v4 as uuidv4 } from "uuid";
 const newUUID = uuidv4();
 
-
 type PanelType = "diagrams" | "shapes" | "composition" | "chat";
 
 const panels: Array<{ id: PanelType; label: string }> = [
@@ -211,9 +210,9 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     handleRedo
 }) => {
     const currentUrl = new URL(window.location.href);
-    const existinguuid = currentUrl.searchParams.get('uuid')
-    if(!existinguuid) currentUrl.searchParams.append('uuid', newUUID);
-    window.history.pushState({}, '', currentUrl);
+    const existinguuid = currentUrl.searchParams.get("uuid");
+    if (!existinguuid) currentUrl.searchParams.append("uuid", newUUID);
+    window.history.pushState({}, "", currentUrl);
     const { keycloak } = useKeycloak();
     const queryClient = useQueryClient();
     const user = queryClient.getQueryData<User>(["user"]);
@@ -246,8 +245,8 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
 
     const updateDiagramWithRateLimit = useCancelLatestCalls(updateDiagram);
 
-    function setPanel(id: PanelType){
-       setActivePanel(id)
+    function setPanel(id: PanelType) {
+        setActivePanel(id);
     }
 
     const handleAutoSave = useCallback(async () => {
@@ -393,8 +392,6 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
         fileInputRef.current?.click();
     };
 
-    
-
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
@@ -431,10 +428,9 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
         setCurrentDiagramInfo(null);
         handleLoadDiagramFromJSON([]);
 
-        currentUrl.searchParams.delete('uuid')
-        currentUrl.searchParams.append('uuid', uuidv4());
-        window.history.pushState({}, '', currentUrl);
-
+        currentUrl.searchParams.delete("uuid");
+        currentUrl.searchParams.append("uuid", uuidv4());
+        window.history.pushState({}, "", currentUrl);
     };
     useEffect(() => {
         const handleMessage = (event: MessageEvent) => {
@@ -476,7 +472,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
             <div className="flex flex-row h-screen w-screen  text-white">
                 {/* Left side control panels */}
                 {!isReadModeEnabled && (
-                    <div className="flex flex-col border-r bg-customGray border-gray-700 w-1/3">
+                    <div className="flex flex-col border-r bg-customGray border-gray-700 w-1/4">
                         {/* Tab buttons */}
                         <div className="flex flex-row px-4 py-3 space-x-3 border-t-2 border-gray-700 items-center justify-between">
                             <DropdownMenu
@@ -497,7 +493,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                     className="w-[200px] bg-customGray"
                                 >
                                     <DropdownMenuGroup>
-                                    <DropdownMenuItem
+                                        <DropdownMenuItem
                                             onSelect={handleMenuSelect(
                                                 handleOpenNewCanvas
                                             )}
@@ -511,7 +507,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                         >
                                             Load Diagram
                                         </DropdownMenuItem>
-                                        
+
                                         <DropdownMenuItem
                                             onSelect={handleMenuSelect(
                                                 handleOpenSaveComponentDialog
@@ -557,14 +553,15 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                     </DropdownMenuItem>
                                     <DropdownMenuSeparator className="bg-customLightGray" />
                                     <DropdownMenuItem
-                                        onSelect={handleMenuSelect(() =>{
-                                            currentUrl.searchParams.delete('uuid')
+                                        onSelect={handleMenuSelect(() => {
+                                            currentUrl.searchParams.delete(
+                                                "uuid"
+                                            );
                                             keycloak.logout({
                                                 logoutMethod: "POST",
                                                 redirectUri: currentUrl
-                                            })
-                                        }
-                                        )}
+                                            });
+                                        })}
                                     >
                                         Logout
                                     </DropdownMenuItem>
@@ -577,22 +574,17 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                     </DropdownMenuItem> */}
                                 </DropdownMenuContent>
                             </DropdownMenu>
-                            <div className="flex overflow-auto scrollbar-hide">
+                            <div className="flex overflow-auto gap-3 scrollbar-hide">
                                 {panels.map((panel) => (
                                     <button
                                         key={panel.id}
                                         onClick={() => setPanel(panel.id)}
-                                        className={`relative rounded px-2 py-1 
-            ${
-                activePanel === panel.id
-                    ? "bg-customLightGray"
-                    : "bg-customGray"
-            }`}
+                                        className={`relative rounded p-2  bg-customLightGray`}
                                     >
                                         {/* Hidden bold reference text */}
                                         <span
                                             aria-hidden="true"
-                                            className="block text-sm font-bold invisible whitespace-nowrap"
+                                            className={`block text-sm font-bold invisible whitespace-nowrap`}
                                         >
                                             {panel.label}
                                         </span>
@@ -600,7 +592,11 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                         {/* Visible text layer */}
                                         <span
                                             className={`absolute inset-0 flex items-center justify-center text-sm
-              ${activePanel === panel.id ? "font-bold" : "font-normal"}`}
+              ${
+                  activePanel === panel.id
+                      ? "font-bold"
+                      : "font-normal text-[#DEDEDE]"
+              }`}
                                         >
                                             {panel.label}
                                         </span>

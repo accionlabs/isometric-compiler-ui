@@ -1,12 +1,11 @@
 import { Shape, ShapesLibrary } from "@/Types";
 
 class ShapesLibraryManager {
-    private static instance: ShapesLibraryManager;
-    private library: ShapesLibrary;
-
-    private constructor() {
-        this.library = this.loadLibrary();
-    }
+    private static instance: ShapesLibraryManager | null = null;
+    private static library: ShapesLibrary = {
+        shapes: {},
+        lastModified: new Date()
+    };
 
     public static getInstance(): ShapesLibraryManager {
         if (!ShapesLibraryManager.instance) {
@@ -15,50 +14,53 @@ class ShapesLibraryManager {
         return ShapesLibraryManager.instance;
     }
 
-    private loadLibrary(): ShapesLibrary {
-        const savedLibrary = localStorage.getItem("ShapesLibrary");
-        if (savedLibrary) {
-            const parsed = JSON.parse(savedLibrary);
-            return {
-                ...parsed,
-                lastModified: new Date(parsed.lastModified)
-            };
-        }
-        return {
-            shapes: {},
-            lastModified: new Date()
-        };
-    }
-
-    private saveLibrary(): void {
-        localStorage.setItem("ShapesLibrary", JSON.stringify(this.library));
-    }
-
     public getAllShapes(): Shape[] {
-        return Object.values(this.library.shapes);
+        return Object.values(ShapesLibraryManager.library.shapes);
     }
+
     public getShape(id: string): Shape | null {
-        return this.library.shapes[id] || null;
+        return ShapesLibraryManager.library.shapes[id] || null;
     }
+
     public getAllComponentsMap(): { [key: string]: Shape } {
-        return this.library.shapes;
+        return ShapesLibraryManager.library.shapes;
     }
 
     public clearLibrary(): void {
-        this.library = {
+        ShapesLibraryManager.library = {
             shapes: {},
             lastModified: new Date()
         };
-        this.saveLibrary();
     }
-    public deserializeShapesLib = (shapes: Shape[]) => {
+
+    public deserializeShapesLib = (shapes: Shape[]): void => {
         shapes.forEach((shape) => {
             const now = new Date();
-            this.library.shapes[shape.name] = shape;
-            this.library.lastModified = now;
-            this.saveLibrary();
+            ShapesLibraryManager.library.shapes[shape.name] = shape;
+            ShapesLibraryManager.library.lastModified = now;
         });
     };
+
+    public getLibraryState(): ShapesLibrary {
+        return ShapesLibraryManager.library;
+    }
+
+    public addShape(shape: Shape): void {
+        ShapesLibraryManager.library.shapes[shape.name] = shape;
+        ShapesLibraryManager.library.lastModified = new Date();
+    }
+
+    public removeShape(shapeName: string): void {
+        delete ShapesLibraryManager.library.shapes[shapeName];
+        ShapesLibraryManager.library.lastModified = new Date();
+    }
+
+    public updateShape(shape: Shape): void {
+        if (ShapesLibraryManager.library.shapes[shape.name]) {
+            ShapesLibraryManager.library.shapes[shape.name] = shape;
+            ShapesLibraryManager.library.lastModified = new Date();
+        }
+    }
 }
 
 export const shapesLibraryManager = ShapesLibraryManager.getInstance();

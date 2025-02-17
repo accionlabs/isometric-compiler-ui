@@ -26,7 +26,6 @@ export default function Login() {
                 <button
                     className="bg-blue-700 px-4 py-2 mt-16 rounded text-white font-bold"
                     onClick={() => {
-                        localStorage.clear();
                         keycloak.login({
                             prompt: "login",
                             idpHint: "google"

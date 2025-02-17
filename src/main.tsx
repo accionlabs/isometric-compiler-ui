@@ -1,7 +1,6 @@
-import React from "react";
 import ReactDOM from "react-dom/client";
-import App from "./App";
 import "./index.css";
+import "@fontsource/roboto";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { ReactKeycloakProvider } from "@react-keycloak/web";
@@ -16,22 +15,24 @@ const queryClient = new QueryClient({
     }
 });
 
-
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
     // <React.StrictMode>
-        <QueryClientProvider client={queryClient}>
-        <ReactKeycloakProvider authClient={keycloak} initOptions={{ 
-            onLoad: "check-sso",  
-            silentCheckSsoRedirectUri: window.location.origin + '/silent-check-sso.html',
-            pkceMethod: 'S256',
-            checkLoginIframe: true,
-            silentCheckSsoFallback: true,
-            enableLogging: true
+    <QueryClientProvider client={queryClient}>
+        <ReactKeycloakProvider
+            authClient={keycloak}
+            initOptions={{
+                onLoad: "check-sso",
+                silentCheckSsoRedirectUri:
+                    window.location.origin + "/silent-check-sso.html",
+                pkceMethod: "S256",
+                checkLoginIframe: true,
+                silentCheckSsoFallback: true,
+                enableLogging: true
             }}
-            >
-             <Root />
-            </ReactKeycloakProvider>
-            <ReactQueryDevtools initialIsOpen={false} />
-        </QueryClientProvider>
+        >
+            <Root />
+        </ReactKeycloakProvider>
+        <ReactQueryDevtools initialIsOpen={false} />
+    </QueryClientProvider>
     // </React.StrictMode>
 );

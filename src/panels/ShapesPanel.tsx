@@ -55,33 +55,18 @@ interface ShapesPanelProps {
         isShapesLoading: boolean;
     };
 }
+
 const filterOptionsWithColor = [
-    {
-        name: "All",
-        color: "text-white"
-    },
-    {
-        name: "2D",
-        color: "text-custom2D"
-    },
-    {
-        name: "3D",
-        color: "text-custom3D"
-    },
-    {
-        name: "Layers",
-        color: "text-customLayer"
-    },
-    {
-        name: "Component",
-        color: "text-customComponent"
-    }
+    { name: "All", color: "" },
+    { name: "Primitives", color: "bg-primitive" },
+    { name: "Modifiers", color: "bg-modifier" },
+    { name: "Composites", color: "bg-composite" }
 ];
 const filterBgColors = {
-    "3D": "bg-custom3D",
-    LAYERS: "bg-customLayer",
-    "2D": "bg-custom2D",
-    COMPONENT: "bg-customComponent"
+    "3D": "bg-primitive",
+    LAYERS: "bg-primitive",
+    "2D": "bg-modifier",
+    COMPONENT: "bg-composite"
 };
 const ShapesPanel: React.FC<ShapesPanelProps> = ({
     svgLibrary,
@@ -104,7 +89,6 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
 }) => {
     const [inputQuery, setInputQuery] = useState("");
     const [selectedFilter, setselectedFilter] = useState("All");
-
     const [isEditDialog, setIsEditDialog] = useState(false);
     const [currentShapeDetails, setCurrentShapeDetails] = useState<
         Shape | Component | UnifiedElement | null
@@ -171,45 +155,54 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
 
     const isAllOrComponent =
         selectedFilter === "All" ||
-        selectedFilter.toLocaleUpperCase() === "COMPONENT";
+        selectedFilter.toLocaleUpperCase() === "COMPOSITES";
 
     const { isCategoryLoading, isSearchLoading, isShapesLoading } =
         isDataLoading;
     const filteredShapes = useMemo(() => {
         const upperCaseFilter = selectedFilter.toLocaleUpperCase();
-        if (upperCaseFilter === "COMPONENT") return [];
-        const isShapeType = ["3D", "2D", "LAYERS"].includes(upperCaseFilter);
 
-        return isShapeType
-            ? shapesByCategory.filter(
-                  (shape) => shape.type.toLocaleUpperCase() === upperCaseFilter
-              )
-            : shapesByCategory;
+        const filterMap: Record<string, string[] | null> = {
+            ALL: null, // Show all shapes
+            COMPOSITES: [], // Return empty array
+            PRIMITIVES: ["3D", "LAYERS"],
+            MODIFIERS: ["2D"]
+        };
+
+        const allowedTypes = filterMap[upperCaseFilter];
+
+        return allowedTypes === null
+            ? shapesByCategory
+            : shapesByCategory.filter((shape) =>
+                  allowedTypes.includes(shape.type.toLocaleUpperCase())
+              );
     }, [selectedFilter, shapesByCategory]);
 
     const groupedSearchedElements = useMemo(() => {
         const upperCaseFilter = selectedFilter.toLocaleUpperCase();
 
-        const isShapeType = ["3D", "2D", "LAYERS", "COMPONENT"].includes(
-            upperCaseFilter
-        );
+        const filterMap: Record<string, string[]> = {
+            COMPOSITES: ["COMPONENT"],
+            PRIMITIVES: ["3D", "LAYERS"],
+            MODIFIERS: ["2D"]
+        };
 
-        const filteredData = isShapeType
-            ? searchedData?.data.filter(
-                  (shape) => shape.type.toLocaleUpperCase() === upperCaseFilter
-              )
-            : searchedData?.data ?? [];
+        const allowedTypes = filterMap[upperCaseFilter] ?? null;
 
-        const groupedElements = filteredData?.reduce((acc, element) => {
+        const filteredData =
+            allowedTypes === null
+                ? searchedData?.data ?? []
+                : (searchedData?.data ?? []).filter((shape) =>
+                      allowedTypes.includes(shape.type.toLocaleUpperCase())
+                  );
+
+        const groupedElements = filteredData.reduce((acc, element) => {
             const pathKey = element.path || "unknown";
-            if (!acc[pathKey]) {
-                acc[pathKey] = [];
-            }
-            acc[pathKey].push(element);
+            (acc[pathKey] ||= []).push(element);
             return acc;
         }, {} as Record<string, UnifiedElement[]>);
 
-        return { data: groupedElements, total: filteredData?.length ?? 0 };
+        return { data: groupedElements, total: filteredData.length };
     }, [searchedData, selectedFilter]);
 
     const handleCategoryChange = (id: string) => {
@@ -388,35 +381,46 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                         <Search size={20} />
                     </button>
                 </div>
-                <div className="flex mt-3 space-x-1 flex-wrap justify-end  ">
+                <div className="flex mt-2 flex-wrap justify-end gap-1 ">
                     {filterOptionsWithColor.map((item) => (
                         <button
                             key={item.name}
-                            className={clsx(
-                                "relative px-2 py-1 rounded focus:outline-none text-",
-
-                                item.color, // Apply text color safely
-                                selectedFilter === item.name
-                                    ? "bg-customLightGray"
-                                    : "bg-customGray"
-                            )}
+                            className="flex items-center gap-1 bg-[#3B3B3B] rounded px-2 py-1 focus:outline-none"
                             onClick={() => setselectedFilter(item.name)}
                         >
-                            {/* Hidden bold reference text - always maintains maximum space */}
-                            <span
-                                aria-hidden="true"
-                                className="block font-bold invisible whitespace-nowrap"
-                            >
-                                {item.name}
-                            </span>
+                            {item.color && (
+                                <div
+                                    className={clsx(
+                                        `w-4 h-4 ${item.color} rounded-full shrink-0`
+                                    )}
+                                />
+                            )}
+                            <div className="relative ">
+                                {/* Hidden reference text */}
+                                <span
+                                    aria-hidden="true"
+                                    className={clsx(
+                                        "invisible block whitespace-nowrap",
+                                        selectedFilter === item.name
+                                            ? "font-bold"
+                                            : "font-normal text-[#DEDEDE]"
+                                    )}
+                                >
+                                    {item.name}
+                                </span>
 
-                            {/* Visible text that sits on top */}
-                            <span
-                                className={`absolute inset-0 flex items-center justify-center
-              ${selectedFilter === item.name ? "font-bold" : "font-normal"}`}
-                            >
-                                {item.name}
-                            </span>
+                                {/* Visible text */}
+                                <span
+                                    className={clsx(
+                                        "absolute left-0 top-1/2 -translate-y-1/2 ",
+                                        selectedFilter === item.name
+                                            ? "font-bold"
+                                            : "font-normal text-[#DEDEDE]"
+                                    )}
+                                >
+                                    {item.name}
+                                </span>
+                            </div>
                         </button>
                     ))}
                 </div>

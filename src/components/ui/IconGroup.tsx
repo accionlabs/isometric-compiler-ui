@@ -125,3 +125,23 @@ export const MenuIcon = (props: SVGProps<SVGSVGElement>) => (
         </defs>
     </svg>
 );
+
+export const DoubleArrow = (props: SVGProps<SVGSVGElement>) => (
+    <svg
+        width={16}
+        height={16}
+        viewBox="0 0 16 16"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        {...props}
+    >
+        <path
+            d="M3.3335 5.83333L3.3335 8.83333L8.00016 5.5L12.6668 8.83333L12.6668 5.83333L8.00016 2.5L3.3335 5.83333Z"
+            fill="#DEDEDE"
+        />
+        <path
+            d="M3.3335 10.5L3.3335 13.5L8.00016 10.1667L12.6668 13.5L12.6668 10.5L8.00016 7.16667L3.3335 10.5Z"
+            fill="#DEDEDE"
+        />
+    </svg>
+);

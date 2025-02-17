@@ -44,18 +44,21 @@ interface GridPosition {
 }
 
 class ComponentLibraryManager {
-    private static instance: ComponentLibraryManager;
-    private library: ComponentLibrary;
-
-    private constructor() {
-        this.library = this.loadLibrary();
-    }
+    private static instance: ComponentLibraryManager | null = null;
+    private static library: ComponentLibrary = {
+        components: {},
+        lastModified: new Date()
+    };
 
     public static getInstance(): ComponentLibraryManager {
         if (!ComponentLibraryManager.instance) {
             ComponentLibraryManager.instance = new ComponentLibraryManager();
         }
         return ComponentLibraryManager.instance;
+    }
+
+    public getLibraryState(): ComponentLibrary {
+        return ComponentLibraryManager.library;
     }
 
     private loadLibrary(): ComponentLibrary {
@@ -73,14 +76,11 @@ class ComponentLibraryManager {
         };
     }
 
-    private saveLibrary(): void {
-        localStorage.setItem("componentLibrary", JSON.stringify(this.library));
-    }
-
     private addComponentAttachmentPoints(
         attachmentPointsMap: AttachmentPointMap,
         parentAttachmentPoints: ComponentAttachmentPointMap
     ): ComponentAttachmentPointMap {
+        // Method implementation remains the same
         Object.keys(attachmentPointsMap).forEach((name) => {
             if (!parentAttachmentPoints[name]) {
                 parentAttachmentPoints[name] = [];
@@ -637,11 +637,10 @@ class ComponentLibraryManager {
     };
 
     public hasComponent(name: string): boolean {
-        return Object.values(this.library.components).some(
+        return Object.values(ComponentLibraryManager.library.components).some(
             (component) => component.name === name
         );
     }
-
     public createComponent(
         name: string,
         description: string,
@@ -656,15 +655,13 @@ class ComponentLibraryManager {
 
         const now = new Date();
 
-        // Create deep copy of diagram components to avoid reference issues
         const componentsCopy = JSON.parse(JSON.stringify(diagramComponents));
-        // detach the root from its parent and move it to the center
         componentsCopy[0].relativeToId = null;
         componentsCopy[0].absolutePosition = {
             x: canvasSize.width / 2,
             y: canvasSize.height / 2
         };
-        // compile the shapes, so that all the internal shapes' absolute positions are updated
+
         const { svgContent, processedComponents } = compileDiagram(
             componentsCopy,
             canvasSize,
@@ -682,16 +679,14 @@ class ComponentLibraryManager {
             lastModified: now
         };
 
-        this.library.components[name] = component;
-        this.library.lastModified = now;
-        this.saveLibrary();
+        ComponentLibraryManager.library.components[name] = component;
+        ComponentLibraryManager.library.lastModified = now;
 
         return component;
     }
 
     public serializeComponentLib = (): Component[] => {
         const components = this.getAllComponents();
-
         const serializeComponentWithDiagrams = (component: Component) => ({
             id: component.id,
             name: component.name,
@@ -714,9 +709,9 @@ class ComponentLibraryManager {
 
         components.forEach((component) => {
             const now = new Date();
-            this.library.components[component.name] = component;
-            this.library.lastModified = now;
-            this.saveLibrary();
+            ComponentLibraryManager.library.components[component.name] =
+                component;
+            ComponentLibraryManager.library.lastModified = now;
         });
     };
 
@@ -726,7 +721,7 @@ class ComponentLibraryManager {
         svgLibrary: Shape[],
         fetchedComponent?: Component
     ): string {
-        const componentFromLib = this.library.components[id];
+        const componentFromLib = ComponentLibraryManager.library.components[id];
         const component = componentFromLib || fetchedComponent;
         if (!component) {
             throw new Error(`Component with id ${id} not found`);
@@ -799,7 +794,7 @@ class ComponentLibraryManager {
         canvasSize: CanvasSize,
         svgLibrary: Shape[]
     ): string {
-        const component = this.library.components[id];
+        const component = ComponentLibraryManager.library.components[id];
         if (!component) {
             throw new Error(`Component with id ${id} not found`);
         }
@@ -836,7 +831,7 @@ class ComponentLibraryManager {
         id: string,
         updates: Partial<Omit<Component, "id" | "created">>
     ): Component {
-        const component = this.library.components[id];
+        const component = ComponentLibraryManager.library.components[id];
         if (!component) {
             throw new Error(`Component with id ${id} not found`);
         }
@@ -847,40 +842,38 @@ class ComponentLibraryManager {
             lastModified: new Date()
         };
 
-        this.library.components[id] = updatedComponent;
-        this.library.lastModified = new Date();
-        this.saveLibrary();
+        ComponentLibraryManager.library.components[id] = updatedComponent;
+        ComponentLibraryManager.library.lastModified = new Date();
 
         return updatedComponent;
     }
 
     public deleteComponent(id: string): void {
-        if (!this.library.components[id]) {
+        if (!ComponentLibraryManager.library.components[id]) {
             throw new Error(`Component with id ${id} not found`);
         }
 
-        delete this.library.components[id];
-        this.library.lastModified = new Date();
-        this.saveLibrary();
-    }
-
-    public getComponent(id: string): Component | null {
-        return this.library.components[id] || null;
-    }
-
-    public getAllComponents(): Component[] {
-        return Object.values(this.library.components);
-    }
-    public getAllComponentsMap(): { [key: string]: Component } {
-        return this.library.components;
+        delete ComponentLibraryManager.library.components[id];
+        ComponentLibraryManager.library.lastModified = new Date();
     }
 
     public clearLibrary(): void {
-        this.library = {
+        ComponentLibraryManager.library = {
             components: {},
             lastModified: new Date()
         };
-        this.saveLibrary();
+    }
+
+    public getComponent(id: string): Component | null {
+        return ComponentLibraryManager.library.components[id] || null;
+    }
+
+    public getAllComponents(): Component[] {
+        return Object.values(ComponentLibraryManager.library.components);
+    }
+
+    public getAllComponentsMap(): { [key: string]: Component } {
+        return ComponentLibraryManager.library.components;
     }
 
     // Helper method to create a new diagram component from a component
