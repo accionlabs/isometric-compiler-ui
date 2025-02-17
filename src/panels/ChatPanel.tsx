@@ -87,8 +87,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     })
 
     useEffect(()=>{
-        if(existingChatData?.chats.length){
-            const existingMessages = existingChatData.chats.map((chat)=>{
+            const existingMessages = existingChatData?.chats.map((chat)=>{
                 const existingMessage : Message = {
                     text: chat.message,
                     isUser: chat.role === 'user',
@@ -97,9 +96,8 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                 }
                 return existingMessage
             })
-            setMessages(existingMessages)
-        }
-    },[existingChatData])
+            setMessages(existingMessages || [])
+        },[existingChatData])
 
 
     const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -278,7 +276,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                         >
                             
                             
-                            <span className="text-blue-400 font-semibold">📄 View JSON Response</span>
+                            <span className="text-blue-400 font-semibold">📄 View Unified Model</span>
                         
                             
                         </div>
