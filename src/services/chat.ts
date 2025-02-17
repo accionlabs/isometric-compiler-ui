@@ -44,22 +44,7 @@ export async function sendChatRequest(
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        const shapeNames = [];
         const res = await response.json(); // Parse the JSON response
-        for (let i = 0; i < res.action?.length; i++) {
-            if (res.action[i].shapeName && res.action[i].action === "add") {
-                shapeNames.push(res.action[i].shapeName);
-            }
-        }
-        if (shapeNames.length>0) {
-            const shapes = await getShapesByName(shapeNames);
-            if (shapes) {
-                shapesLibraryManager.deserializeShapesLib(shapes.shapes);
-                componentLibraryManager.deserializeComponentLib(
-                    shapes.components
-                );
-            }
-        }
         return res;
     } catch (error) {
         console.error("Error:", error); // Handle errors
@@ -88,22 +73,6 @@ export async function sendImageChatRequest(image: string) {
         }
 
         const result = await response.json();
-        /*Need to be moved to reusable helper function*/
-        const shapeNames = [];
-        for (let i = 0; i < result.length; i++) {
-            if (result[i].shape) {
-                shapeNames.push(result[i].shape);
-            }
-        }
-        if (shapeNames.length>0) {
-            const shapes = await getShapesByName(shapeNames);
-            if (shapes) {
-                shapesLibraryManager.deserializeShapesLib(shapes.shapes);
-                componentLibraryManager.deserializeComponentLib(
-                    shapes.components
-                );
-            }
-        }
         return result
 }
 
