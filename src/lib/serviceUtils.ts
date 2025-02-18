@@ -1,5 +1,11 @@
 import { Shape, UnifiedResponse, Component, UnifiedElement } from "@/Types";
-
+import { modifySvgColors } from "./utils";
+const colors = {
+    baseColor: "#ff5555",
+    strokeColor: "#000000",
+    highlightColor: "#8888ff",
+    shade: 0.3 // Makes colors 30% lighter
+};
 export const segregateShapesAndComponents = (response: UnifiedResponse[]) => {
     const shapes: Shape[] = [];
     const components: Component[] = [];
@@ -15,7 +21,7 @@ export const segregateShapesAndComponents = (response: UnifiedResponse[]) => {
                 type: item.type,
                 attachTo: item.attachTo ?? undefined,
                 svgFile: item.svgFile ?? "",
-                svgContent: item.svgContent ?? "",
+                svgContent: modifySvgColors(item.svgContent ?? "", colors),
                 path: item.categoryDetails?.path ?? "",
                 version: item.version ?? "",
                 description: item?.metadata?.description ?? "",
@@ -33,7 +39,8 @@ export const segregateShapesAndComponents = (response: UnifiedResponse[]) => {
                 description: item?.metadata?.description ?? "",
                 diagramComponents: item.diagram_components,
                 attachmentPoints: item.attachment_points,
-                svgContent: item.svgContent ?? undefined,
+                svgContent: modifySvgColors(item.svgContent ?? "", colors),
+
                 path: item.categoryDetails?.path ?? "",
                 version: item.version ?? "",
                 created: new Date(item.createdAt),
@@ -59,7 +66,7 @@ export const transformToUnifiedResponse = (
                 type: "COMPONENT",
                 diagramComponents: item.diagram_components,
                 attachmentPoints: item.attachment_points,
-                svgContent: item.svgContent ?? undefined,
+                svgContent: modifySvgColors(item.svgContent ?? "", colors),
                 path: item.categoryDetails?.path ?? "",
                 version: item.version ?? "",
                 created: new Date(item.createdAt),
@@ -75,7 +82,7 @@ export const transformToUnifiedResponse = (
             type: item.type as "2D" | "3D" | "LAYERS",
             attachTo: item.attachTo ?? undefined,
             svgFile: item.svgFile ?? "",
-            svgContent: item.svgContent ?? "",
+            svgContent: modifySvgColors(item.svgContent ?? "", colors),
             path: item.categoryDetails?.path ?? "",
             version: item.version ?? "",
             status: item.status,

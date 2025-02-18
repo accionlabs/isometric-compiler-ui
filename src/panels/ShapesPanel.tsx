@@ -23,6 +23,7 @@ import {
 import { Badge } from "@/components/ui/Badge";
 import clsx from "clsx";
 import { CUSTOM_SCROLLBAR } from "@/Constants";
+import { formatString } from "@/lib/utils";
 
 type ElementType = "3D" | "2D" | "LAYERS" | "COMPONENT";
 
@@ -67,6 +68,13 @@ const filterBgColors = {
     LAYERS: "bg-primitive",
     "2D": "bg-modifier",
     COMPONENT: "bg-composite"
+};
+
+const showTypeName = {
+    "3D": "3D",
+    LAYERS: "Layer",
+    "2D": "2D",
+    COMPONENT: "Component"
 };
 const ShapesPanel: React.FC<ShapesPanelProps> = ({
     svgLibrary,
@@ -197,7 +205,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                   );
 
         const groupedElements = filteredData.reduce((acc, element) => {
-            const pathKey = element.path || "unknown";
+            const pathKey = element.path?.split("/").join(" / ") || "unknown";
             (acc[pathKey] ||= []).push(element);
             return acc;
         }, {} as Record<string, UnifiedElement[]>);
@@ -277,8 +285,8 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                             } rounded-full shrink-0 mt-1.5`
                         )}
                     />
-                    <p className="h-10 text-white text-sm overflow-hidden text-ellipsis whitespace-pre-line line-clamp-2">
-                        {element.name}
+                    <p className="h-10 break-words text-white text-sm overflow-hidden text-ellipsis  line-clamp-2">
+                        {formatString(element.name)}
                     </p>
                 </div>
             </div>
@@ -305,7 +313,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                                 )}
                             />
                             <p className=" text-white text-base overflow-hidden text-ellipsis whitespace-pre-line line-clamp-1">
-                                {element.name}
+                                {formatString(element.name)}
                             </p>
                         </div>
                         <div className="flex gap-2 text-sm">
@@ -319,7 +327,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                                 variant="secondary"
                                 className="flex items-center w-fit bg-[#626262] px-2 py-1"
                             >
-                                <span>{elementType.toLocaleLowerCase()}</span>
+                                <span>{showTypeName[elementType]}</span>
                             </Badge>
                         </div>
                         <p className="text-[#BFBFBF] text-sm">

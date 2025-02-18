@@ -23,7 +23,6 @@ export const exportToImage = async (
     options: ExportOptions = {}
 ): Promise<void> => {
     const opts = { ...defaultOptions, ...options };
-    console.log("first1", opts);
 
     // Get the flow element
     const flowElement = document.querySelector(".react-flow") as HTMLElement;
@@ -70,7 +69,6 @@ export const exportToImage = async (
 
                 // Clean the SVG
                 const cleanedSvgString = await cleanSVG(svgString);
-                console.log("first1111", cleanedSvgString);
 
                 // Convert back to data URL
                 dataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(

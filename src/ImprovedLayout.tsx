@@ -55,6 +55,7 @@ import { calculateSVGBoundingBox } from "./lib/svgUtils";
 import { useCancelLatestCalls } from "./hooks/useCancelLatestCalls";
 import { useQueryClient } from "@tanstack/react-query";
 import { v4 as uuidv4 } from "uuid";
+import { CUSTOM_SCROLLBAR } from "./Constants";
 const newUUID = uuidv4();
 
 type PanelType = "diagrams" | "shapes" | "composition" | "chat";
@@ -574,7 +575,9 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                     </DropdownMenuItem> */}
                                 </DropdownMenuContent>
                             </DropdownMenu>
-                            <div className="flex overflow-auto gap-3 scrollbar-hide">
+                            <div
+                                className={`flex overflow-auto gap-3 ${CUSTOM_SCROLLBAR}`}
+                            >
                                 {panels.map((panel) => (
                                     <button
                                         key={panel.id}
