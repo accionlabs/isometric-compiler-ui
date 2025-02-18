@@ -1,6 +1,5 @@
-import { MenuIcon } from "@/components/ui/IconGroup";
+import { LeftArrow, MenuIcon, RightArrow } from "@/components/ui/IconGroup";
 import { useRef, useState } from "react";
-import { ChevronRight, ChevronLeft } from "lucide-react";
 import { Category } from "@/Types";
 import { CUSTOM_SCROLLBAR } from "@/Constants";
 
@@ -57,7 +56,30 @@ export default function CategoriesPanel({
         setSelected(categoryMap[previousParentId]);
         setCurrentChildren(categoryMap[previousParentId].children || []);
     };
+    const renderSVG = (svgContent: string) => {
+        if (!svgContent) return "";
+        // Parse the SVG content
+        const parser = new DOMParser();
+        const svgDoc = parser.parseFromString(svgContent, "image/svg+xml");
+        const svgElement = svgDoc.documentElement;
 
+        // Get the viewBox
+        let viewBox = svgElement.getAttribute("viewBox");
+        if (!viewBox) {
+            // If viewBox is not present, create one based on width and height
+            const width = svgElement.getAttribute("width") || "100";
+            const height = svgElement.getAttribute("height") || "100";
+            viewBox = `0 0 ${width} ${height}`;
+        }
+        // Create a new SVG element with our desired properties
+        const newSvgContent = `
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+                ${svgElement.innerHTML}
+            </svg>
+        `;
+
+        return newSvgContent;
+    };
     const categoryCard = (category: Category) => {
         const isSelected = selectedCategory._id === category._id;
 
@@ -72,7 +94,16 @@ export default function CategoriesPanel({
                             }`}
             >
                 {/* Icon */}
-                <MenuIcon className="w-6 h-6" />
+                {category?.metadata?.icon?.length > 0 ? (
+                    <div
+                        className="w-6 h-6 text-white"
+                        dangerouslySetInnerHTML={{
+                            __html: renderSVG(category.metadata.icon)
+                        }}
+                    />
+                ) : (
+                    <MenuIcon className="w-6 h-6" />
+                )}
 
                 <div className="flex flex-col min-w-20">
                     <span className="text-sm font-medium text-center whitespace-normal line-clamp-3">
@@ -85,6 +116,7 @@ export default function CategoriesPanel({
             </div>
         );
     };
+
     return (
         <section>
             <h1 className="text-md font-medium bg-customGray text-white">
@@ -109,22 +141,23 @@ export default function CategoriesPanel({
             >
                 {/* Parent / Selected */}
                 <div className="flex items-center gap-2">
-                    <button
-                        disabled={!(parentHistory.length > 0)}
-                        className="w-6 h-6 text-white disabled:text-customLightGray"
-                        onClick={handleBack}
-                    >
-                        <ChevronLeft />
-                    </button>
-
+                    {parentHistory.length > 0 && (
+                        <button
+                            disabled={!(parentHistory.length > 0)}
+                            className="h-10 text-white bg-[#3B3B3B] p-[0.125rem] rounded-sm  disabled:text-customLightGray"
+                            onClick={handleBack}
+                        >
+                            <LeftArrow />
+                        </button>
+                    )}
                     <button onClick={() => handleSelect(selected)}>
                         {categoryCard(selected)}
                     </button>
                     <button
                         disabled
-                        className="w-6 h-6 text-white disabled:text-customLightGray"
+                        className=" text-white disabled:text-customLightGray"
                     >
-                        <ChevronRight />
+                        <RightArrow />
                     </button>
                 </div>
 

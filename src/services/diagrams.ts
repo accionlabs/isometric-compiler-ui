@@ -59,7 +59,7 @@ export async function saveDiagram(payload: {
 }): Promise<DiagramInfo | undefined> {
     const url = `${config.isometricApiUrl}/diagram`;
     const currentUrl = new URL(window.location.href);
-    const existinguuid = currentUrl.searchParams.get('uuid')
+    const existinguuid = currentUrl.searchParams.get("uuid");
     const body = {
         name: payload.name,
         version: "1.0.0",
@@ -94,7 +94,6 @@ export async function updateDiagram(payload: {
     diagramComponents: DiagramComponent[];
     svgContent: string;
 }): Promise<DiagramInfo | undefined> {
-    console.log("called after throttle");
     const url = `${config.isometricApiUrl}/diagram/${payload.id}`;
     const body = {
         name: payload.name,

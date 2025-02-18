@@ -280,6 +280,8 @@ const App: React.FC = () => {
                 svgLibrary.find((s) => s.name === shapeName);
             if (!shape) {
                 console.error(`Shape ${shapeName} not found in library`);
+                console.log("Current SVG Library:", svgLibrary);
+
                 return {
                     updatedComponents: diagramComponents,
                     newComponent: null
