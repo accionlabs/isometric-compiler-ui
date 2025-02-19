@@ -99,6 +99,24 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             setMessages(existingMessages || [])
         },[existingChatData])
 
+    // Different messages based on file type
+    const LoadMessagesWithImage = [
+        { time: 0, message: "Extracting components." },
+        { time: 0.5, message: "Mapping to Unified Model..." },
+        { time: 1, message: "Optimizing layout..." },
+        { time: 2, message: "Applying isometric view..." },
+        { time: 3, message: "Finalizing diagram.." }
+    ];
+
+    const LoadMessagesWithPDF = [
+        { time: 0, message: "Extracting text from PDF..." },
+        { time: 1, message: "Analyzing document structure..." },
+        { time: 2, message: "Detecting diagrams or tables..." },
+        { time: 3, message: "Generating insights..." }
+    ];
+
+    const [loadMessages, setLoadMessages] = useState(LoadMessagesWithImage);
+    const messageDuration = 4;
 
     const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event.target.files && event.target.files[0]) {
@@ -113,6 +131,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                         fileType: 'image',
                         src: reader.result as string,
                     });
+                    setLoadMessages(LoadMessagesWithImage)
                 reader.readAsDataURL(file);
             } else if (file.type === 'application/pdf') {
                 // Set PDF file without preview
@@ -121,6 +140,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                     src: '',
                     fileType: 'pdf',
                 });
+                setLoadMessages(LoadMessagesWithPDF)
             }
         }
     };
@@ -175,7 +195,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     const handleSend = async (e: { preventDefault: () => void }) => {
         e.preventDefault();
         if(!existinguuid) return
-        if (!input) return;
+        if (!input && !selectedFile.file ) return;
         if(selectedFile.file) {
             setShowLoader(true);
             setIsLoader(true);
@@ -186,7 +206,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         ]);
         sendChatMutaion(
             {
-                query: input,
+                query: input || "Process this file",
                 uuid: existinguuid,
                 currentState: diagramComponents,
                 file: selectedFile.file ?? undefined
@@ -197,13 +217,12 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     };
 
     const [isLoader, setIsLoader] = useState(false);
-    const [isLoaderTimePassed, setIsLoaderTimePassed] = useState(false);
-
+    const [isLoaderTimePassed, setIsLoaderTimePassed] = useState(false); 
     useEffect(() => {
         if(isLoaderTimePassed) {
-            setIsLoader(false);
-            setShowLoader(false);
-            setIsLoaderTimePassed(false);
+            setIsLoader(isLoading);
+            setShowLoader(isLoading);
+            setIsLoaderTimePassed(isLoading);
         }
     }, [isLoading, isLoaderTimePassed])
 
@@ -212,22 +231,13 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         addHistory(content)
     }
 
-    const LoadMeessagesWithImage: { time: number; message: string }[] = [
-        { time: 0, message: "Extracting components." },
-        { time: 0.5, message: "Mapping to Unified Model..." },
-        { time: 1, message: "Optimizing layout..." },
-        { time: 2, message: "Applying isometric view..." },
-        { time: 3, message: "Finalizing diagram.." }
-    ];
-
-    const messageDurationWithImage = 4;
     return (
         <div className="p-4 h-full flex flex-col gap-4 ">
             {/* chat container */}
             <div
                 className={`flex-grow overflow-x-hidden flex flex-col gap-2 ${CUSTOM_SCROLLBAR}`}
             >
-                {messages.map((message, index) => (
+                {messages.map((message: Message, index) => (
                     <div
                     key={index}
                     className={`flex flex-col gap-2 ${
@@ -357,7 +367,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                         />
                         <Button
                             type="submit"
-                            disabled={(!input) || isLoading}
+                            disabled={(!input && !selectedFile.file) || isLoading}
                         >
                             send
                             <span className="sr-only">Send message</span>
@@ -380,8 +390,8 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                         setIsLoader(isLoading);
                         setIsLoaderTimePassed(true);
                     }}
-                    messages={LoadMeessagesWithImage}
-                    duration={messageDurationWithImage}
+                    messages={loadMessages}
+                    duration={messageDuration}
                 />
             )}
         </div>
