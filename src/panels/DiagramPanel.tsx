@@ -37,7 +37,6 @@ import {
 } from "@/components/ui/AlertDialog";
 // import { v4 as uuidv4 } from "uuid";
 
-
 type Mode = "save" | "clone" | "edit_details" | "delete";
 export default function DiagramPanel({
     currentDiagramInfo,
@@ -319,7 +318,7 @@ export default function DiagramPanel({
             <div className="flex-grow overflow-hidden flex flex-col">
                 <div className="flex justify-between items-center px-4 py-3">
                     <h1 className=" text-md font-medium bg-customGray text-white">
-                        Composition
+                        Diagrams
                     </h1>
                     <button
                         onClick={() => {

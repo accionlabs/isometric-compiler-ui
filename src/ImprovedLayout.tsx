@@ -41,12 +41,14 @@ import {
 import {
     CheckCircle,
     ChevronDown,
+    ChevronUp,
     FilePlus,
     Loader2,
     Redo,
-    Undo
+    Undo,
+    X
 } from "lucide-react";
-import { MenuIcon } from "./components/ui/IconGroup";
+import { DoubleArrow, MenuIcon } from "./components/ui/IconGroup";
 import { useKeycloak } from "@react-keycloak/web";
 import CustomTooltip from "./components/flow/CustomToolTip";
 import DiagramPanel from "./panels/DiagramPanel";
@@ -56,6 +58,9 @@ import { useCancelLatestCalls } from "./hooks/useCancelLatestCalls";
 import { useQueryClient } from "@tanstack/react-query";
 import { v4 as uuidv4 } from "uuid";
 import { CUSTOM_SCROLLBAR } from "./Constants";
+import HeaderMain from "./panels/HeaderMain";
+import SVGPreview from "./components/ui/SVGPreview";
+import clsx from "clsx";
 const newUUID = uuidv4();
 
 type PanelType = "diagrams" | "shapes" | "composition" | "chat";
@@ -468,155 +473,343 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
         handleAutoSave();
     }, [autoSaveMode, currentDiagramInfo, composedSVG]);
 
+    const [leftSidebarOpen, setLeftSidebarOpen] = useState(true);
+    const [rightSidebarOpen, setRightSidebarOpen] = useState(true);
+    const [accordian, setAccordian] = useState(true);
+    const [activeTab, setActiveTab] = useState("Business");
+    const SIDEBAR_WIDTH = "w-1/4";
+
+    const Header = () => {
+        return (
+            <div className="flex flex-row px-4 py-3 space-x-3  items-center justify-between">
+                <DropdownMenu
+                    open={isDropdownOpen}
+                    onOpenChange={setIsDropdownOpen}
+                >
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline" className="p-2 gap-1">
+                            <MenuIcon />
+                            <ChevronDown />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                        align="end"
+                        className="w-[200px] bg-customGray"
+                    >
+                        <DropdownMenuGroup>
+                            <DropdownMenuItem
+                                onSelect={handleMenuSelect(handleOpenNewCanvas)}
+                            >
+                                New Diagram
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                                onSelect={handleMenuSelect(handleFileSelect)}
+                            >
+                                Load Diagram
+                            </DropdownMenuItem>
+
+                            <DropdownMenuItem
+                                onSelect={handleMenuSelect(
+                                    handleOpenSaveComponentDialog
+                                )}
+                                disabled={diagramComponents.length === 0}
+                            >
+                                Save as Component
+                            </DropdownMenuItem>
+                        </DropdownMenuGroup>
+                        <DropdownMenuSeparator className="bg-customLightGray" />
+                        <DropdownMenuGroup>
+                            <DropdownMenuItem
+                                onSelect={handleMenuSelect(() =>
+                                    onDownloadSVG("svg")
+                                )}
+                            >
+                                Download SVG
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                                onSelect={handleMenuSelect(() =>
+                                    onDownloadSVG("png")
+                                )}
+                            >
+                                Download PNG
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                                onSelect={handleMenuSelect(
+                                    handleOpenSaveDialog
+                                )}
+                            >
+                                Download Diagram
+                            </DropdownMenuItem>
+                        </DropdownMenuGroup>
+                        <DropdownMenuSeparator className="bg-customLightGray" />
+                        <DropdownMenuItem
+                            onSelect={handleMenuSelect(() =>
+                                setIsSettingsDialogOpen(true)
+                            )}
+                        >
+                            Display Settings
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator className="bg-customLightGray" />
+                        <DropdownMenuItem
+                            onSelect={handleMenuSelect(() => {
+                                currentUrl.searchParams.delete("uuid");
+                                keycloak.logout({
+                                    logoutMethod: "POST",
+                                    redirectUri: currentUrl
+                                });
+                            })}
+                        >
+                            Logout
+                        </DropdownMenuItem>
+                        {/* <DropdownMenuItem
+                            onSelect={handleMenuSelect(() =>
+                                setIsLibraryDialogOpen(true)
+                            )}
+                        >
+                            Library Settings
+                        </DropdownMenuItem> */}
+                    </DropdownMenuContent>
+                </DropdownMenu>
+                <div className={`flex overflow-auto gap-3 ${CUSTOM_SCROLLBAR}`}>
+                    {panels.map((panel) => (
+                        <button
+                            key={panel.id}
+                            onClick={() => setPanel(panel.id)}
+                            className={`relative rounded p-2  bg-customLightGray`}
+                        >
+                            {/* Hidden bold reference text */}
+                            <span
+                                aria-hidden="true"
+                                className={`block text-sm font-bold invisible whitespace-nowrap`}
+                            >
+                                {panel.label}
+                            </span>
+
+                            {/* Visible text layer */}
+                            <span
+                                className={`absolute inset-0 flex items-center justify-center text-sm
+  ${activePanel === panel.id ? "font-bold" : "font-normal text-lightGray2"}`}
+                            >
+                                {panel.label}
+                            </span>
+                        </button>
+                    ))}
+                </div>
+                <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".json"
+                    onChange={handleFileChange}
+                    className="hidden"
+                />
+            </div>
+        );
+    };
+    const Header2 = () => {
+        return (
+            <div className="flex flex-grow justify-between items-center bg-customGray px-4 py-3 z-10">
+                <h2 className="text-base  font-semibold ">
+                    {autoSaveMode && currentDiagramInfo?._id
+                        ? currentDiagramInfo.name
+                        : "Accion Breeze"}
+                </h2>
+                <div className="flex items-center">
+                    {isPending ? (
+                        <Loader2 className="animate-spin text-white" />
+                    ) : showUpdateSuccess ? (
+                        <CheckCircle className="text-green-500  transition-opacity duration-1000 animate-pulse" />
+                    ) : (
+                        ""
+                    )}
+
+                    <CustomTooltip
+                        action={
+                            <button
+                                disabled={currentIndex === 0}
+                                onClick={handleUndo}
+                                className="hover:bg-customLightGray p-2 rounded disabled:cursor-not-allowed disabled:opacity-50"
+                                title="Undo"
+                            >
+                                <Undo />
+                            </button>
+                        }
+                        header="Undo"
+                        side="top"
+                    />
+                    <CustomTooltip
+                        action={
+                            <button
+                                disabled={currentIndex === history.length - 1}
+                                onClick={handleRedo}
+                                className="hover:bg-customLightGray p-2 rounded disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                                <Redo />
+                            </button>
+                        }
+                        header="Redo"
+                        side="top"
+                    />
+                </div>
+            </div>
+        );
+    };
+    const RenderAllDialogs = () => (
+        <>
+            <Dialog
+                open={isLoadingDialogOpen}
+                onOpenChange={setIsLoadingDialogOpen}
+            >
+                <DialogContent className="bg-gray-800 text-white">
+                    <DialogHeader>
+                        <DialogTitle className="text-white">
+                            Loading Shapes from Google Drive
+                        </DialogTitle>
+                        <DialogDescription className="text-gray-300">
+                            Please wait while we load the shapes from your
+                            Google Drive.
+                        </DialogDescription>
+                    </DialogHeader>
+                    {errorMessage && (
+                        <div className="mt-4">
+                            <p className="text-red-400">{errorMessage}</p>
+                            <Button
+                                onClick={() => setIsLoadingDialogOpen(false)}
+                                className="mt-2"
+                            >
+                                Close
+                            </Button>
+                        </div>
+                    )}
+                    {loadingProgress && (
+                        <div className="mt-4 text-white">
+                            <p>Loading: {loadingProgress.currentFile}</p>
+                            <p>
+                                Progress: {loadingProgress.loadedFiles} /
+                                {loadingProgress.totalFiles}
+                            </p>
+                            <div className="w-full bg-gray-700 rounded-full h-2.5 mt-2">
+                                <div
+                                    className="bg-blue-500 h-2.5 rounded-full"
+                                    style={{
+                                        width: `${
+                                            (loadingProgress.loadedFiles /
+                                                loadingProgress.totalFiles) *
+                                            100
+                                        }%`
+                                    }}
+                                ></div>
+                            </div>
+                        </div>
+                    )}
+                </DialogContent>
+            </Dialog>
+
+            <SettingsDialog
+                isOpen={isSettingsDialogOpen}
+                onClose={() => setIsSettingsDialogOpen(false)}
+                settings={settings}
+                canvasSize={canvasSize}
+                onSetCanvasSize={onSetCanvasSize}
+                onSetCanvasSettings={onSetCanvasSettings}
+                showAttachmentPoints={showAttachmentPoints}
+                setShowAttachmentPoints={setShowAttachmentPoints}
+            />
+            <LibraryManagerDialog
+                isOpen={isLibraryDialogOpen}
+                onClose={() => setIsLibraryDialogOpen(false)}
+                activeLibrary={activeLibrary}
+                onLibraryChange={onLibraryChange}
+                onUpdateShapes={onUpdateSvgLibrary}
+            />
+            <SaveDiagramDialog
+                isOpen={isSaveDiagramDialogOpen}
+                onClose={() => setIsSaveDiagramDialogOpen(false)}
+                onSave={handleSaveDiagram}
+                fileName={fileName}
+                setFileName={handleSetFileName}
+            />
+            <SaveComponentDialog
+                isOpen={isSaveComponentDialogOpen}
+                onClose={() => setIsSaveComponentDialogOpen(false)}
+                onSave={onSaveAsComponent}
+            />
+
+            {/* Save/Load Diagram Dialog */}
+            <Dialog
+                open={isSaveLoadDialogOpen}
+                onOpenChange={setIsSaveLoadDialogOpen}
+            >
+                <DialogContent className="bg-gray-800 text-white">
+                    <DialogHeader>
+                        <DialogTitle className="text-white">
+                            Diagram Operation
+                        </DialogTitle>
+                        <DialogDescription className="text-gray-300">
+                            {saveLoadMessage}
+                        </DialogDescription>
+                    </DialogHeader>
+                </DialogContent>
+            </Dialog>
+        </>
+    );
     return (
         <ChatProvider>
-            <div className="flex flex-row h-screen w-screen  text-white">
-                {/* Left side control panels */}
-                {!isReadModeEnabled && (
-                    <div className="flex flex-col border-r bg-customGray border-gray-700 w-1/4">
-                        {/* Tab buttons */}
-                        <div className="flex flex-row px-4 py-3 space-x-3 border-t-2 border-gray-700 items-center justify-between">
-                            <DropdownMenu
-                                open={isDropdownOpen}
-                                onOpenChange={setIsDropdownOpen}
+            <div className="flex flex-col h-screen w-full text-white">
+                {/* Header */}
+                <div className="w-full  bg-customGray  flex ">
+                    <div className="flex flex-col  bg-customGray  border-[#1E1E1E] border-r-[1px] w-1/4">
+                        <Header />
+                        {!leftSidebarOpen && selected3DShape && (
+                            <div className="m-4 " />
+                        )}
+                        {!leftSidebarOpen && (
+                            <button
+                                onClick={() => setLeftSidebarOpen(true)}
+                                className="flex p-2 border-t-[0.5px] border-[#1E1E1E] bg-customGray items-center justify-center w-full"
                             >
-                                <DropdownMenuTrigger asChild>
-                                    <Button
-                                        variant="outline"
-                                        className="p-2 gap-1"
-                                    >
-                                        <MenuIcon />
-                                        <ChevronDown />
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent
-                                    align="end"
-                                    className="w-[200px] bg-customGray"
-                                >
-                                    <DropdownMenuGroup>
-                                        <DropdownMenuItem
-                                            onSelect={handleMenuSelect(
-                                                handleOpenNewCanvas
-                                            )}
-                                        >
-                                            New Diagram
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem
-                                            onSelect={handleMenuSelect(
-                                                handleFileSelect
-                                            )}
-                                        >
-                                            Load Diagram
-                                        </DropdownMenuItem>
+                                <DoubleArrow />
+                            </button>
+                        )}
+                        {/* border-top: 0.5px solid ; background: ; */}
+                    </div>
+                    <div className="flex-grow relative">
+                        <Header2 />
 
-                                        <DropdownMenuItem
-                                            onSelect={handleMenuSelect(
-                                                handleOpenSaveComponentDialog
-                                            )}
-                                            disabled={
-                                                diagramComponents.length === 0
-                                            }
-                                        >
-                                            Save as Component
-                                        </DropdownMenuItem>
-                                    </DropdownMenuGroup>
-                                    <DropdownMenuSeparator className="bg-customLightGray" />
-                                    <DropdownMenuGroup>
-                                        <DropdownMenuItem
-                                            onSelect={handleMenuSelect(() =>
-                                                onDownloadSVG("svg")
-                                            )}
-                                        >
-                                            Download SVG
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem
-                                            onSelect={handleMenuSelect(() =>
-                                                onDownloadSVG("png")
-                                            )}
-                                        >
-                                            Download PNG
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem
-                                            onSelect={handleMenuSelect(
-                                                handleOpenSaveDialog
-                                            )}
-                                        >
-                                            Download Diagram
-                                        </DropdownMenuItem>
-                                    </DropdownMenuGroup>
-                                    <DropdownMenuSeparator className="bg-customLightGray" />
-                                    <DropdownMenuItem
-                                        onSelect={handleMenuSelect(() =>
-                                            setIsSettingsDialogOpen(true)
-                                        )}
-                                    >
-                                        Display Settings
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator className="bg-customLightGray" />
-                                    <DropdownMenuItem
-                                        onSelect={handleMenuSelect(() => {
-                                            currentUrl.searchParams.delete(
-                                                "uuid"
-                                            );
-                                            keycloak.logout({
-                                                logoutMethod: "POST",
-                                                redirectUri: currentUrl
-                                            });
-                                        })}
-                                    >
-                                        Logout
-                                    </DropdownMenuItem>
-                                    {/* <DropdownMenuItem
-                                        onSelect={handleMenuSelect(() =>
-                                            setIsLibraryDialogOpen(true)
-                                        )}
-                                    >
-                                        Library Settings
-                                    </DropdownMenuItem> */}
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                            <div
-                                className={`flex overflow-auto gap-3 ${CUSTOM_SCROLLBAR}`}
-                            >
-                                {panels.map((panel) => (
-                                    <button
-                                        key={panel.id}
-                                        onClick={() => setPanel(panel.id)}
-                                        className={`relative rounded p-2  bg-customLightGray`}
-                                    >
-                                        {/* Hidden bold reference text */}
-                                        <span
-                                            aria-hidden="true"
-                                            className={`block text-sm font-bold invisible whitespace-nowrap`}
-                                        >
-                                            {panel.label}
-                                        </span>
-
-                                        {/* Visible text layer */}
-                                        <span
-                                            className={`absolute inset-0 flex items-center justify-center text-sm
-              ${
-                  activePanel === panel.id
-                      ? "font-bold"
-                      : "font-normal text-[#DEDEDE]"
-              }`}
-                                        >
-                                            {panel.label}
-                                        </span>
-                                    </button>
-                                ))}
-                            </div>
-                            <input
-                                ref={fileInputRef}
-                                type="file"
-                                accept=".json"
-                                onChange={handleFileChange}
-                                className="hidden"
+                        <div
+                            className={`left-0 right-0 absolute z-10 transition-all duration-300 ease-in-out transform border-t-[1px] border-[#1E1E1E] ${
+                                selected3DShape
+                                    ? "translate-y-0 opacity-100 pointer-events-auto"
+                                    : "-translate-y-full opacity-0 pointer-events-none"
+                            }`}
+                        >
+                            <AttachmentOptionsPanel
+                                selectedPosition={selectedPosition}
+                                setSelectedPosition={handleSelectedPosition}
+                                selectedAttachmentPoint={
+                                    selectedAttachmentPoint
+                                }
+                                setSelectedAttachmentPoint={
+                                    handleSelectedAttachmentPoint
+                                }
+                                availableAttachmentPoints={
+                                    availableAttachmentPoints
+                                }
                             />
                         </div>
+                    </div>
+                </div>
 
-                        {/* Panel content */}
-                        <div className="flex-grow overflow-hidden">
+                {/* Main content area with sidebars */}
+                <div className="flex flex-1 w-full overflow-hidden">
+                    {/* Left sidebar */}
+                    <div
+                        className={`overflow-hidden bg-customGray transition-all duration-300 ease-in-out flex flex-col ${
+                            leftSidebarOpen
+                                ? SIDEBAR_WIDTH + " opacity-100"
+                                : "w-0 opacity-0"
+                        }`}
+                    >
+                        <div className="flex-grow overflow-auto">
                             {activePanel === "shapes" && (
                                 <ShapesPanel
                                     svgLibrary={svgLibrary}
@@ -685,73 +878,20 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                 />
                             )}
                         </div>
-                    </div>
-                )}
-                <div className="flex-grow flex flex-col  relative">
-                    {/* Heading */}
-                    <div className="flex h-14 justify-between items-center bg-customGray p-4 z-10">
-                        <h2 className="text-xl  font-semibold ">
-                            {autoSaveMode && currentDiagramInfo?._id
-                                ? currentDiagramInfo.name
-                                : "Composed SVG"}
-                        </h2>
-                        <div className="flex items-center">
-                            {isPending ? (
-                                <Loader2 className="animate-spin text-white" />
-                            ) : showUpdateSuccess ? (
-                                <CheckCircle className="text-green-500  transition-opacity duration-1000 animate-pulse" />
-                            ) : (
-                                ""
-                            )}
-                            {/* <CustomTooltip
-                                action={
-                                    <button
-                                        disabled={!diagramComponents.length}
-                                        onClick={handleOpenNewCanvas}
-                                        className="hover:bg-customLightGray p-2 rounded disabled:cursor-not-allowed disabled:opacity-50"
-                                        title="Undo"
-                                    >
-                                        <FilePlus />
-                                    </button>
-                                }
-                                header="New canvas"
-                                side="top"
-                            /> */}
-                            <CustomTooltip
-                                action={
-                                    <button
-                                        disabled={currentIndex === 0}
-                                        onClick={handleUndo}
-                                        className="hover:bg-customLightGray p-2 rounded disabled:cursor-not-allowed disabled:opacity-50"
-                                        title="Undo"
-                                    >
-                                        <Undo />
-                                    </button>
-                                }
-                                header="Undo"
-                                side="top"
-                            />
-                            <CustomTooltip
-                                action={
-                                    <button
-                                        disabled={
-                                            currentIndex === history.length - 1
-                                        }
-                                        onClick={handleRedo}
-                                        className="hover:bg-customLightGray p-2 rounded disabled:cursor-not-allowed disabled:opacity-50"
-                                    >
-                                        <Redo />
-                                    </button>
-                                }
-                                header="Redo"
-                                side="top"
-                            />
-                        </div>
+                        {leftSidebarOpen && (
+                            <div className="flex-shrink-0 border-t border-gray-700">
+                                <button
+                                    onClick={() => setLeftSidebarOpen(false)}
+                                    className="flex p-2 bg-customGray items-center justify-center w-full hover:bg-gray-700 transition-colors"
+                                >
+                                    <DoubleArrow />
+                                </button>
+                            </div>
+                        )}
                     </div>
 
-                    {/* Relative container for SVG Display and Attachment Options Panel */}
-                    <div className="relative flex-grow overflow-hidden">
-                        {/* SVG Display */}
+                    {/* Main content */}
+                    <div className="flex-grow  p-4 bg-white flex flex-col items-center justify-center transition-all duration-300 ease-in-out">
                         <FlowSVGDisplay
                             svgContent={composedSVG}
                             selected3DShape={selected3DShape}
@@ -765,136 +905,156 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                 handleSelectedAttachmentPoint
                             }
                         />
+                    </div>
 
-                        {/* Attachment Options Panel - slides behind the heading */}
-                        {!isReadModeEnabled && (
-                            <div
-                                className={`absolute top-0 left-0 right-0 transition-transform duration-300 ease-in-out transform ${
-                                    selected3DShape
-                                        ? "translate-y-0"
-                                        : "-translate-y-full"
-                                }`}
-                                style={{ top: "-1px" }} // Slight overlap to prevent gap
-                            >
-                                <AttachmentOptionsPanel
-                                    selectedPosition={selectedPosition}
-                                    setSelectedPosition={handleSelectedPosition}
-                                    selectedAttachmentPoint={
-                                        selectedAttachmentPoint
-                                    }
-                                    setSelectedAttachmentPoint={
-                                        handleSelectedAttachmentPoint
-                                    }
-                                    availableAttachmentPoints={
-                                        availableAttachmentPoints
-                                    }
-                                />
+                    {/* Right sidebar */}
+                    <div
+                        className={`overflow-hidden flex flex-col  border-t-[1px] border-[#1E1E1E] bg-customGray transition-all duration-300 ease-in-out ${
+                            rightSidebarOpen
+                                ? SIDEBAR_WIDTH + " opacity-100"
+                                : "w-0 opacity-0"
+                        }`}
+                    >
+                        <div className="flex items-center justify-between px-4 pt-6 gap-5 pb-3">
+                            <div className="flex items-center gap-5">
+                                <div className="h-14 w-14">
+                                    <SVGPreview svgContent={""} />
+                                </div>
+                                <span className="text-lg font-semibold">
+                                    React App sf jkdvksdfm v ms skdoslk sd
+                                </span>
                             </div>
-                        )}
+                            <button
+                                onClick={() => setRightSidebarOpen(false)}
+                                className=" bg-[#4A4A4A] p-1 rounded"
+                            >
+                                <X size={16} />
+                            </button>
+                        </div>
+                        {/* toggle buttons */}
+
+                        <div className="flex gap-2 px-4 py-3">
+                            {["Business", "Design", "Metrics", "Technical"].map(
+                                (tab) => (
+                                    <button
+                                        key={tab}
+                                        onClick={() => setActiveTab(tab)}
+                                        className={clsx(
+                                            "px-3 py-1 rounded text-base font-medium transition",
+                                            activeTab === tab
+                                                ? "bg-blue-600 font-bold text-white"
+                                                : "bg-gray-700 text-lightGray2"
+                                        )}
+                                    >
+                                        {tab}
+                                    </button>
+                                )
+                            )}
+                        </div>
+                        <div className="flex-col flex overflow-auto flex-grow px-4 py-3">
+                            {/* component card */}
+                            <Section
+                                title="Personas"
+                                expanded={accordian}
+                                onToggle={() => setAccordian(!accordian)}
+                            >
+                                <div className="grid grid-cols-1 xl:grid-cols-2 gap-2 ">
+                                    <PersonaCard
+                                        title="Business User"
+                                        subtitle="Primary Stakeholder"
+                                    />{" "}
+                                    <PersonaCard
+                                        title="Business User"
+                                        subtitle="Primary Stakeholder"
+                                    />
+                                    <PersonaCard
+                                        title="Business User"
+                                        subtitle="Primary Stakeholder"
+                                    />
+                                </div>
+                            </Section>
+                            <Section
+                                title="Outcomes"
+                                expanded={accordian}
+                                onToggle={() => setAccordian(!accordian)}
+                            >
+                                <div className="bg-customGray p-2 text-xs rounded-md">
+                                    Streamline business process workflow
+                                </div>
+                            </Section>
+                            <Section
+                                title="Contributors"
+                                expanded={accordian}
+                                onToggle={() => setAccordian(!accordian)}
+                            >
+                                <div className="grid grid-cols-2 xl:grid-cols-3 gap-2 ">
+                                    <ContributorCard
+                                        name="Product Owner"
+                                        image="https://randomuser.me/api/portraits/women/44.jpg"
+                                    />
+                                    <ContributorCard
+                                        name="Product Ownerfdv"
+                                        image="https://randomuser.me/api/portraits/women/44.jpg"
+                                    />
+                                    <ContributorCard
+                                        name="Product Owner "
+                                        image="https://randomuser.me/api/portraits/women/44.jpg"
+                                    />
+                                </div>
+                            </Section>
+                        </div>
+
+                        <div className="p-4 bg-customGray2 text-xs">
+                            <span>Last Update:</span>
+                            <span className="text-lightGray2"> 2 days ago</span>
+                        </div>
                     </div>
                 </div>
-
-                {/* Google Drive Folder URL Dialog */}
-                <Dialog
-                    open={isLoadingDialogOpen}
-                    onOpenChange={setIsLoadingDialogOpen}
-                >
-                    <DialogContent className="bg-gray-800 text-white">
-                        <DialogHeader>
-                            <DialogTitle className="text-white">
-                                Loading Shapes from Google Drive
-                            </DialogTitle>
-                            <DialogDescription className="text-gray-300">
-                                Please wait while we load the shapes from your
-                                Google Drive.
-                            </DialogDescription>
-                        </DialogHeader>
-                        {errorMessage && (
-                            <div className="mt-4">
-                                <p className="text-red-400">{errorMessage}</p>
-                                <Button
-                                    onClick={() =>
-                                        setIsLoadingDialogOpen(false)
-                                    }
-                                    className="mt-2"
-                                >
-                                    Close
-                                </Button>
-                            </div>
-                        )}
-                        {loadingProgress && (
-                            <div className="mt-4 text-white">
-                                <p>Loading: {loadingProgress.currentFile}</p>
-                                <p>
-                                    Progress: {loadingProgress.loadedFiles} /
-                                    {loadingProgress.totalFiles}
-                                </p>
-                                <div className="w-full bg-gray-700 rounded-full h-2.5 mt-2">
-                                    <div
-                                        className="bg-blue-500 h-2.5 rounded-full"
-                                        style={{
-                                            width: `${
-                                                (loadingProgress.loadedFiles /
-                                                    loadingProgress.totalFiles) *
-                                                100
-                                            }%`
-                                        }}
-                                    ></div>
-                                </div>
-                            </div>
-                        )}
-                    </DialogContent>
-                </Dialog>
-
-                <SettingsDialog
-                    isOpen={isSettingsDialogOpen}
-                    onClose={() => setIsSettingsDialogOpen(false)}
-                    settings={settings}
-                    canvasSize={canvasSize}
-                    onSetCanvasSize={onSetCanvasSize}
-                    onSetCanvasSettings={onSetCanvasSettings}
-                    showAttachmentPoints={showAttachmentPoints}
-                    setShowAttachmentPoints={setShowAttachmentPoints}
-                />
-                <LibraryManagerDialog
-                    isOpen={isLibraryDialogOpen}
-                    onClose={() => setIsLibraryDialogOpen(false)}
-                    activeLibrary={activeLibrary}
-                    onLibraryChange={onLibraryChange}
-                    onUpdateShapes={onUpdateSvgLibrary}
-                />
-                <SaveDiagramDialog
-                    isOpen={isSaveDiagramDialogOpen}
-                    onClose={() => setIsSaveDiagramDialogOpen(false)}
-                    onSave={handleSaveDiagram}
-                    fileName={fileName}
-                    setFileName={handleSetFileName}
-                />
-                <SaveComponentDialog
-                    isOpen={isSaveComponentDialogOpen}
-                    onClose={() => setIsSaveComponentDialogOpen(false)}
-                    onSave={onSaveAsComponent}
-                />
-
-                {/* Save/Load Diagram Dialog */}
-                <Dialog
-                    open={isSaveLoadDialogOpen}
-                    onOpenChange={setIsSaveLoadDialogOpen}
-                >
-                    <DialogContent className="bg-gray-800 text-white">
-                        <DialogHeader>
-                            <DialogTitle className="text-white">
-                                Diagram Operation
-                            </DialogTitle>
-                            <DialogDescription className="text-gray-300">
-                                {saveLoadMessage}
-                            </DialogDescription>
-                        </DialogHeader>
-                    </DialogContent>
-                </Dialog>
             </div>
+            <RenderAllDialogs />
         </ChatProvider>
     );
 };
 
 export default ImprovedLayout;
+const Section = ({ title, expanded, onToggle, children }: any) => (
+    <div className="bg-customGray2 flex flex-col  rounded-md p-3 mb-3">
+        <div
+            className="flex justify-between items-center cursor-pointer"
+            onClick={onToggle}
+        >
+            <span className="text-sm">{title}</span>
+            <ChevronUp
+                size={16}
+                className={`transition-transform ${
+                    expanded ? "rotate-0" : "rotate-180"
+                }`}
+            />
+        </div>
+        {expanded && <div className="mt-2">{children}</div>}
+    </div>
+);
+
+const PersonaCard = ({ title, subtitle }: any) => (
+    <div className="bg-customGray p-2 rounded-md flex items-center text-sm  gap-2">
+        {/* Prevent logo div from shrinking */}
+        <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white flex-shrink-0">
+            👤
+        </div>
+
+        {/* Wrap text content in a div to ensure proper spacing */}
+        <div className="flex flex-col">
+            <span className="text-sm line-clamp-1">{title}</span>
+            <span className="text-lightGray2 text-xs line-clamp-1">
+                {subtitle}
+            </span>
+        </div>
+    </div>
+);
+
+const ContributorCard = ({ name, image }: any) => (
+    <div className="bg-customGray p-2 rounded-md flex flex-col items-center text-sm">
+        <img src={image} alt={name} className="w-12 h-12 rounded-full mb-2" />
+        <span className="text-sm text-center">{name} </span>
+    </div>
+);

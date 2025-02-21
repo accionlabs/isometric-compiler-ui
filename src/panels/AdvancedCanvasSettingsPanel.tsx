@@ -27,7 +27,7 @@ export const DEFAULT_SETTINGS: CanvasSettings = {
         width: 200,
         lineSpacing: 1.2,
         fontFamily: "sans-serif",
-        fontSize: 21,
+        fontSize: 60,
         fontWeight: "bold"
     }
 };
@@ -37,7 +37,7 @@ interface AdvancedCanvasSettingsProps {
     initialSettings?: Partial<CanvasSettings>;
 }
 
-const STORAGE_KEY = 'canvas-settings';
+const STORAGE_KEY = "canvas-settings";
 
 export const AdvancedCanvasSettings: React.FC<AdvancedCanvasSettingsProps> = ({
     onSaveSettings,
@@ -85,7 +85,7 @@ export const AdvancedCanvasSettings: React.FC<AdvancedCanvasSettingsProps> = ({
                 };
             }
             return settings;
-        }
+        };
         console.log(newSettings());
         setSettings(newSettings());
         setHasChanges(true);
@@ -93,14 +93,14 @@ export const AdvancedCanvasSettings: React.FC<AdvancedCanvasSettingsProps> = ({
 
     const handleSave = () => {
         onSaveSettings(settings);
-        localStorage.setItem(STORAGE_KEY,JSON.stringify(settings));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
         setHasChanges(false);
     };
 
     useEffect(() => {
         console.log("Settings updated:", settings);
     }, [settings]);
-
+    console.log("settings", settings);
     return (
         <div className={styles.settingsContainer}>
             <Tabs defaultValue="canvas" className={styles.tabs}>

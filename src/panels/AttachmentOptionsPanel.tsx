@@ -74,7 +74,7 @@ const AttachmentOptionsPanel: React.FC<AttachmentOptionsPanelProps> = ({
     return (
         <div className="bg-customGray px-4 py-3 shadow-md w-full">
             {/* <h3 className="text-lg font-semibold mb-2">Attachment Options</h3> */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center gap-2">
                 <div className="flex-grow">
                     <ToggleGroup
                         options={positionOptions}

@@ -673,6 +673,9 @@ video {
     overflow: auto;
 }
 
+.scroll-container {
+    scrollbar-gutter: stable;
+}
 .overflow-hidden {
     overflow: hidden;
 }

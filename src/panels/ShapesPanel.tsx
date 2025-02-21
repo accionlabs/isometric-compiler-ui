@@ -367,7 +367,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
     return (
         <main className="p-4 h-full flex flex-col gap-4">
             <div>
-                <div className="flex items-center bg-[#3B3B3B] rounded-md gap-2 border-customDarkGray border-2 border-solid">
+                <div className="flex items-center bg-customGray2 rounded-md gap-2 border-customDarkGray border-2 border-solid">
                     <input
                         value={inputQuery}
                         autoComplete="off"
@@ -375,7 +375,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                         type="text"
                         name="search"
                         placeholder="Search"
-                        className="w-full p-2 bg-[#3B3B3B]  text-white placeholder-gray-400 rounded focus:outline-none"
+                        className="w-full p-2 bg-customGray2  text-white placeholder-gray-400 rounded focus:outline-none"
                     />
                     {inputQuery && (
                         <button
@@ -393,7 +393,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                     {filterOptionsWithColor.map((item) => (
                         <button
                             key={item.name}
-                            className="flex items-center gap-1 bg-[#3B3B3B] rounded px-2 py-1 focus:outline-none"
+                            className="flex items-center gap-1 bg-customGray2 rounded px-2 py-1 focus:outline-none"
                             onClick={() => setselectedFilter(item.name)}
                         >
                             {item.color && (
@@ -411,7 +411,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                                         "invisible block whitespace-nowrap",
                                         selectedFilter === item.name
                                             ? "font-bold"
-                                            : "font-normal text-[#DEDEDE]"
+                                            : "font-normal text-lightGray2"
                                     )}
                                 >
                                     {item.name}
@@ -423,7 +423,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                                         "absolute left-0 top-1/2 -translate-y-1/2 ",
                                         selectedFilter === item.name
                                             ? "font-bold"
-                                            : "font-normal text-[#DEDEDE]"
+                                            : "font-normal text-lightGray2"
                                     )}
                                 >
                                     {item.name}

@@ -144,7 +144,7 @@ export default function CategoriesPanel({
                     {parentHistory.length > 0 && (
                         <button
                             disabled={!(parentHistory.length > 0)}
-                            className="h-10 text-white bg-[#3B3B3B] p-[0.125rem] rounded-sm  disabled:text-customLightGray"
+                            className="h-10 text-white bg-customGray2 p-[0.125rem] rounded-sm  disabled:text-customLightGray"
                             onClick={handleBack}
                         >
                             <LeftArrow />
