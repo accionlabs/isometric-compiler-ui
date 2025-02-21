@@ -15,5 +15,6 @@ const getGoogleKeys = () => {
 export const config = {
     googleKeys: getGoogleKeys(),
     gatewayApiUrl: import.meta.env.VITE_GATEWAY_API_URL,
-    isometricApiUrl: import.meta.env.VITE_ISOMETRIC_AIP_URL
+    isometricApiUrl: import.meta.env.VITE_ISOMETRIC_AIP_URL,
+    microsoftLoginHint: import.meta.env.VITE_MICROSOFT_LOGIN_HINT
 };

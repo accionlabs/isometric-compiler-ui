@@ -1,4 +1,5 @@
 import { useKeycloak } from "@react-keycloak/web";
+import { config } from "../../config";
 // import keycloak from "../../services/keycloak";
 
 export default function Login() {
@@ -28,7 +29,7 @@ export default function Login() {
                     onClick={() => {
                         keycloak.login({
                             prompt: "login",
-                            idpHint: "google"
+                            idpHint: config.microsoftLoginHint
                         });
                     }}
                 >
