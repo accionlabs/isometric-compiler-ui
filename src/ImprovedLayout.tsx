@@ -38,16 +38,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger
 } from "@/components/ui/DropDownMenu";
-import {
-    CheckCircle,
-    ChevronDown,
-    ChevronUp,
-    FilePlus,
-    Loader2,
-    Redo,
-    Undo,
-    X
-} from "lucide-react";
+import { CheckCircle, ChevronDown, Loader2, Redo, Undo, X } from "lucide-react";
 import { DoubleArrow, MenuIcon } from "./components/ui/IconGroup";
 import { useKeycloak } from "@react-keycloak/web";
 import CustomTooltip from "./components/flow/CustomToolTip";
@@ -58,9 +49,13 @@ import { useCancelLatestCalls } from "./hooks/useCancelLatestCalls";
 import { useQueryClient } from "@tanstack/react-query";
 import { v4 as uuidv4 } from "uuid";
 import { CUSTOM_SCROLLBAR } from "./Constants";
-import HeaderMain from "./panels/HeaderMain";
 import SVGPreview from "./components/ui/SVGPreview";
 import clsx from "clsx";
+import {
+    ContributorCard,
+    PersonaCard,
+    Section
+} from "./components/ui/CardGroup";
 const newUUID = uuidv4();
 
 type PanelType = "diagrams" | "shapes" | "composition" | "chat";
@@ -764,7 +759,10 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                         )}
                         {!leftSidebarOpen && (
                             <button
-                                onClick={() => setLeftSidebarOpen(true)}
+                                onClick={() => {
+                                    setRightSidebarOpen(true);
+                                    setLeftSidebarOpen(true);
+                                }}
                                 className="flex p-2 border-t-[0.5px] border-[#1E1E1E] bg-customGray items-center justify-center w-full"
                             >
                                 <DoubleArrow />
@@ -910,6 +908,8 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                     {/* Right sidebar */}
                     <div
                         className={`overflow-hidden flex flex-col  border-t-[1px] border-[#1E1E1E] bg-customGray transition-all duration-300 ease-in-out ${
+                            selected3DShape ? "mt-14" : ""
+                        } ${
                             rightSidebarOpen
                                 ? SIDEBAR_WIDTH + " opacity-100"
                                 : "w-0 opacity-0"
@@ -921,7 +921,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                     <SVGPreview svgContent={""} />
                                 </div>
                                 <span className="text-lg font-semibold">
-                                    React App sf jkdvksdfm v ms skdoslk sd
+                                    React App
                                 </span>
                             </div>
                             <button
@@ -1017,44 +1017,3 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
 };
 
 export default ImprovedLayout;
-const Section = ({ title, expanded, onToggle, children }: any) => (
-    <div className="bg-customGray2 flex flex-col  rounded-md p-3 mb-3">
-        <div
-            className="flex justify-between items-center cursor-pointer"
-            onClick={onToggle}
-        >
-            <span className="text-sm">{title}</span>
-            <ChevronUp
-                size={16}
-                className={`transition-transform ${
-                    expanded ? "rotate-0" : "rotate-180"
-                }`}
-            />
-        </div>
-        {expanded && <div className="mt-2">{children}</div>}
-    </div>
-);
-
-const PersonaCard = ({ title, subtitle }: any) => (
-    <div className="bg-customGray p-2 rounded-md flex items-center text-sm  gap-2">
-        {/* Prevent logo div from shrinking */}
-        <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white flex-shrink-0">
-            👤
-        </div>
-
-        {/* Wrap text content in a div to ensure proper spacing */}
-        <div className="flex flex-col">
-            <span className="text-sm line-clamp-1">{title}</span>
-            <span className="text-lightGray2 text-xs line-clamp-1">
-                {subtitle}
-            </span>
-        </div>
-    </div>
-);
-
-const ContributorCard = ({ name, image }: any) => (
-    <div className="bg-customGray p-2 rounded-md flex flex-col items-center text-sm">
-        <img src={image} alt={name} className="w-12 h-12 rounded-full mb-2" />
-        <span className="text-sm text-center">{name} </span>
-    </div>
-);

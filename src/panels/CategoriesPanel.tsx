@@ -2,6 +2,7 @@ import { LeftArrow, MenuIcon, RightArrow } from "@/components/ui/IconGroup";
 import { useRef, useState } from "react";
 import { Category } from "@/Types";
 import { CUSTOM_SCROLLBAR } from "@/Constants";
+import clsx from "clsx";
 
 export default function CategoriesPanel({
     categories,
@@ -58,45 +59,53 @@ export default function CategoriesPanel({
     };
     const renderSVG = (svgContent: string) => {
         if (!svgContent) return "";
-        // Parse the SVG content
+
         const parser = new DOMParser();
         const svgDoc = parser.parseFromString(svgContent, "image/svg+xml");
         const svgElement = svgDoc.documentElement;
 
-        // Get the viewBox
         let viewBox = svgElement.getAttribute("viewBox");
         if (!viewBox) {
-            // If viewBox is not present, create one based on width and height
             const width = svgElement.getAttribute("width") || "100";
             const height = svgElement.getAttribute("height") || "100";
             viewBox = `0 0 ${width} ${height}`;
         }
-        // Create a new SVG element with our desired properties
-        const newSvgContent = `
+
+        // Ensure every path, rect, circle, etc., inside SVG explicitly has a white fill
+        svgElement.setAttribute("fill", "white");
+
+        const paths = svgElement.querySelectorAll(
+            "path, rect, circle, line, polyline, polygon"
+        );
+        paths.forEach((el) => {
+            if (
+                !el.hasAttribute("fill") ||
+                el.getAttribute("fill") === "currentColor"
+            ) {
+                el.setAttribute("fill", "white");
+            }
+        });
+
+        return `
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
                 ${svgElement.innerHTML}
             </svg>
         `;
-
-        return newSvgContent;
     };
+
     const categoryCard = (category: Category) => {
         const isSelected = selectedCategory._id === category._id;
 
         return (
             <div
-                className={`flex flex-col items-center justify-start gap-2 
-                            p-2 rounded-lg h-32
-                            ${
-                                isSelected
-                                    ? "bg-customBlue"
-                                    : "bg-customLightGray"
-                            }`}
+                className={clsx(`flex flex-col items-center justify-start gap-2 
+                p-2 rounded-lg h-[6.375rem]
+                ${isSelected ? "bg-customBlue" : "bg-customLightGray"}`)}
             >
                 {/* Icon */}
                 {category?.metadata?.icon?.length > 0 ? (
                     <div
-                        className="w-6 h-6 text-white"
+                        className="w-6 h-6 fill-white"
                         dangerouslySetInnerHTML={{
                             __html: renderSVG(category.metadata.icon)
                         }}
@@ -106,7 +115,7 @@ export default function CategoriesPanel({
                 )}
 
                 <div className="flex flex-col min-w-20">
-                    <span className="text-sm font-medium text-center whitespace-normal line-clamp-3">
+                    <span className="text-sm font-medium text-center whitespace-normal line-clamp-2">
                         {category.name}
                     </span>
                     <span className="text-xs mt-1">
@@ -117,6 +126,43 @@ export default function CategoriesPanel({
         );
     };
 
+    const selectedCategoryCard = (category: Category) => {
+        const isSelected = selectedCategory._id === category._id;
+
+        return (
+            <div
+                className={`flex flex-col items-center justify-start gap-2 
+                            p-2 rounded-lg h-[7.375rem]
+                            ${
+                                isSelected
+                                    ? "bg-customBlue"
+                                    : "bg-customLightGray"
+                            }`}
+            >
+                {/* Icon */}
+                {category?.metadata?.icon?.length > 0 ? (
+                    <div
+                        className="w-8 h-8 fill-white"
+                        dangerouslySetInnerHTML={{
+                            __html: renderSVG(category.metadata.icon)
+                        }}
+                        style={{ fill: "white" }}
+                    />
+                ) : (
+                    <MenuIcon className="w-8 h-8" />
+                )}
+
+                <div className="flex flex-col min-w-20">
+                    <span className="text-base font-medium text-center whitespace-normal line-clamp-2">
+                        {category.name}
+                    </span>
+                    <span className="text-sm mt-1">
+                        {category.shapeCount} Shapes
+                    </span>
+                </div>
+            </div>
+        );
+    };
     return (
         <section>
             <h1 className="text-md font-medium bg-customGray text-white">
@@ -151,7 +197,7 @@ export default function CategoriesPanel({
                         </button>
                     )}
                     <button onClick={() => handleSelect(selected)}>
-                        {categoryCard(selected)}
+                        {selectedCategoryCard(selected)}
                     </button>
                     <button
                         disabled
