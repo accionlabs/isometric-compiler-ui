@@ -12,6 +12,9 @@ import ProgressPopup from "@/components/ui/ProgressPopup";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Markdown from "react-markdown";
 import { CUSTOM_SCROLLBAR } from "@/Constants";
+import { getDiagramImageUrl } from "@/lib/exportUtils";
+import { config } from "@/config";
+
 
 interface ChatPanelProps {
     handleLoadDiagramFromJSON: (
@@ -20,6 +23,31 @@ interface ChatPanelProps {
     diagramComponents: DiagramComponent[];
     addHistory: (diagramComponent: DiagramComponent[]) => void;
 }
+
+const sendDiagramImage = async (imageUrl: string, fileName: string, email: string) => {
+    try {
+        const response = await fetch(imageUrl);
+        const blob = await response.blob();
+        const formData = new FormData();
+
+        formData.append("image", new File([blob], fileName, { type: blob.type }));
+        formData.append("email", email);
+
+        const uploadResponse = await fetch(`${config.gatewayApiUrl}/isometric/sendEmail`, {
+            method: "POST",
+            body: formData
+        });
+
+        if (!uploadResponse.ok) {
+            throw new Error(`Failed to send email: ${uploadResponse.statusText}`);
+        }
+
+        console.log("Email sent successfully!");
+    } catch (error) {
+        console.error("Error sending image:", error);
+    }
+};
+
 
 const ChatPanel: React.FC<ChatPanelProps> = ({
     handleLoadDiagramFromJSON,
@@ -55,8 +83,12 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     }, enabled: !!existinguuid})
     const { mutate: sendChatMutaion, isPending: isLoading } = useMutation({
         mutationFn: sendChatRequestV2,
-        onSettled: (res, error) => {
+        onSettled: async (res, error) => {
             if (res) {
+                if(res.metadata.isEmailQuery && !!res.metadata.emailId){
+                        const imageUrl = await getDiagramImageUrl("png"); 
+                        await sendDiagramImage(imageUrl, "diagram.png", res.metadata.emailId);
+                }
                 if (res.metadata.needFeedback) {
                     setMessages((prev) => [
                         ...prev,
