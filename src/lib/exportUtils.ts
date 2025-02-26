@@ -102,3 +102,59 @@ export const exportAsSVG = (options?: ExportOptions) =>
 
 export const exportAsPNG = (options?: ExportOptions) =>
     exportToImage("png", options);
+
+
+export const getDiagramImageUrl = async (
+    type: "svg" | "png" = "png",
+    options: ExportOptions = {}
+): Promise<string> => {
+    const opts = { ...defaultOptions, ...options };
+
+    const flowElement = document.querySelector(".react-flow") as HTMLElement;
+    if (!flowElement) throw new Error("React Flow element not found");
+
+    try {
+        const currentTransform = flowElement.style.transform;
+        flowElement.style.transform = "none";
+
+        const filter = (node: HTMLElement) => {
+            const exclude = [
+                "react-flow__controls",
+                "react-flow__minimap",
+                "react-flow__panel",
+                "react-flow__background",
+                "react-flow__handle"
+            ];
+            return !exclude.some((className) => node.classList?.contains(className));
+        };
+
+        const exportOptions = {
+            backgroundColor: opts.backgroundColor,
+            filter,
+            quality: opts.quality,
+            scale: opts.scale,
+            pixelRatio: opts.scale
+        };
+
+        let dataUrl =
+            type === "svg"
+                ? await toSvg(flowElement, exportOptions)
+                : await toPng(flowElement, exportOptions);
+
+        if (type === "svg" && opts.cleanupSvg) {
+            try {
+                const svgString = decodeURIComponent(dataUrl.split(",")[1]);
+                const cleanedSvgString = await cleanSVG(svgString);
+                dataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(cleanedSvgString)}`;
+            } catch (cleanError) {
+                console.warn("SVG cleanup failed:", cleanError);
+            }
+        }
+
+        flowElement.style.transform = currentTransform;
+        return dataUrl;
+    } catch (error) {
+        console.error(`Failed to export diagram as ${type}:`, error);
+        throw error;
+    }
+};

@@ -361,6 +361,8 @@ export interface MessageResponse {
         content: any[];
         action: MessageAction[];
         needFeedback: boolean;
+        isEmailQuery?: boolean;
+        emailId?: string;
     };
     role: "user" | "system";
 }
