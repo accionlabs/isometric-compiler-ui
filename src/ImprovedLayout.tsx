@@ -56,11 +56,11 @@ import { calculateSVGBoundingBox } from "./lib/svgUtils";
 import { useCancelLatestCalls } from "./hooks/useCancelLatestCalls";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { v4 as uuidv4 } from "uuid";
-import { CUSTOM_SCROLLBAR } from "./Constants";
 
 import SaveNewDiagram from "./panels/SaveNewDiagram";
 import RightSidebarPanel from "./panels/RightSidebarPanel";
 import { getReport } from "./services/chat";
+import { toast } from "sonner";
 const newUUID = uuidv4();
 
 type PanelType = "diagrams" | "shapes" | "composition" | "chat";
@@ -215,6 +215,8 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     handleUndo,
     handleRedo
 }) => {
+    const SIDEBAR_WIDTH = "w-1/4";
+
     const currentUrl = new URL(window.location.href);
     const existinguuid = currentUrl.searchParams.get("uuid");
     if (!existinguuid) currentUrl.searchParams.append("uuid", newUUID);
@@ -248,14 +250,25 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
 
     const [saveLoadMessage, setSaveLoadMessage] = useState<string | null>(null);
     const [isPending, setIsPending] = useState(false);
+    const [isUnifiedModelFetched, setIsUnifiedModelFetched] = useState(false);
+    const [leftSidebarOpen, setLeftSidebarOpen] = useState(true);
+    const [rightSidebarOpen, setRightSidebarOpen] = useState(false);
+
     const timeoutIdRef = useRef<NodeJS.Timeout | null>(null);
+    const isFirstRender = useRef(true);
 
     const updateDiagramWithRateLimit = useCancelLatestCalls(updateDiagram);
-    const { data: reportData, isLoading: isReportLoading } = useQuery({
+    const {
+        data: reportData,
+        isLoading: isReportLoading,
+        refetch,
+        isRefetching
+    } = useQuery({
         queryKey: ["report", existinguuid],
         queryFn: () => getReport(existinguuid || ""),
-        enabled: !!existinguuid
+        enabled: false
     });
+
     const { mutate, isPending: isCreateDiagramPending } = useMutation({
         mutationFn: saveDiagram,
         onSettled: (res, error) => {
@@ -490,6 +503,23 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
             window.removeEventListener("message", handleMessage);
         };
     }, []);
+    useEffect(() => {
+        if (isFirstRender.current) {
+            isFirstRender.current = false;
+            return;
+        }
+        if (isRefetching) return;
+        if (reportData?.qum) {
+            setRightSidebarOpen(true);
+        } else {
+            toast.error(
+                "Unified model unavailable right now, Please try again!",
+                {
+                    duration: 3000
+                }
+            );
+        }
+    }, [reportData, isRefetching]);
 
     // Trigger autoSave whenever the diagram composed svg changes
     useEffect(() => {
@@ -504,11 +534,6 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
 
         handleAutoSave();
     }, [autoSaveMode, currentDiagramInfo, composedSVG]);
-
-    const [leftSidebarOpen, setLeftSidebarOpen] = useState(true);
-    const [rightSidebarOpen, setRightSidebarOpen] = useState(false);
-
-    const SIDEBAR_WIDTH = "w-1/4";
 
     const Header = () => {
         return (
@@ -683,16 +708,17 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                     <CustomTooltip
                         action={
                             <button
-                                disabled={!Array.isArray(reportData)}
                                 onClick={() => {
-                                    setRightSidebarOpen(!rightSidebarOpen);
+                                    rightSidebarOpen
+                                        ? setRightSidebarOpen(false)
+                                        : refetch();
                                 }}
                                 className="hover:bg-customLightGray p-2 rounded disabled:cursor-not-allowed disabled:opacity-50"
                             >
                                 {rightSidebarOpen ? <X /> : <Text />}
                             </button>
                         }
-                        header="show details"
+                        header="Unified model"
                         side="top"
                     />
                 </div>
@@ -974,7 +1000,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                             setRightSidebarOpen={setRightSidebarOpen}
                             svgContent={composedSVG}
                             canvasSize={canvasSize}
-                            reportData={reportData}
+                            reportData={reportData?.qum ?? []}
                         />
                     </div>
                 </div>

@@ -1,26 +1,18 @@
 import { Outcome, PersonaData, Scenario } from "@/Types";
 import {
-    CitationCard,
     ContentButton,
     ContentDiv,
-    ContributorCard,
     PersonaCard,
-    ScenarioCard,
     Section
 } from "@/components/ui/CardGroup";
-import { PersonaIcon } from "@/components/ui/IconGroup";
-import SVGPreview from "@/components/ui/SVGPreview";
-import { calculateSVGBoundingBox } from "@/lib/svgUtils";
-import { getReport } from "@/services/chat";
-import { useQuery } from "@tanstack/react-query";
+
 import clsx from "clsx";
-import { FileImage, FileText, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 interface RightSidebarPanelProps {
     setRightSidebarOpen: (value: boolean) => void;
     svgContent: string;
-    reportData: PersonaData[] | undefined;
+    reportData: PersonaData[];
     canvasSize: { width: number; height: number };
 }
 export default function RightSidebarPanel({
@@ -29,9 +21,6 @@ export default function RightSidebarPanel({
     svgContent,
     canvasSize
 }: RightSidebarPanelProps) {
-    const currentUrl = new URL(window.location.href);
-    const existinguuid = currentUrl.searchParams.get("uuid") || "";
-
     const [tabs, setTabs] = useState([
         { name: "Business", enabled: true },
         { name: "Design", enabled: false },
@@ -132,24 +121,24 @@ export default function RightSidebarPanel({
             {activeTab === "Business" ? (
                 <div className="flex-col flex overflow-auto flex-grow px-4 py-3">
                     {/* component card */}
-                    {Array.isArray(reportData) && (
-                        <Section title="Personas">
-                            <div className="grid grid-cols-1 xl:grid-cols-2 gap-2 ">
-                                {reportData?.map((item: any, index: number) => (
-                                    <PersonaCard
-                                        key={item.persona + index}
-                                        title={item.persona}
-                                        subtitle=""
-                                        onClick={() => handlePersonaClick(item)}
-                                        isActive={
-                                            selectedPersona?.persona ===
-                                            item.persona
-                                        }
-                                    />
-                                ))}
-                            </div>
-                        </Section>
-                    )}
+
+                    <Section title="Personas">
+                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-2 ">
+                            {reportData?.map((item: any, index: number) => (
+                                <PersonaCard
+                                    key={item.persona + index}
+                                    title={item.persona}
+                                    subtitle=""
+                                    onClick={() => handlePersonaClick(item)}
+                                    isActive={
+                                        selectedPersona?.persona ===
+                                        item.persona
+                                    }
+                                />
+                            ))}
+                        </div>
+                    </Section>
+
                     {selectedPersona && (
                         <Section title="Outcomes">
                             <div className="grid grid-cols-1  gap-2 ">

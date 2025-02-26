@@ -6,6 +6,7 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { ReactKeycloakProvider } from "@react-keycloak/web";
 import keycloak from "./services/keycloak";
 import Root from "./root";
+import { Toaster } from "./components/ui/sonner";
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -31,6 +32,7 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
             }}
         >
             <Root />
+            <Toaster />
         </ReactKeycloakProvider>
         <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>

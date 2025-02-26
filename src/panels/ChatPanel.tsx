@@ -108,6 +108,8 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         mutationFn: sendChatRequestV2,
         onSettled: async (res, error) => {
             if (res) {
+                queryClient.invalidateQueries({ queryKey: ["report"] });
+
                 if (res.metadata.isEmailQuery && !!res.metadata.emailId) {
                     const imageUrl = await getDiagramImageUrl("png");
                     await sendDiagramImage(
