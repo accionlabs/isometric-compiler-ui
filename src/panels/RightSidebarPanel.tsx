@@ -1,5 +1,6 @@
-import { Outcome, PersonaData, Scenario } from "@/Types";
+import { Outcome, PersonaData, Scenario, Step } from "@/Types";
 import {
+    CitationCard,
     ContentButton,
     ContentDiv,
     PersonaCard,
@@ -7,6 +8,7 @@ import {
 } from "@/components/ui/CardGroup";
 
 import clsx from "clsx";
+import { FileText, Image } from "lucide-react";
 import { useState } from "react";
 
 interface RightSidebarPanelProps {
@@ -37,6 +39,7 @@ export default function RightSidebarPanel({
     const [selectedScenario, setSelectedScenario] = useState<Scenario | null>(
         null
     );
+    const [selectedStep, setSelectedStep] = useState<Step | null>(null);
     //     const composedSVG = useMemo(() => {
     //         const boundingBox = calculateSVGBoundingBox(svgContent, canvasSize) || {
     //             x: 0,
@@ -79,7 +82,9 @@ export default function RightSidebarPanel({
             return temp;
         });
     };
-
+    const handleStepClick = (step: Step): void => {
+        setSelectedStep(step);
+    };
     return (
         <>
             {/* <div className="flex items-center justify-between px-4 pt-6 gap-5 pb-3">
@@ -206,19 +211,52 @@ export default function RightSidebarPanel({
             ) : activeTab === "Design" ? (
                 <div className="flex-col flex overflow-auto flex-grow px-4 py-3">
                     {selectedScenario && (
+                        <Section title="Steps">
+                            <div className="grid grid-cols-1 gap-2 text-left">
+                                {selectedScenario.steps.map((step, index) => (
+                                    <ContentButton
+                                        key={step.step + index}
+                                        content={`${index + 1}. ${step.step}`}
+                                        onClick={() => handleStepClick(step)}
+                                        isActive={
+                                            selectedStep?.step === step.step
+                                        }
+                                    />
+                                ))}
+                            </div>
+                        </Section>
+                    )}
+                    {selectedStep && (
                         <>
-                            <Section title="Steps">
+                            <Section title="Actions">
                                 <div className="grid grid-cols-1 gap-2 text-left">
-                                    {selectedScenario.steps.map(
-                                        (step, index) => (
+                                    {selectedStep.actions.map(
+                                        (action, index) => (
                                             <ContentDiv
-                                                key={step.step + index}
-                                                content={`${index + 1}. ${
-                                                    step.step
-                                                }`}
+                                                key={action.action + index}
+                                                content={action.action}
                                             />
                                         )
                                     )}
+                                </div>
+                            </Section>
+                            <Section title="Citations">
+                                <div className="grid grid-cols-1 gap-2 text-left">
+                                    {selectedStep.citations.map((citation) => (
+                                        <CitationCard
+                                            key={citation.documentName}
+                                            title={citation.documentName}
+                                            icon={
+                                                citation.documentName
+                                                    .toLowerCase()
+                                                    .endsWith(".pdf") ? (
+                                                    <FileText />
+                                                ) : (
+                                                    <Image />
+                                                )
+                                            }
+                                        />
+                                    ))}
                                 </div>
                             </Section>
                         </>

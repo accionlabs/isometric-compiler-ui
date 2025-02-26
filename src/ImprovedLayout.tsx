@@ -268,7 +268,6 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
         queryFn: () => getReport(existinguuid || ""),
         enabled: false
     });
-
     const { mutate, isPending: isCreateDiagramPending } = useMutation({
         mutationFn: saveDiagram,
         onSettled: (res, error) => {
