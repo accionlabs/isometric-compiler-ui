@@ -5,7 +5,6 @@ import { DiagramComponent } from "@/Types";
 import { Message, useChat } from "@/hooks/useChatProvider";
 import {
     getChatByuuid,
-    getReport,
     getSignedUrl,
     sendChatRequestV2
 } from "@/services/chat";
@@ -105,7 +104,6 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             },
             enabled: !!existinguuid
         });
-
     const { mutate: sendChatMutaion, isPending: isLoading } = useMutation({
         mutationFn: sendChatRequestV2,
         onSettled: async (res, error) => {
@@ -156,6 +154,19 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             }
         }
     });
+
+    useEffect(() => {
+        const existingMessages = existingChatData?.chats.map((chat) => {
+            const existingMessage: Message = {
+                text: chat.message,
+                isUser: chat.role === "user",
+                isSystemQuery: chat.role === "system",
+                metaData: chat.metadata
+            };
+            return existingMessage;
+        });
+        setMessages(existingMessages || []);
+    }, [existingChatData]);
 
     // Different messages based on file type
     const LoadMessagesWithImage = [
@@ -265,14 +276,18 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         setMessages((prev) => [
             ...prev,
             {
-                query: input || "Process this file",
-                uuid: existinguuid,
-                currentState: diagramComponents,
-                file: selectedFile.file ?? undefined
+                text: input,
+                isUser: true,
+                isSystemQuery: false,
+                metaData: {
+                    fileUrl: selectedFile.src,
+                    fileType: selectedFile.fileType ?? undefined,
+                    fileName: selectedFile.file?.name
+                }
             }
         ]);
         sendChatMutaion({
-            query: input,
+            query: input || "Process this file",
             uuid: existinguuid,
             currentState: diagramComponents,
             file: selectedFile.file ?? undefined
