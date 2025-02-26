@@ -9,20 +9,20 @@ import { DiagramComponent, MessageResponse } from "@/Types";
 const newUUID = uuidv4();
 
 interface Chat {
-    id:string
-    message:string
-    messageType:'text' | 'json' | 'file'
-    createdAt: string
-    role: 'system' | 'user'
+    id: string;
+    message: string;
+    messageType: "text" | "json" | "file";
+    createdAt: string;
+    role: "system" | "user";
     metadata: {
-        fileUrl?: string
-        fileType?: 'image' | 'pdf'
-        fileName?: string
-        content?: any
-    }
+        fileUrl?: string;
+        fileType?: "image" | "pdf";
+        fileName?: string;
+        content?: any;
+    };
 }
 interface ChatResponse {
-chats: Chat[]
+    chats: Chat[];
 }
 
 export async function sendChatRequest(
@@ -53,97 +53,122 @@ export async function sendChatRequest(
 
 export async function sendImageChatRequest(image: string) {
     const formData = new FormData();
-        if (image) {
-            const imageFile = await fetch(image)
-                .then((res) => res.blob())
-                .then(
-                    (blob) =>
-                        new File([blob], 'selectedImage.jpg', { type: blob.type })
-                );
-            formData.append('image', imageFile);
+    if (image) {
+        const imageFile = await fetch(image)
+            .then((res) => res.blob())
+            .then(
+                (blob) =>
+                    new File([blob], "selectedImage.jpg", { type: blob.type })
+            );
+        formData.append("image", imageFile);
+    }
+
+    const response = await fetch(
+        `${config.gatewayApiUrl}/document/isometric/v2/image`,
+        {
+            method: "POST",
+            body: formData
         }
+    );
 
-        const response = await fetch(`${config.gatewayApiUrl}/document/isometric/v2/image`, {
-            method: 'POST',
-            body: formData,
-        });
+    if (!response.ok) {
+        throw new Error("Failed to send the message.");
+    }
 
-        if (!response.ok) {
-            throw new Error('Failed to send the message.');
-        }
-
-        const result = await response.json();
-        return result
+    const result = await response.json();
+    return result;
 }
 
-export async function sendChatRequestV2({query,uuid, currentState, file}:{
-    query: string,
-    uuid:string,
-    currentState?: DiagramComponent[],
-    file?: File,
+export async function sendChatRequestV2({
+    query,
+    uuid,
+    currentState,
+    file
+}: {
+    query: string;
+    uuid: string;
+    currentState?: DiagramComponent[];
+    file?: File;
 }): Promise<MessageResponse> {
     const formData = new FormData();
-        if (file) {
-            formData.append('file', file);
+    if (file) {
+        formData.append("file", file);
+    }
+    if (currentState) {
+        formData.append("currentState", JSON.stringify(currentState));
+    }
+    formData.append("query", query);
+    formData.append("uuid", uuid);
 
-        }
-        if (currentState) {
-            formData.append('currentState', JSON.stringify(currentState));
-        }
-        formData.append('query', query);
-        formData.append('uuid', uuid);
+    const response = await fetch(`${config.gatewayApiUrl}/isometric/chat`, {
+        method: "POST",
+        body: formData
+    });
 
-        const response = await fetch(`${config.gatewayApiUrl}/isometric/chat`, {
-            method: 'POST',
-            body: formData,
-        });
+    if (!response.ok) {
+        throw new Error("Failed to send the message.");
+    }
 
-        if (!response.ok) {
-            throw new Error('Failed to send the message.');
+    const shapeNames = [];
+    const res: MessageResponse = await response.json(); // Parse the JSON response
+    for (let i = 0; i < res.metadata.action?.length; i++) {
+        if (
+            res.metadata.action[i].shapeName &&
+            res.metadata.action[i].action === "add"
+        ) {
+            shapeNames.push(res.metadata.action[i].shapeName);
         }
-
-        const shapeNames = [];
-        const res: MessageResponse = await response.json(); // Parse the JSON response
-        for (let i = 0; i < res.metadata.action?.length; i++) {
-            if (res.metadata.action[i].shapeName && res.metadata.action[i].action === "add") {
-                shapeNames.push(res.metadata.action[i].shapeName);
-            }
+    }
+    if (shapeNames.length > 0) {
+        const shapes = await getShapesByName(shapeNames);
+        if (shapes) {
+            shapesLibraryManager.deserializeShapesLib(shapes.shapes);
+            componentLibraryManager.deserializeComponentLib(shapes.components);
         }
-        if (shapeNames.length>0) {
-            const shapes = await getShapesByName(shapeNames);
-            if (shapes) {
-                shapesLibraryManager.deserializeShapesLib(shapes.shapes);
-                componentLibraryManager.deserializeComponentLib(
-                    shapes.components
-                );
-            }
-        }
-        return res;
-}   
+    }
+    return res;
+}
 
 export async function getChatByuuid(uuid: string): Promise<ChatResponse> {
     const url = `${config.gatewayApiUrl}/isometric/chat/${uuid}`;
 
-        const response = await fetch(url);
-        
-        // Check if the response is ok (status code in the range 200-299)
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+    const response = await fetch(url);
 
-        const result =  await response.json(); 
-        return result.data
+    // Check if the response is ok (status code in the range 200-299)
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    return result.data;
 }
 
-export async function getSignedUrl(path: string){
-    const url = `${config.gatewayApiUrl}/isometric/get-signed-url/${encodeURIComponent(`isometric/image/${path}`)}`;
+export async function getSignedUrl(path: string) {
+    const url = `${
+        config.gatewayApiUrl
+    }/isometric/get-signed-url/${encodeURIComponent(
+        `isometric/image/${path}`
+    )}`;
     const response = await fetch(url);
-        
-        // Check if the response is ok (status code in the range 200-299)
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
 
-        const result =  await response.text(); 
-        return result
+    // Check if the response is ok (status code in the range 200-299)
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.text();
+    return result;
+}
+
+export async function getReport(uuid: string) {
+    const url = `${config.gatewayApiUrl}/isometric/semantic-model/${uuid}`;
+    const response = await fetch(url);
+
+    // Check if the response is ok (status code in the range 200-299)
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    return result;
 }

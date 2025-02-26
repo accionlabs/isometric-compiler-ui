@@ -38,24 +38,29 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger
 } from "@/components/ui/DropDownMenu";
-import { CheckCircle, ChevronDown, Loader2, Redo, Undo, X } from "lucide-react";
+import {
+    CheckCircle,
+    ChevronDown,
+    Loader2,
+    Redo,
+    Text,
+    Undo,
+    X
+} from "lucide-react";
 import { DoubleArrow, MenuIcon } from "./components/ui/IconGroup";
 import { useKeycloak } from "@react-keycloak/web";
 import CustomTooltip from "./components/flow/CustomToolTip";
 import DiagramPanel from "./panels/DiagramPanel";
-import { updateDiagram } from "./services/diagrams";
+import { saveDiagram, updateDiagram } from "./services/diagrams";
 import { calculateSVGBoundingBox } from "./lib/svgUtils";
 import { useCancelLatestCalls } from "./hooks/useCancelLatestCalls";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { v4 as uuidv4 } from "uuid";
 import { CUSTOM_SCROLLBAR } from "./Constants";
-import SVGPreview from "./components/ui/SVGPreview";
-import clsx from "clsx";
-import {
-    ContributorCard,
-    PersonaCard,
-    Section
-} from "./components/ui/CardGroup";
+
+import SaveNewDiagram from "./panels/SaveNewDiagram";
+import RightSidebarPanel from "./panels/RightSidebarPanel";
+import { getReport } from "./services/chat";
 const newUUID = uuidv4();
 
 type PanelType = "diagrams" | "shapes" | "composition" | "chat";
@@ -232,6 +237,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
     const [isLibraryDialogOpen, setIsLibraryDialogOpen] = useState(false);
+    const [isCreateDiagramOpen, setIsCreateDiagramOpen] = useState(false);
     const [loadingProgress, setLoadingProgress] = useState<{
         currentFile: string;
         loadedFiles: number;
@@ -245,7 +251,20 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     const timeoutIdRef = useRef<NodeJS.Timeout | null>(null);
 
     const updateDiagramWithRateLimit = useCancelLatestCalls(updateDiagram);
-
+    const { data: reportData, isLoading: isReportLoading } = useQuery({
+        queryKey: ["report", existinguuid],
+        queryFn: () => getReport(existinguuid || ""),
+        enabled: !!existinguuid
+    });
+    const { mutate, isPending: isCreateDiagramPending } = useMutation({
+        mutationFn: saveDiagram,
+        onSettled: (res, error) => {
+            if (res?._id) {
+                queryClient.invalidateQueries({ queryKey: ["saved_diagrams"] });
+                setIsCreateDiagramOpen(false);
+            }
+        }
+    });
     function setPanel(id: PanelType) {
         setActivePanel(id);
     }
@@ -273,7 +292,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
             id: currentDiagramInfo._id,
             diagramComponents: diagramComponents,
             svgContent,
-            name: currentDiagramInfo.name,
+            name: currentDiagramInfo.name || "",
             description: currentDiagramInfo.metadata?.description || ""
         });
         setShowUpdateSuccess(true);
@@ -401,6 +420,24 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
         }
     };
 
+    const handleDiagramSave = (name: string, description: string) => {
+        const boundingBox = calculateSVGBoundingBox(
+            composedSVG,
+            canvasSize
+        ) || {
+            x: 0,
+            y: 0,
+            width: "100%",
+            height: "100%"
+        };
+
+        const svgContent: string = `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="${boundingBox.x} ${boundingBox.y} ${boundingBox.width} ${boundingBox.height}" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+        ${composedSVG}
+    </svg>
+`;
+        mutate({ name, description, diagramComponents, svgContent });
+    };
     const handleOpenSaveDialog = () => {
         setIsSaveDiagramDialogOpen(true);
     };
@@ -469,9 +506,8 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     }, [autoSaveMode, currentDiagramInfo, composedSVG]);
 
     const [leftSidebarOpen, setLeftSidebarOpen] = useState(true);
-    const [rightSidebarOpen, setRightSidebarOpen] = useState(true);
-    const [accordian, setAccordian] = useState(true);
-    const [activeTab, setActiveTab] = useState("Business");
+    const [rightSidebarOpen, setRightSidebarOpen] = useState(false);
+
     const SIDEBAR_WIDTH = "w-1/4";
 
     const Header = () => {
@@ -565,7 +601,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                         </DropdownMenuItem> */}
                     </DropdownMenuContent>
                 </DropdownMenu>
-                <div className={`flex overflow-auto gap-3 ${CUSTOM_SCROLLBAR}`}>
+                <div className={`flex overflow-auto gap-3 scrollbar-none`}>
                     {panels.map((panel) => (
                         <button
                             key={panel.id}
@@ -602,7 +638,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     };
     const Header2 = () => {
         return (
-            <div className="flex flex-grow justify-between items-center bg-customGray px-4 py-3 z-10">
+            <div className="flex  flex-grow justify-between items-center bg-customGray px-4 py-3 z-10">
                 <h2 className="text-base  font-semibold ">
                     {autoSaveMode && currentDiagramInfo?._id
                         ? currentDiagramInfo.name
@@ -642,6 +678,21 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                             </button>
                         }
                         header="Redo"
+                        side="top"
+                    />
+                    <CustomTooltip
+                        action={
+                            <button
+                                disabled={!Array.isArray(reportData)}
+                                onClick={() => {
+                                    setRightSidebarOpen(!rightSidebarOpen);
+                                }}
+                                className="hover:bg-customLightGray p-2 rounded disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                                {rightSidebarOpen ? <X /> : <Text />}
+                            </button>
+                        }
+                        header="show details"
                         side="top"
                     />
                 </div>
@@ -728,7 +779,14 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                 onClose={() => setIsSaveComponentDialogOpen(false)}
                 onSave={onSaveAsComponent}
             />
-
+            <SaveNewDiagram
+                mode={"save"}
+                isOpen={isCreateDiagramOpen}
+                isPending={isCreateDiagramPending}
+                onClose={() => setIsCreateDiagramOpen(false)}
+                onSubmit={handleDiagramSave}
+                diagramInfo={{ diagramComponents: diagramComponents }}
+            />
             {/* Save/Load Diagram Dialog */}
             <Dialog
                 open={isSaveLoadDialogOpen}
@@ -754,13 +812,12 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                 <div className="w-full  bg-customGray  flex ">
                     <div className="flex flex-col  bg-customGray  border-[#1E1E1E] border-r-[1px] w-1/4">
                         <Header />
-                        {!leftSidebarOpen && selected3DShape && (
-                            <div className="m-4 " />
-                        )}
+                        {!leftSidebarOpen &&
+                            selected3DShape &&
+                            !rightSidebarOpen && <div className="m-4 " />}
                         {!leftSidebarOpen && (
                             <button
                                 onClick={() => {
-                                    setRightSidebarOpen(true);
                                     setLeftSidebarOpen(true);
                                 }}
                                 className="flex p-2 border-t-[0.5px] border-[#1E1E1E] bg-customGray items-center justify-center w-full"
@@ -775,7 +832,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
 
                         <div
                             className={`left-0 right-0 absolute z-10 transition-all duration-300 ease-in-out transform border-t-[1px] border-[#1E1E1E] ${
-                                selected3DShape
+                                selected3DShape && !rightSidebarOpen
                                     ? "translate-y-0 opacity-100 pointer-events-auto"
                                     : "-translate-y-full opacity-0 pointer-events-none"
                             }`}
@@ -907,107 +964,18 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
 
                     {/* Right sidebar */}
                     <div
-                        className={`overflow-hidden flex flex-col  border-t-[1px] border-[#1E1E1E] bg-customGray transition-all duration-300 ease-in-out ${
-                            selected3DShape ? "mt-14" : ""
-                        } ${
+                        className={`overflow-hidden flex flex-col  border-t-[1px] border-[#1E1E1E] bg-customGray transition-all duration-300 ease-in-out  ${
                             rightSidebarOpen
                                 ? SIDEBAR_WIDTH + " opacity-100"
                                 : "w-0 opacity-0"
                         }`}
                     >
-                        <div className="flex items-center justify-between px-4 pt-6 gap-5 pb-3">
-                            <div className="flex items-center gap-5">
-                                <div className="h-14 w-14">
-                                    <SVGPreview svgContent={""} />
-                                </div>
-                                <span className="text-lg font-semibold">
-                                    React App
-                                </span>
-                            </div>
-                            <button
-                                onClick={() => setRightSidebarOpen(false)}
-                                className=" bg-[#4A4A4A] p-1 rounded"
-                            >
-                                <X size={16} />
-                            </button>
-                        </div>
-                        {/* toggle buttons */}
-
-                        <div className="flex gap-2 px-4 py-3">
-                            {["Business", "Design", "Metrics", "Technical"].map(
-                                (tab) => (
-                                    <button
-                                        key={tab}
-                                        onClick={() => setActiveTab(tab)}
-                                        className={clsx(
-                                            "px-3 py-1 rounded text-base font-medium transition",
-                                            activeTab === tab
-                                                ? "bg-blue-600 font-bold text-white"
-                                                : "bg-gray-700 text-lightGray2"
-                                        )}
-                                    >
-                                        {tab}
-                                    </button>
-                                )
-                            )}
-                        </div>
-                        <div className="flex-col flex overflow-auto flex-grow px-4 py-3">
-                            {/* component card */}
-                            <Section
-                                title="Personas"
-                                expanded={accordian}
-                                onToggle={() => setAccordian(!accordian)}
-                            >
-                                <div className="grid grid-cols-1 xl:grid-cols-2 gap-2 ">
-                                    <PersonaCard
-                                        title="Business User"
-                                        subtitle="Primary Stakeholder"
-                                    />{" "}
-                                    <PersonaCard
-                                        title="Business User"
-                                        subtitle="Primary Stakeholder"
-                                    />
-                                    <PersonaCard
-                                        title="Business User"
-                                        subtitle="Primary Stakeholder"
-                                    />
-                                </div>
-                            </Section>
-                            <Section
-                                title="Outcomes"
-                                expanded={accordian}
-                                onToggle={() => setAccordian(!accordian)}
-                            >
-                                <div className="bg-customGray p-2 text-xs rounded-md">
-                                    Streamline business process workflow
-                                </div>
-                            </Section>
-                            <Section
-                                title="Contributors"
-                                expanded={accordian}
-                                onToggle={() => setAccordian(!accordian)}
-                            >
-                                <div className="grid grid-cols-2 xl:grid-cols-3 gap-2 ">
-                                    <ContributorCard
-                                        name="Product Owner"
-                                        image="https://randomuser.me/api/portraits/women/44.jpg"
-                                    />
-                                    <ContributorCard
-                                        name="Product Ownerfdv"
-                                        image="https://randomuser.me/api/portraits/women/44.jpg"
-                                    />
-                                    <ContributorCard
-                                        name="Product Owner "
-                                        image="https://randomuser.me/api/portraits/women/44.jpg"
-                                    />
-                                </div>
-                            </Section>
-                        </div>
-
-                        <div className="p-4 bg-customGray2 text-xs">
-                            <span>Last Update:</span>
-                            <span className="text-lightGray2"> 2 days ago</span>
-                        </div>
+                        <RightSidebarPanel
+                            setRightSidebarOpen={setRightSidebarOpen}
+                            svgContent={composedSVG}
+                            canvasSize={canvasSize}
+                            reportData={reportData}
+                        />
                     </div>
                 </div>
             </div>

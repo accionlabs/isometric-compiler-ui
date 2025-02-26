@@ -3,10 +3,15 @@ import React, { useEffect, useRef, useState } from "react";
 import { Button } from "../components/ui/Button";
 import { DiagramComponent } from "@/Types";
 import { Message, useChat } from "@/hooks/useChatProvider";
-import { getChatByuuid, getSignedUrl, sendChatRequestV2 } from "@/services/chat";
+import {
+    getChatByuuid,
+    getReport,
+    getSignedUrl,
+    sendChatRequestV2
+} from "@/services/chat";
 import { useEnterSubmit } from "@/hooks/useEnterSubmit";
 import { Textarea } from "@/components/ui/Textarea";
-import { Eye, FileText, Paperclip,  X } from "lucide-react";
+import { Eye, FileText, Paperclip, X } from "lucide-react";
 import ViewerPopup from "@/components/ui/ViewerPopup";
 import ProgressPopup from "@/components/ui/ProgressPopup";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -42,17 +47,27 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     );
     const [isViewerOpen, setViewerOpen] = useState(false);
     const [showLoader, setShowLoader] = useState(false);
-    const [selectedFile, setSelectedFile] = React.useState<{ file: File | null; src: string; fileType: 'image' | 'pdf' | null }>({
+    const [selectedFile, setSelectedFile] = React.useState<{
+        file: File | null;
+        src: string;
+        fileType: "image" | "pdf" | null;
+    }>({
         file: null,
-        src: '',
-        fileType: null,
+        src: "",
+        fileType: null
     });
     const currentUrl = new URL(window.location.href);
-    const existinguuid = currentUrl.searchParams.get('uuid')
+    const existinguuid = currentUrl.searchParams.get("uuid");
     // get api using useQuery
-    const {data: existingChatData, isLoading: isExistingChatLoading} = useQuery({queryKey: ['getChatByuuid', existinguuid], queryFn: ()=>{
-        return getChatByuuid(existinguuid || '')
-    }, enabled: !!existinguuid})
+    const { data: existingChatData, isLoading: isExistingChatLoading } =
+        useQuery({
+            queryKey: ["getChatByuuid", existinguuid],
+            queryFn: () => {
+                return getChatByuuid(existinguuid || "");
+            },
+            enabled: !!existinguuid
+        });
+
     const { mutate: sendChatMutaion, isPending: isLoading } = useMutation({
         mutationFn: sendChatRequestV2,
         onSettled: (res, error) => {
@@ -60,7 +75,12 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                 if (res.metadata.needFeedback) {
                     setMessages((prev) => [
                         ...prev,
-                        { text: res.message, isUser: false, isSystemQuery: true, metaData: {} }
+                        {
+                            text: res.message,
+                            isUser: false,
+                            isSystemQuery: true,
+                            metaData: {}
+                        }
                     ]);
                 } else {
                     handleLoadDiagramFromJSON(res.metadata.content ?? []);
@@ -79,65 +99,73 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             if (error) {
                 setMessages((prev) => [
                     ...prev,
-                    { text: 'something went wrong. Please try again', isUser: false, isSystemQuery: true, metaData: {} }
+                    {
+                        text: "something went wrong. Please try again",
+                        isUser: false,
+                        isSystemQuery: true,
+                        metaData: {}
+                    }
                 ]);
                 // setError({ isError: true, message: error.message });
             }
         }
-    })
+    });
 
-    useEffect(()=>{
-            const existingMessages = existingChatData?.chats.map((chat)=>{
-                const existingMessage : Message = {
-                    text: chat.message,
-                    isUser: chat.role === 'user',
-                    isSystemQuery: chat.role === 'system',
-                    metaData: chat.metadata
-                }
-                return existingMessage
-            })
-            setMessages(existingMessages || [])
-        },[existingChatData])
-
+    useEffect(() => {
+        const existingMessages = existingChatData?.chats.map((chat) => {
+            const existingMessage: Message = {
+                text: chat.message,
+                isUser: chat.role === "user",
+                isSystemQuery: chat.role === "system",
+                metaData: chat.metadata
+            };
+            return existingMessage;
+        });
+        setMessages(existingMessages || []);
+    }, [existingChatData]);
 
     const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event.target.files && event.target.files[0]) {
             const file = event.target.files[0];
-    
+
             const reader = new FileReader();
-            if (file.type.startsWith('image/')) {
+            if (file.type.startsWith("image/")) {
                 // Read image as Data URL for preview
                 reader.onload = () =>
                     setSelectedFile({
                         file,
-                        fileType: 'image',
-                        src: reader.result as string,
+                        fileType: "image",
+                        src: reader.result as string
                     });
                 reader.readAsDataURL(file);
-            } else if (file.type === 'application/pdf') {
+            } else if (file.type === "application/pdf") {
                 // Set PDF file without preview
                 setSelectedFile({
                     file,
-                    src: '',
-                    fileType: 'pdf',
+                    src: "",
+                    fileType: "pdf"
                 });
             }
         }
     };
 
-    const clearFile = () => setSelectedFile({ file: null, src: '', fileType: null });
+    const clearFile = () =>
+        setSelectedFile({ file: null, src: "", fileType: null });
 
     const queryClient = useQueryClient();
     const getViewerContent = async (message: Message) => {
-        if (message.metaData.fileType === 'image') {
-            let signedUrl
-            if(message.metaData.fileUrl?.startsWith('https://')){
-                const urlArray = message.metaData.fileUrl.split('/')
-                const imageKey = urlArray[urlArray.length - 1]
-                signedUrl = await queryClient.fetchQuery({ queryKey: ['getSignedUrl', imageKey], queryFn: () => getSignedUrl(imageKey), staleTime: 300000  });
-                
-            }else{
-                signedUrl = message.metaData.fileUrl
+        if (message.metaData.fileType === "image") {
+            let signedUrl;
+            if (message.metaData.fileUrl?.startsWith("https://")) {
+                const urlArray = message.metaData.fileUrl.split("/");
+                const imageKey = urlArray[urlArray.length - 1];
+                signedUrl = await queryClient.fetchQuery({
+                    queryKey: ["getSignedUrl", imageKey],
+                    queryFn: () => getSignedUrl(imageKey),
+                    staleTime: 300000
+                });
+            } else {
+                signedUrl = message.metaData.fileUrl;
             }
             return (
                 <img
@@ -174,24 +202,31 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
 
     const handleSend = async (e: { preventDefault: () => void }) => {
         e.preventDefault();
-        if(!existinguuid) return
+        if (!existinguuid) return;
         if (!input) return;
-        if(selectedFile.file) {
+        if (selectedFile.file) {
             setShowLoader(true);
             setIsLoader(true);
         }
         setMessages((prev) => [
             ...prev,
-            { text: input, isUser: true, isSystemQuery: false, metaData: { fileUrl: selectedFile.src, fileType: selectedFile.fileType ?? undefined, fileName: selectedFile.file?.name } }
-        ]);
-        sendChatMutaion(
             {
-                query: input,
-                uuid: existinguuid,
-                currentState: diagramComponents,
-                file: selectedFile.file ?? undefined
+                text: input,
+                isUser: true,
+                isSystemQuery: false,
+                metaData: {
+                    fileUrl: selectedFile.src,
+                    fileType: selectedFile.fileType ?? undefined,
+                    fileName: selectedFile.file?.name
+                }
             }
-        );
+        ]);
+        sendChatMutaion({
+            query: input,
+            uuid: existinguuid,
+            currentState: diagramComponents,
+            file: selectedFile.file ?? undefined
+        });
         setInput("");
         clearFile();
     };
@@ -200,17 +235,17 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     const [isLoaderTimePassed, setIsLoaderTimePassed] = useState(false);
 
     useEffect(() => {
-        if(isLoaderTimePassed) {
+        if (isLoaderTimePassed) {
             setIsLoader(false);
             setShowLoader(false);
             setIsLoaderTimePassed(false);
         }
-    }, [isLoading, isLoaderTimePassed])
+    }, [isLoading, isLoaderTimePassed]);
 
     const loadDiagram = (content: DiagramComponent[]) => {
-        handleLoadDiagramFromJSON(content)
-        addHistory(content)
-    }
+        handleLoadDiagramFromJSON(content);
+        addHistory(content);
+    };
 
     const LoadMeessagesWithImage: { time: number; message: string }[] = [
         { time: 0, message: "Extracting components." },
@@ -229,64 +264,68 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             >
                 {messages.map((message, index) => (
                     <div
-                    key={index}
-                    className={`flex flex-col gap-2 ${
-                        message.isUser ? "items-end" : "items-start"
-                    }`}
-                >
-                
-                    {/* Image Message */}
-                    {message.metaData.fileType === "image" && (
-                        <img
-                            src={message.metaData.fileUrl}
-                            alt="Sent"
-                            className="w-20 h-20 cursor-pointer"
-                            onClick={() => openViewerPopup(message)}
-                            onError={(e) => (e.currentTarget.src = "/images/placeholder.jpg")} 
-                        />
-                    )}
-                
-                    {/* PDF Message */}
-                    {message.metaData.fileType === "pdf" && (
-                        <div className="w-20 h-20 flex flex-col items-center justify-center bg-gray-100 rounded-sm border">
-                            <FileText className="w-5 h-5 text-gray-700" />
-                            <span className="text-[10px] text-gray-800 truncate max-w-[40px] text-center">
-                                {message.metaData.fileName}
-                            </span>
-                        </div>
-                    )}
+                        key={index}
+                        className={`flex flex-col gap-2 ${
+                            message.isUser ? "items-end" : "items-start"
+                        }`}
+                    >
+                        {/* Image Message */}
+                        {message.metaData.fileType === "image" && (
+                            <img
+                                src={message.metaData.fileUrl}
+                                alt="Sent"
+                                className="w-20 h-20 cursor-pointer"
+                                onClick={() => openViewerPopup(message)}
+                                onError={(e) =>
+                                    (e.currentTarget.src =
+                                        "/images/placeholder.jpg")
+                                }
+                            />
+                        )}
 
-                    {/* Text Message */}
-                    {message.text && (
-                        <div
-                            className={`max-w-xs px-4 py-2 rounded-lg break-words ${
-                                message.isUser ? "bg-blue-600" : "bg-gray-700"
-                            }`}
-                        >
-                            <Markdown>{message.text}</Markdown>
-                        </div>
-                    )}
-                
-                    {/* JSON Response */}
-                    {message.metaData.content && (
-                        <div className="flex items-center gap-2">
-                        <div
-                            className="max-w-xs p-3 rounded-lg bg-gray-700 cursor-pointer border border-gray-500 hover:bg-gray-600 flex items-center"
-                            onClick={() => openViewerPopup(message)}
-                        >
-                            
-                            
-                            <span className="text-blue-400 font-semibold">📄 View Unified Model</span>
-                        
-                            
-                        </div>
-                        <Eye className="cursor-pointer" onClick={()=>{
-                           loadDiagram(message.metaData.content) 
-                        }}/>
-                        </div>
-                    )}
-                </div>
-                
+                        {/* PDF Message */}
+                        {message.metaData.fileType === "pdf" && (
+                            <div className="w-20 h-20 flex flex-col items-center justify-center bg-gray-100 rounded-sm border">
+                                <FileText className="w-5 h-5 text-gray-700" />
+                                <span className="text-[10px] text-gray-800 truncate max-w-[40px] text-center">
+                                    {message.metaData.fileName}
+                                </span>
+                            </div>
+                        )}
+
+                        {/* Text Message */}
+                        {message.text && (
+                            <div
+                                className={`max-w-xs px-4 py-2 rounded-lg break-words ${
+                                    message.isUser
+                                        ? "bg-blue-600"
+                                        : "bg-gray-700"
+                                }`}
+                            >
+                                <Markdown>{message.text}</Markdown>
+                            </div>
+                        )}
+
+                        {/* JSON Response */}
+                        {message.metaData.content && (
+                            <div className="flex items-center gap-2">
+                                <div
+                                    className="max-w-xs p-3 rounded-lg bg-gray-700 cursor-pointer border border-gray-500 hover:bg-gray-600 flex items-center"
+                                    onClick={() => openViewerPopup(message)}
+                                >
+                                    <span className="text-blue-400 font-semibold">
+                                        📄 View Unified Model
+                                    </span>
+                                </div>
+                                <Eye
+                                    className="cursor-pointer"
+                                    onClick={() => {
+                                        loadDiagram(message.metaData.content);
+                                    }}
+                                />
+                            </div>
+                        )}
+                    </div>
                 ))}
                 {isLoading && (
                     <div
@@ -304,7 +343,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                     {/* Image on the left side */}
                     {selectedFile.file && (
                         <div className="relative w-12 h-12 flex-shrink-0">
-                            {selectedFile.fileType === 'image' ? (
+                            {selectedFile.fileType === "image" ? (
                                 <img
                                     src={selectedFile.src}
                                     alt="Selected"
@@ -313,7 +352,9 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                             ) : (
                                 <div className="w-full h-full flex flex-col items-center justify-center bg-gray-100 rounded-sm border">
                                     <FileText className="w-5 h-5 text-gray-700" />
-                                    <span className="text-[10px] text-gray-800 truncate max-w-[40px] text-center">{selectedFile.file?.name}</span>
+                                    <span className="text-[10px] text-gray-800 truncate max-w-[40px] text-center">
+                                        {selectedFile.file?.name}
+                                    </span>
                                 </div>
                             )}
 
@@ -326,7 +367,6 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                             </button>
                         </div>
                     )}
-
 
                     {/* Text input next to image */}
                     <Textarea
@@ -347,7 +387,10 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                     />
 
                     <div className="flex gap-1 justify-center items-center absolute right-0 top-[13px] sm:right-4">
-                        <Paperclip className="mt-1 cursor-pointer" onClick={() => fileInputRef.current?.click()} />
+                        <Paperclip
+                            className="mt-1 cursor-pointer"
+                            onClick={() => fileInputRef.current?.click()}
+                        />
                         <input
                             type="file"
                             accept="image/*,.pdf"
@@ -355,17 +398,13 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                             className="hidden"
                             onChange={handleFileSelect}
                         />
-                        <Button
-                            type="submit"
-                            disabled={(!input) || isLoading}
-                        >
+                        <Button type="submit" disabled={!input || isLoading}>
                             send
                             <span className="sr-only">Send message</span>
                         </Button>
                     </div>
                 </div>
             </form>
-
 
             {/* viewer Popup */}
             <ViewerPopup

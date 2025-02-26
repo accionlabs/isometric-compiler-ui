@@ -1,5 +1,7 @@
 // @/Types.ts
 
+import { ReactNode } from "react";
+
 // CanvasSize type
 export interface CanvasSize {
     width: number;
@@ -340,9 +342,9 @@ export interface User {
 
 export interface DiagramInfo {
     _id?: string;
-    name: string;
-    version: string;
-    author: string;
+    name?: string;
+    version?: string;
+    author?: string;
     metadata?: {
         description: string;
         svgContent: string;
@@ -372,4 +374,73 @@ interface MessageAction {
     shapeName: string;
     position: "top" | "front-right" | "front-left";
     relativeTo3dShapeId: string;
+}
+interface Citation {
+    documentId: string;
+    documentName: string;
+}
+
+export interface Action {
+    action: string;
+}
+
+export interface Step {
+    step: string;
+    actions: Action[];
+    citations: Citation[];
+}
+
+export interface Scenario {
+    scenario: string;
+    description: string;
+    steps: Step[];
+}
+
+export interface Outcome {
+    outcome: string;
+    citations: Citation[];
+    scenarios: Scenario[];
+}
+
+export interface PersonaData {
+    persona: string;
+    outcomes: Outcome[];
+}
+// Props interfaces for our components
+export interface SectionProps {
+    title: string;
+    children: React.ReactNode;
+}
+
+export interface PersonaCardProps {
+    title: string;
+    subtitle?: string;
+    onClick: () => void;
+    isActive: boolean;
+}
+export interface CitationCardProps {
+    title: string;
+    subtitle?: string;
+    icon: ReactNode;
+}
+
+export interface OutcomeCardProps {
+    title: string;
+    onClick: () => void;
+    isActive: boolean;
+}
+
+export interface ScenarioCardProps {
+    scenario: Scenario;
+}
+
+export interface ContributorCardProps {
+    name: string;
+    image: string;
+}
+
+export interface ContentCardProps {
+    content: string;
+    isActive?: boolean;
+    onClick?: () => void;
 }
