@@ -29,7 +29,7 @@ export default function Login() {
                     onClick={() => {
                         keycloak.login({
                             prompt: "login",
-                            idpHint: config.idpHint
+                            idpHint: config.microsoftLoginHint
                         });
                     }}
                 >
