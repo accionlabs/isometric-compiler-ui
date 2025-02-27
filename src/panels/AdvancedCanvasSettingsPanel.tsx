@@ -46,7 +46,10 @@ export const AdvancedCanvasSettings: React.FC<AdvancedCanvasSettingsProps> = ({
     const [settings, setSettings] = useState<CanvasSettings>(() => {
         const savedSettings = localStorage.getItem(STORAGE_KEY);
         if (savedSettings) {
-            return JSON.parse(savedSettings);
+            const settings = JSON.parse(savedSettings);
+            settings.layerLabel.fontSize < 60 &&
+                (settings.layerLabel.fontSize = 60);
+            return settings;
         }
         return { ...DEFAULT_SETTINGS, ...initialSettings };
     });

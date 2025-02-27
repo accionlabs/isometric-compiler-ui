@@ -7,8 +7,11 @@ import {
     SectionProps
 } from "@/Types";
 import { ChevronUp } from "lucide-react";
-import { ReactNode, useState } from "react";
+import { useState } from "react";
 import { PersonaIcon } from "./IconGroup";
+import pdf from "../../assets/pdf.png";
+import image from "../../assets/image.png";
+
 // Define TypeScript interfaces for our data structure
 
 export const Section: React.FC<SectionProps> = ({ title, children }) => {
@@ -63,27 +66,24 @@ export const PersonaCard: React.FC<PersonaCardProps> = ({
     </button>
 );
 
-export const CitationCard: React.FC<CitationCardProps> = ({
-    title,
-    subtitle,
-    icon
-}) => (
+export const CitationCard: React.FC<CitationCardProps> = ({ title }) => (
     <div
         className={`bg-customGray p-2 rounded-md flex items-center text-sm gap-2 text-left`}
     >
         {/* Prevent logo div from shrinking */}
         <div
-            className={`w-8 h-8 bg-customGray2 rounded-full flex items-center justify-center text-white flex-shrink-0`}
+            className={`w-8 h-8 bg-customGray2 rounded flex items-center justify-center text-white flex-shrink-0`}
         >
-            {icon}
+            <img
+                src={title.toLowerCase().endsWith(".pdf") ? pdf : image}
+                alt={title}
+                className=" object-contain "
+            />
         </div>
 
         {/* Wrap text content in a div to ensure proper spacing */}
         <div className="flex flex-col">
-            <span className="text-sm line-clamp-2">{title}</span>
-            <span className="text-lightGray2 text-xs line-clamp-1">
-                {subtitle}
-            </span>
+            <span className="text-xs line-clamp-2">{title}</span>
         </div>
     </div>
 );

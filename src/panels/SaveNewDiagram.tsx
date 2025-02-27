@@ -11,7 +11,6 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
-import { componentLibraryManager } from "@/lib/componentLib";
 import { DiagramInfo } from "@/Types";
 type Mode = "save" | "clone" | "edit_details" | "delete";
 interface SaveComponentDialogProps {
@@ -61,7 +60,10 @@ const SaveNewDiagram: React.FC<SaveComponentDialogProps> = ({
         delete: "Delete existing diagram"
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = (
+        e: React.MouseEvent<HTMLButtonElement, MouseEvent>
+    ) => {
+        e.preventDefault();
         if (!name.trim()) {
             setError("Component name and category is required");
             return;

@@ -166,25 +166,41 @@ export default function RightSidebarPanel({
                         </Section>
                     )}
                     {selectedOutcome && (
-                        <Section title="Scenarios">
-                            <div className="grid grid-cols-1 gap-2 text-left">
-                                {selectedOutcome.scenarios.map(
-                                    (scenario, index) => (
-                                        <ContentButton
-                                            key={scenario.scenario + index}
-                                            content={scenario.scenario}
-                                            onClick={() =>
-                                                handleScenarioClick(scenario)
-                                            }
-                                            isActive={
-                                                selectedScenario?.scenario ===
-                                                scenario.scenario
-                                            }
-                                        ></ContentButton>
-                                    )
-                                )}
-                            </div>
-                        </Section>
+                        <>
+                            <Section title="Scenarios">
+                                <div className="grid grid-cols-1 gap-2 text-left">
+                                    {selectedOutcome.scenarios.map(
+                                        (scenario, index) => (
+                                            <ContentButton
+                                                key={scenario.scenario + index}
+                                                content={scenario.scenario}
+                                                onClick={() =>
+                                                    handleScenarioClick(
+                                                        scenario
+                                                    )
+                                                }
+                                                isActive={
+                                                    selectedScenario?.scenario ===
+                                                    scenario.scenario
+                                                }
+                                            />
+                                        )
+                                    )}
+                                </div>
+                            </Section>
+                            <Section title="Citations">
+                                <div className="grid grid-cols-1 gap-2 text-left">
+                                    {selectedOutcome.citations.map(
+                                        (citation) => (
+                                            <CitationCard
+                                                key={citation.documentName}
+                                                title={citation.documentName}
+                                            />
+                                        )
+                                    )}
+                                </div>
+                            </Section>
+                        </>
                     )}
 
                     {/* <Section
@@ -246,15 +262,6 @@ export default function RightSidebarPanel({
                                         <CitationCard
                                             key={citation.documentName}
                                             title={citation.documentName}
-                                            icon={
-                                                citation.documentName
-                                                    .toLowerCase()
-                                                    .endsWith(".pdf") ? (
-                                                    <FileText />
-                                                ) : (
-                                                    <Image />
-                                                )
-                                            }
                                         />
                                     ))}
                                 </div>

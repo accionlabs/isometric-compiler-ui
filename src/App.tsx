@@ -487,21 +487,27 @@ const App: React.FC = () => {
         diagramComponents: DiagramComponent[]
     ) => {
         const missingDependencies = new Set<string>();
-
         for (const element of diagramComponents) {
-            if (
-                (element.source === "component" &&
-                    !componentLibraryManager.getComponent(element.id)) ||
-                (element.source === "shape" &&
-                    !shapesLibraryManager.getShape(element.id))
-            ) {
-                missingDependencies.add(element.shape);
+            if (element.source === "component") {
+                if (!componentLibraryManager.getComponent(element.shape)) {
+                    missingDependencies.add(element.shape);
+                }
+            } else if (element.source === "shape") {
+                if (!shapesLibraryManager.getShape(element.shape)) {
+                    missingDependencies.add(element.shape);
+                }
+
+                for (const { name } of element.attached2DShapes || []) {
+                    if (!shapesLibraryManager.getShape(name)) {
+                        missingDependencies.add(name);
+                    }
+                }
             }
         }
-
         if (missingDependencies.size === 0) return;
 
         const response = await getShapesByName(Array.from(missingDependencies));
+
         if (!response) return;
 
         const { shapes = [], components = [] } = response;

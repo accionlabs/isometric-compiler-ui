@@ -422,8 +422,6 @@ export interface PersonaCardProps {
 }
 export interface CitationCardProps {
     title: string;
-    subtitle?: string;
-    icon: ReactNode;
 }
 
 export interface OutcomeCardProps {
