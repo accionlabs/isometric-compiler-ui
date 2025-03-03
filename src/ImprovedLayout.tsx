@@ -551,7 +551,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                         <button
                             key={panel.id}
                             onClick={() => setPanel(panel.id)}
-                            className={`relative rounded p-2  bg-customLightGray`}
+                            className={`relative rounded p-2  bg-customGray2`}
                         >
                             {/* Hidden bold reference text */}
                             <span

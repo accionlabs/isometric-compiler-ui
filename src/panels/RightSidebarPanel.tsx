@@ -6,9 +6,10 @@ import {
     PersonaCard,
     Section
 } from "@/components/ui/CardGroup";
+import { getSignedUrl } from "@/services/chat";
+import { useQuery } from "@tanstack/react-query";
 
 import clsx from "clsx";
-import { FileText, Image } from "lucide-react";
 import { useState } from "react";
 
 interface RightSidebarPanelProps {
@@ -40,21 +41,12 @@ export default function RightSidebarPanel({
         null
     );
     const [selectedStep, setSelectedStep] = useState<Step | null>(null);
-    //     const composedSVG = useMemo(() => {
-    //         const boundingBox = calculateSVGBoundingBox(svgContent, canvasSize) || {
-    //             x: 0,
-    //             y: 0,
-    //             width: "100%",
-    //             height: "100%"
-    //         };
-
-    //         return `
-    //     <svg xmlns="http://www.w3.org/2000/svg" viewBox="${boundingBox.x} ${boundingBox.y} ${boundingBox.width} ${boundingBox.height}" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
-    //         ${svgContent}
-    //     </svg>
-    // `;
-    //     }, [svgContent, canvasSize]);
-
+    // const { data } = useQuery({
+    //     queryKey: ["signedUrl", "IA User Story Document Version v0.3.pdf"],
+    //     queryFn: () => getSignedUrl("IA User Story Document Version v0.3.pdf"),
+    //     staleTime: 300000
+    // });
+    // console.log("first", data);
     const handlePersonaClick = (persona: PersonaData): void => {
         setSelectedPersona(persona);
         setSelectedOutcome(null);
@@ -85,6 +77,7 @@ export default function RightSidebarPanel({
     const handleStepClick = (step: Step): void => {
         setSelectedStep(step);
     };
+
     return (
         <>
             {/* <div className="flex items-center justify-between px-4 pt-6 gap-5 pb-3">

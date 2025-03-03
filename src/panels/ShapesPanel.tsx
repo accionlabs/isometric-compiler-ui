@@ -446,7 +446,14 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                         Object.entries(groupedSearchedElements.data).map(
                             ([path, group]) => (
                                 <div key={path}>
-                                    <h2 className="my-3 text-sm"> {path}</h2>
+                                    <h2 className="my-3 text-sm">
+                                        /{" "}
+                                        {path
+                                            .split("/")
+                                            .slice(1)
+                                            .slice(-2)
+                                            .join(" / ")}
+                                    </h2>
                                     <ul>
                                         {group.map((element) => (
                                             <li
@@ -508,7 +515,7 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                     {renderShapeDetails(currentShapeDetails as UnifiedElement)}
                 </section>
             )}
-            {currentShapeDetails && (
+            {currentShapeDetails?.name && (
                 <EditElementDialog
                     isOpen={isEditDialog}
                     onClose={() => setIsEditDialog(false)}

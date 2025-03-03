@@ -1,4 +1,8 @@
-import { LeftArrow, MenuIcon, RightArrow } from "@/components/ui/IconGroup";
+import {
+    DefaultShapeIcon,
+    LeftArrow,
+    RightArrow
+} from "@/components/ui/IconGroup";
 import { useRef, useState } from "react";
 import { Category } from "@/Types";
 import { CUSTOM_SCROLLBAR } from "@/Constants";
@@ -111,7 +115,7 @@ export default function CategoriesPanel({
                         }}
                     />
                 ) : (
-                    <MenuIcon className="w-6 h-6" />
+                    <DefaultShapeIcon className="w-6 h-6" />
                 )}
 
                 <div className="flex flex-col min-w-20">
@@ -149,7 +153,7 @@ export default function CategoriesPanel({
                         style={{ fill: "white" }}
                     />
                 ) : (
-                    <MenuIcon className="w-8 h-8" />
+                    <DefaultShapeIcon className="w-8 h-8" />
                 )}
 
                 <div className="flex flex-col min-w-20">
