@@ -8,36 +8,14 @@ import { MetadataSettingsTab } from "./MetadataSettingsTab";
 import { LayerSettingsTab } from "./LayerSettingsTab";
 import { CanvasSize, CanvasSettings } from "@/Types";
 import styles from "@/styles/AdvancedCanvasSettings.module.css";
-
-export const DEFAULT_SETTINGS: CanvasSettings = {
-    canvas: {
-        canvasSize: {
-            width: 1000,
-            height: 1000
-        },
-        showAttachmentPoints: false
-    },
-    metadataLabel: {
-        minSpacing: 200,
-        minYSpacing: 17,
-        smoothingAngle: (120 * Math.PI) / 180, // 120 degrees in radians
-        stepSize: 20
-    },
-    layerLabel: {
-        width: 200,
-        lineSpacing: 1.2,
-        fontFamily: "sans-serif",
-        fontSize: 60,
-        fontWeight: "bold"
-    }
-};
+import { DEFAULT_SETTINGS } from "@/Constants";
 
 interface AdvancedCanvasSettingsProps {
     onSaveSettings: (settings: CanvasSettings) => void;
     initialSettings?: Partial<CanvasSettings>;
 }
 
-const STORAGE_KEY = "canvas-settings";
+const STORAGE_KEY = "canvasSettings";
 
 export const AdvancedCanvasSettings: React.FC<AdvancedCanvasSettingsProps> = ({
     onSaveSettings,
@@ -46,10 +24,7 @@ export const AdvancedCanvasSettings: React.FC<AdvancedCanvasSettingsProps> = ({
     const [settings, setSettings] = useState<CanvasSettings>(() => {
         const savedSettings = localStorage.getItem(STORAGE_KEY);
         if (savedSettings) {
-            const settings = JSON.parse(savedSettings);
-            settings.layerLabel.fontSize < 60 &&
-                (settings.layerLabel.fontSize = 60);
-            return settings;
+            return JSON.parse(savedSettings);
         }
         return { ...DEFAULT_SETTINGS, ...initialSettings };
     });

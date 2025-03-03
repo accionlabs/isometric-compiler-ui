@@ -20,6 +20,7 @@ import {
     saveComponent
 } from "./services/shapes";
 import { shapesLibraryManager } from "./lib/shapesLib";
+import { DEFAULT_SETTINGS } from "./Constants";
 const MAX_HISTORY_LENGTH = 10;
 
 const App: React.FC = () => {
@@ -873,6 +874,26 @@ const App: React.FC = () => {
             setDiagramComponents(processedComponents);
         }
     }, [diagramComponents, canvasSize, svgLibrary, showAttachmentPoints]);
+
+    useEffect(() => {
+        const savedSettings = localStorage.getItem("canvasSettings");
+        const parsedSettings = savedSettings
+            ? JSON.parse(savedSettings)
+            : DEFAULT_SETTINGS;
+
+        const settings = {
+            ...parsedSettings,
+            layerLabel: {
+                ...parsedSettings.layerLabel,
+                fontSize: Math.max(
+                    parsedSettings?.layerLabel?.fontSize ?? 60,
+                    60
+                )
+            }
+        };
+        setCanvasSettings(settings);
+        localStorage.setItem("canvasSettings", JSON.stringify(settings));
+    }, []);
 
     useEffect(() => {
         localStorage.setItem("canvasSize", JSON.stringify(canvasSize));
