@@ -170,7 +170,6 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     const [qumData, setQumData] = useState<any>(undefined);
 
     const timeoutIdRef = useRef<NodeJS.Timeout | null>(null);
-    const isFirstRender = useRef(true);
 
     const updateDiagramWithRateLimit = useCancelLatestCalls(updateDiagram);
     // const {
@@ -641,9 +640,6 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                         action={
                             <button
                                 onClick={async () => {
-                                    // rightSidebarOpen
-                                    //     ? setRightSidebarOpen(false)
-                                    //     : refetch();
                                     setSelectedDiagramCompoent(undefined);
                                     if (rightSidebarOpen)
                                         setRightSidebarOpen(false);
