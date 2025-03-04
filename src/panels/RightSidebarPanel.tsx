@@ -104,7 +104,7 @@ export default function RightSidebarPanel({
         setSelectedScenario(null);
         setTabs((prev) =>
             prev.map((tab) =>
-                tab.name === "Business" ? { ...tab, enabled: false } : tab
+                tab.name === "Design" ? { ...tab, enabled: false } : tab
             )
         );
     };
@@ -114,7 +114,7 @@ export default function RightSidebarPanel({
         setSelectedScenario(null);
         setTabs((prev) =>
             prev.map((tab) =>
-                tab.name === "Business" ? { ...tab, enabled: false } : tab
+                tab.name === "Design" ? { ...tab, enabled: false } : tab
             )
         );
     };
@@ -123,7 +123,7 @@ export default function RightSidebarPanel({
         setSelectedScenario(scenario);
         setTabs((prev) =>
             prev.map((tab) =>
-                tab.name === "Business" ? { ...tab, enabled: true } : tab
+                tab.name === "Design" ? { ...tab, enabled: true } : tab
             )
         );
     };
@@ -206,9 +206,101 @@ export default function RightSidebarPanel({
                             </div>
                         </Section>
                     )}
+                    {selectedOutcome && (
+                        <>
+                            <Section title="Scenarios">
+                                <div className="grid grid-cols-1 gap-2 text-left">
+                                    {selectedOutcome.scenarios.map(
+                                        (scenario, index) => (
+                                            <ContentButton
+                                                key={scenario.scenario + index}
+                                                content={scenario.scenario}
+                                                onClick={() =>
+                                                    handleScenarioClick(
+                                                        scenario
+                                                    )
+                                                }
+                                                isActive={
+                                                    selectedScenario?.scenario ===
+                                                    scenario.scenario
+                                                }
+                                            />
+                                        )
+                                    )}
+                                </div>
+                            </Section>
+                            <Section title="Citations">
+                                <div className="grid grid-cols-1 gap-2 text-left">
+                                    {selectedOutcome.citations.map(
+                                        (citation) => (
+                                            <CitationCard
+                                                key={citation.documentName}
+                                                title={citation.documentName}
+                                                onClick={() =>
+                                                    handleDocumentDownload(
+                                                        citation.documentId
+                                                    )
+                                                }
+                                            />
+                                        )
+                                    )}
+                                </div>
+                            </Section>
+                        </>
+                    )}
                 </div>
             )}
-
+            {activeTab === "Design" && (
+                <div className="flex-col flex overflow-auto flex-grow px-4 py-3">
+                    {selectedScenario && (
+                        <Section title="Steps">
+                            <div className="grid grid-cols-1 gap-2 text-left">
+                                {selectedScenario.steps.map((step, index) => (
+                                    <ContentButton
+                                        key={step.step + index}
+                                        content={`${index + 1}. ${step.step}`}
+                                        onClick={() => handleStepClick(step)}
+                                        isActive={
+                                            selectedStep?.step === step.step
+                                        }
+                                    />
+                                ))}
+                            </div>
+                        </Section>
+                    )}
+                    {selectedStep && (
+                        <>
+                            <Section title="Actions">
+                                <div className="grid grid-cols-1 gap-2 text-left">
+                                    {selectedStep.actions.map(
+                                        (action, index) => (
+                                            <ContentDiv
+                                                key={action.action + index}
+                                                content={action.action}
+                                            />
+                                        )
+                                    )}
+                                </div>
+                            </Section>
+                            <Section title="Citations">
+                                <div className="grid grid-cols-1 gap-2 text-left">
+                                    {selectedStep.citations.map((citation) => (
+                                        <CitationCard
+                                            key={citation.documentName}
+                                            title={citation.documentName}
+                                            onClick={() =>
+                                                handleDocumentDownload(
+                                                    citation.documentId
+                                                )
+                                            }
+                                        />
+                                    ))}
+                                </div>
+                            </Section>
+                        </>
+                    )}
+                </div>
+            )}
             {activeTab === "Blueprint" && !!blueprint.name && (
                 <div
                     className={`flex-col flex overflow-auto flex-grow px-4 py-3 ${CUSTOM_SCROLLBAR}`}
