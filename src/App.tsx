@@ -497,11 +497,11 @@ const App: React.FC = () => {
                 if (!shapesLibraryManager.getShape(element.shape)) {
                     missingDependencies.add(element.shape);
                 }
+            }
 
-                for (const { name } of element.attached2DShapes || []) {
-                    if (!shapesLibraryManager.getShape(name)) {
-                        missingDependencies.add(name);
-                    }
+            for (const { name } of element.attached2DShapes || []) {
+                if (!shapesLibraryManager.getShape(name)) {
+                    missingDependencies.add(name);
                 }
             }
         }

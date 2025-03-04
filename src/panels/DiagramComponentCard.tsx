@@ -1,13 +1,18 @@
 // @/panels/DiagramComponentCard.tsx
 
-import React, { useState } from 'react';
-import { Button } from '../components/ui/Button';
-import { RadixSelect } from '../components/ui/Select';
-import { DiagramComponent } from '../Types';
-import { handleWithStopPropagation } from '../lib/eventUtils';
-import { schemaLoader } from '../lib/componentSchemaLib';
-import MetadataForm from '../components/ui/MetadataForm';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/Dialog';
+import React, { useState } from "react";
+import { Button } from "../components/ui/Button";
+import { RadixSelect } from "../components/ui/Select";
+import { DiagramComponent } from "../Types";
+import { handleWithStopPropagation } from "../lib/eventUtils";
+import { schemaLoader } from "../lib/componentSchemaLib";
+import MetadataForm from "../components/ui/MetadataForm";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle
+} from "../components/ui/Dialog";
 
 interface DiagramComponentCardProps {
     component: DiagramComponent;
@@ -26,7 +31,11 @@ interface DiagramComponentCardProps {
     onRemove2DShape: (parentId: string, shapeIndex: number) => void;
     onScrollToParent: (parentId: string) => void;
     svgPreview: React.ReactNode;
-    onUpdateMetadata: (id: string, type: string | undefined, metadata: any) => void;
+    onUpdateMetadata: (
+        id: string,
+        type: string | undefined,
+        metadata: any
+    ) => void;
 }
 
 const DiagramComponentCard: React.FC<DiagramComponentCardProps> = ({
@@ -46,13 +55,13 @@ const DiagramComponentCard: React.FC<DiagramComponentCardProps> = ({
     onRemove2DShape,
     onScrollToParent,
     svgPreview,
-    onUpdateMetadata,
+    onUpdateMetadata
 }) => {
     const [isMetadataDialogOpen, setIsMetadataDialogOpen] = useState(false);
     const availableTypes = schemaLoader.getAvailableTypes();
 
     const handleTypeChange = (type: string) => {
-        onUpdateMetadata(component.id, type === '' ? undefined : type, {});
+        onUpdateMetadata(component.id, type === "" ? undefined : type, {});
     };
 
     const handleMetadataChange = (metadata: any) => {
@@ -61,8 +70,12 @@ const DiagramComponentCard: React.FC<DiagramComponentCardProps> = ({
 
     return (
         <div
-            className={`p-4 rounded-lg ${isSelected ? 'bg-blue-800' : 'bg-gray-800'}`}
-            onClick={(e) => handleWithStopPropagation(e, () => onSelect(component.id))}
+            className={`p-4 rounded-lg ${
+                isSelected ? "bg-blue-800" : "bg-gray-800"
+            }`}
+            onClick={(e) =>
+                handleWithStopPropagation(e, () => onSelect(component.id))
+            }
         >
             <div className="flex justify-between items-center mb-2">
                 {svgPreview}
@@ -73,47 +86,90 @@ const DiagramComponentCard: React.FC<DiagramComponentCardProps> = ({
                     {isCut ? (
                         isFirst && (
                             <div className="flex space-x-2">
-                                <Button onClick={(e) => handleWithStopPropagation(e, () => onCancelCut(component.id))}>
+                                <Button
+                                    onClick={(e) =>
+                                        handleWithStopPropagation(e, () =>
+                                            onCancelCut(component.id)
+                                        )
+                                    }
+                                >
                                     Cancel
                                 </Button>
-                                <Button onClick={(e) => handleWithStopPropagation(e, () => onPaste(component.id))}>
+                                <Button
+                                    onClick={(e) =>
+                                        handleWithStopPropagation(e, () =>
+                                            onPaste(component.id)
+                                        )
+                                    }
+                                >
                                     Paste
                                 </Button>
-                                <Button onClick={(e) => handleWithStopPropagation(e, () => onRemove(component.id))}>
+                                <Button
+                                    onClick={(e) =>
+                                        handleWithStopPropagation(e, () =>
+                                            onRemove(component.id)
+                                        )
+                                    }
+                                >
                                     Remove
                                 </Button>
                             </div>
                         )
-                    ) : (
-                        isCopied ? (
-                            isFirst && (
-                                <div className="flex space-x-2">
-                                    <Button onClick={(e) => handleWithStopPropagation(e, () => onPaste(component.id))}>
-                                        Paste
-                                    </Button>
-                                    <Button onClick={(e) => handleWithStopPropagation(e, () => onCancelCut(component.id))}>
-                                        Cancel
-                                    </Button>
-                                </div>
-                            )
-                        ) : (
+                    ) : isCopied ? (
+                        isFirst && (
                             <div className="flex space-x-2">
                                 <Button
-                                    onClick={(e) => handleWithStopPropagation(e, () => onCopy(component.id))}
+                                    onClick={(e) =>
+                                        handleWithStopPropagation(e, () =>
+                                            onPaste(component.id)
+                                        )
+                                    }
                                 >
-                                    Copy
+                                    Paste
                                 </Button>
                                 <Button
-                                    onClick={(e) => handleWithStopPropagation(e, () => onCut(component.id))}
-                                    disabled={isFirst}
+                                    onClick={(e) =>
+                                        handleWithStopPropagation(e, () =>
+                                            onCancelCut(component.id)
+                                        )
+                                    }
                                 >
-                                    Cut
-                                </Button>
-                                <Button onClick={(e) => handleWithStopPropagation(e, () => onRemove(component.id))}>
-                                    Remove
+                                    Cancel
                                 </Button>
                             </div>
-                        ))}
+                        )
+                    ) : (
+                        <div className="flex space-x-2">
+                            <Button
+                                onClick={(e) =>
+                                    handleWithStopPropagation(e, () =>
+                                        onCopy(component.id)
+                                    )
+                                }
+                            >
+                                Copy
+                            </Button>
+                            <Button
+                                onClick={(e) =>
+                                    handleWithStopPropagation(e, () =>
+                                        onCut(component.id)
+                                    )
+                                }
+                                disabled={isFirst}
+                            >
+                                Cut
+                            </Button>
+                            <Button
+                                onClick={(e) =>
+                                    handleWithStopPropagation(e, () =>
+                                        onRemove(component.id)
+                                    )
+                                }
+                            >
+                                Remove
+                            </Button>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -121,31 +177,60 @@ const DiagramComponentCard: React.FC<DiagramComponentCardProps> = ({
                 <>
                     <div className="grid grid-cols-2 gap-2 mb-2">
                         <div>
-                            <span className="font-semibold">Position:</span> {component.position}
+                            <span className="font-semibold">Position:</span>{" "}
+                            {component.position}
                         </div>
                         <div>
                             <span className="font-semibold">Relative To:</span>
                             {parentIndex !== null ? (
                                 <button
                                     className="text-blue-400 hover:underline ml-2"
-                                    onClick={(e) => handleWithStopPropagation(e, () => onScrollToParent(component.relativeToId!))}
+                                    onClick={(e) =>
+                                        handleWithStopPropagation(e, () =>
+                                            onScrollToParent(
+                                                component.relativeToId!
+                                            )
+                                        )
+                                    }
                                 >
                                     3D-{parentIndex + 1}
                                 </button>
-                            ) : ' None'}
+                            ) : (
+                                " None"
+                            )}
                         </div>
                     </div>
 
                     <div>
-                        <h4 className="font-semibold mb-1">Attached 2D Shapes:</h4>
+                        <h4 className="font-semibold mb-1">
+                            Attached 2D Shapes:
+                        </h4>
                         {component.attached2DShapes.length > 0 ? (
                             <ul className="space-y-2">
                                 {component.attached2DShapes.map((shape, i) => (
-                                    <li key={i} className="flex justify-between items-center bg-gray-700 p-2 rounded">
-                                        <span>{shape.name} (attached to {shape.attachedTo})</span>
+                                    <li
+                                        key={i}
+                                        className="flex justify-between items-center bg-gray-700 p-2 rounded"
+                                    >
+                                        <span>
+                                            {typeof shape.name === "string"
+                                                ? shape.name
+                                                : "shape"}{" "}
+                                            (attached to {shape.attachedTo})
+                                        </span>
+
                                         <Button
                                             className="ml-2 text-xs"
-                                            onClick={(e) => handleWithStopPropagation(e, () => onRemove2DShape(component.id, i))}
+                                            onClick={(e) =>
+                                                handleWithStopPropagation(
+                                                    e,
+                                                    () =>
+                                                        onRemove2DShape(
+                                                            component.id,
+                                                            i
+                                                        )
+                                                )
+                                            }
                                         >
                                             Remove
                                         </Button>
@@ -153,7 +238,9 @@ const DiagramComponentCard: React.FC<DiagramComponentCardProps> = ({
                                 ))}
                             </ul>
                         ) : (
-                            <div className="text-gray-400">No 2D shapes attached</div>
+                            <div className="text-gray-400">
+                                No 2D shapes attached
+                            </div>
                         )}
                     </div>
 
@@ -165,13 +252,16 @@ const DiagramComponentCard: React.FC<DiagramComponentCardProps> = ({
                                 </label>
                                 <RadixSelect
                                     options={[
-                                        { value: '', label: 'No Type' },
-                                        ...availableTypes.map(type => ({
+                                        { value: "", label: "No Type" },
+                                        ...availableTypes.map((type) => ({
                                             value: type,
-                                            label: schemaLoader.getComponentType(type)?.displayName || type
+                                            label:
+                                                schemaLoader.getComponentType(
+                                                    type
+                                                )?.displayName || type
                                         }))
                                     ]}
-                                    value={component.type || ''}
+                                    value={component.type || ""}
                                     onChange={handleTypeChange}
                                     placeholder="Select component type"
                                 />
@@ -191,13 +281,20 @@ const DiagramComponentCard: React.FC<DiagramComponentCardProps> = ({
 
                         {component.type && component.metadata && (
                             <div className="mt-2 p-2 bg-gray-700 rounded">
-                                <h4 className="text-sm font-medium text-gray-300 mb-1">Current Metadata:</h4>
+                                <h4 className="text-sm font-medium text-gray-300 mb-1">
+                                    Current Metadata:
+                                </h4>
                                 <div className="text-sm text-gray-400">
-                                    {Object.entries(component.metadata).map(([key, value]) => (
-                                        <div key={key}>
-                                            <span className="font-medium">{key}:</span> {value?.toString()}
-                                        </div>
-                                    ))}
+                                    {Object.entries(component.metadata).map(
+                                        ([key, value]) => (
+                                            <div key={key}>
+                                                <span className="font-medium">
+                                                    {key}:
+                                                </span>{" "}
+                                                {value?.toString()}
+                                            </div>
+                                        )
+                                    )}
                                 </div>
                             </div>
                         )}
@@ -205,14 +302,27 @@ const DiagramComponentCard: React.FC<DiagramComponentCardProps> = ({
                 </>
             )}
 
-            <Dialog open={isMetadataDialogOpen} onOpenChange={setIsMetadataDialogOpen}>
+            <Dialog
+                open={isMetadataDialogOpen}
+                onOpenChange={setIsMetadataDialogOpen}
+            >
                 <DialogContent className="bg-gray-800 text-white">
                     <DialogHeader>
-                        <DialogTitle>Edit Metadata - {schemaLoader.getComponentType(component.type || '')?.displayName}</DialogTitle>
+                        <DialogTitle>
+                            Edit Metadata -{" "}
+                            {
+                                schemaLoader.getComponentType(
+                                    component.type || ""
+                                )?.displayName
+                            }
+                        </DialogTitle>
                     </DialogHeader>
                     {component.type && (
                         <MetadataForm
-                            fields={schemaLoader.getComponentType(component.type)?.fields || []}
+                            fields={
+                                schemaLoader.getComponentType(component.type)
+                                    ?.fields || []
+                            }
                             values={component.metadata || {}}
                             onChange={handleMetadataChange}
                         />

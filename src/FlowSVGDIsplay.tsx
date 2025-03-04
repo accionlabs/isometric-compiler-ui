@@ -167,14 +167,14 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
 
     // Debug: Log state changes
     useEffect(() => {
-        console.log("State Change Debug:", {
-            nodesCount: nodes.length,
-            edgesCount: edges.length,
-            diagramComponentsCount: diagramComponents.length,
-            areComponentBoundsReady,
-            hasLayoutManager: !!layoutManager,
-            componentBoundsCount: Object.keys(componentBounds).length
-        });
+        // console.log("State Change Debug:", {
+        //     nodesCount: nodes.length,
+        //     edgesCount: edges.length,
+        //     diagramComponentsCount: diagramComponents.length,
+        //     areComponentBoundsReady,
+        //     hasLayoutManager: !!layoutManager,
+        //     componentBoundsCount: Object.keys(componentBounds).length
+        // });
     }, [
         nodes.length,
         edges.length,
@@ -379,11 +379,11 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
             (component) => component.type && component.metadata
         );
 
-        console.log("Processing Components:", {
-            total: diagramComponents.length,
-            withMetadata: componentsWithMetadata.length,
-            componentBounds: Object.keys(componentBounds)
-        });
+        // console.log("Processing Components:", {
+        //     total: diagramComponents.length,
+        //     withMetadata: componentsWithMetadata.length,
+        //     componentBounds: Object.keys(componentBounds)
+        // });
 
         const nodePositions = calculateMetadataNodePositions(
             componentsWithMetadata
@@ -394,13 +394,13 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
             return;
         }
 
-        console.log("Node Positions Calculated:", {
-            positionsCount: nodePositions.size,
-            positions: Array.from(nodePositions.entries()).map(([id, pos]) => ({
-                id,
-                position: pos.position
-            }))
-        });
+        // console.log("Node Positions Calculated:", {
+        //     positionsCount: nodePositions.size,
+        //     positions: Array.from(nodePositions.entries()).map(([id, pos]) => ({
+        //         id,
+        //         position: pos.position
+        //     }))
+        // });
 
         // Update both nodes and edges together to maintain synchronization
         setNodes((prevNodes) => {
@@ -424,12 +424,12 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
             });
 
             // Debug node updates
-            console.log("Nodes Updated:", {
-                prevCount: prevNodes.length,
-                newCount: updatedNodes.length,
-                metadataNodes: updatedNodes.filter((n) => n.type === "metadata")
-                    .length
-            });
+            // console.log("Nodes Updated:", {
+            //     prevCount: prevNodes.length,
+            //     newCount: updatedNodes.length,
+            //     metadataNodes: updatedNodes.filter((n) => n.type === "metadata")
+            //         .length
+            // });
             // Create new edges for the updated node positions
             const newEdges: FlowEdge[] = updatedNodes
                 .filter(
@@ -462,10 +462,10 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
                                 componentId: component.id,
                                 pointName: point.name
                             }));
-                            console.log(
-                                `Attachment points for ${component.id}:`,
-                                points
-                            );
+                            // console.log(
+                            //     `Attachment points for ${component.id}:`,
+                            //     points
+                            // );
                             return points;
                         }
                     );
@@ -477,12 +477,12 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
                             globalAttachmentPoints
                         );
 
-                    console.log("Edge Connection Details:", {
-                        nodeId: metadataNode.id,
-                        sourceHandle,
-                        targetHandle,
-                        sourcePosition
-                    });
+                    // console.log("Edge Connection Details:", {
+                    //     nodeId: metadataNode.id,
+                    //     sourceHandle,
+                    //     targetHandle,
+                    //     sourcePosition
+                    // });
 
                     if (!sourceHandle || !targetHandle) {
                         console.log(

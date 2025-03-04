@@ -982,6 +982,7 @@ export const compileDiagram = (
                 attached2DShape.name,
                 svgLibrary
             );
+
             if (shape2DElement) {
                 shape2DElement.setAttribute(
                     "id",
