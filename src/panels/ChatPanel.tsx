@@ -170,7 +170,6 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         setMessages(existingMessages || []);
     }, [existingChatData]);
 
-    // Different messages based on file type
     const LoadMessagesWithImage = [
         { time: 0, message: "Extracting components." },
         { time: 0.5, message: "Mapping to Unified Model..." },
@@ -183,11 +182,19 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         { time: 0, message: "Extracting text from PDF..." },
         { time: 1, message: "Analyzing document structure..." },
         { time: 2, message: "Detecting diagrams or tables..." },
-        { time: 3, message: "Generating insights..." }
+        { time: 3, message: "Extracting business specification..." },
+        { time: 4, message: "Extracting design specification..." },
+        { time: 5, message: "Extracting Breeze blueprint..." },
+        { time: 6, message: "Generating semantic model..." }
     ];
 
     const [loadMessages, setLoadMessages] = useState(LoadMessagesWithImage);
-    const messageDuration = 4;
+    let messageDuration
+    if(loadMessages === LoadMessagesWithPDF){
+        messageDuration = 6;
+    }else{
+        messageDuration = 4;
+    }
 
     const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event.target.files && event.target.files[0]) {
