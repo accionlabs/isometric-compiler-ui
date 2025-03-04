@@ -422,6 +422,7 @@ export interface PersonaCardProps {
 }
 export interface CitationCardProps {
     title: string;
+    onClick: () => void;
 }
 
 export interface OutcomeCardProps {

@@ -160,6 +160,19 @@ export async function getSignedUrl(folderName: string, path: string) {
     return result;
 }
 
+export async function getDocumentsSignedUrlById(id: string) {
+    const url = `${config.gatewayApiUrl}/isometric/document-url/${id}`;
+    const response = await fetch(url);
+
+    // Check if the response is ok (status code in the range 200-299)
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.text();
+    return result;
+}
+
 export async function getReport(uuid: string) {
     const url = `${config.gatewayApiUrl}/isometric/semantic-model/${uuid}`;
     const response = await fetch(url);

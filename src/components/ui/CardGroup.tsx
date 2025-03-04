@@ -66,9 +66,13 @@ export const PersonaCard: React.FC<PersonaCardProps> = ({
     </button>
 );
 
-export const CitationCard: React.FC<CitationCardProps> = ({ title }) => (
-    <div
+export const CitationCard: React.FC<CitationCardProps> = ({
+    title,
+    onClick
+}) => (
+    <button
         className={`bg-customGray p-2 rounded-md flex items-center text-sm gap-2 text-left`}
+        onClick={onClick}
     >
         {/* Prevent logo div from shrinking */}
         <div
@@ -85,7 +89,7 @@ export const CitationCard: React.FC<CitationCardProps> = ({ title }) => (
         <div className="flex flex-col">
             <span className="text-xs line-clamp-2">{title}</span>
         </div>
-    </div>
+    </button>
 );
 // ScenarioCard component
 export const ScenarioCard: React.FC<ScenarioCardProps> = ({ scenario }) => (
