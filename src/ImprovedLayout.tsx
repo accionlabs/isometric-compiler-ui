@@ -164,7 +164,9 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     const [isUnifiedModelFetched, setIsUnifiedModelFetched] = useState(false);
     const [leftSidebarOpen, setLeftSidebarOpen] = useState(true);
     const [rightSidebarOpen, setRightSidebarOpen] = useState(false);
-    const [selectedDiagramCompoent, setSelectedDiagramCompoent] = useState<DiagramComponent | undefined>(undefined);
+    const [selectedDiagramCompoent, setSelectedDiagramCompoent] = useState<
+        DiagramComponent | undefined
+    >(undefined);
     const [qumData, setQumData] = useState<any>(undefined);
 
     const timeoutIdRef = useRef<NodeJS.Timeout | null>(null);
@@ -373,10 +375,10 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     };
     const handleComponentMetadata = (data: any) => {
         setRightSidebarOpen(true);
-        const selectedComponentData = diagramComponents.find((component) => { 
+        const selectedComponentData = diagramComponents.find((component) => {
             return component?.metadata?.name === data.name;
-        })
-        setSelectedDiagramCompoent (selectedComponentData)
+        });
+        setSelectedDiagramCompoent(selectedComponentData);
         setQumData(selectedComponentData?.metadata?.qum);
     };
     const handleSaveDiagram = async () => {
@@ -643,18 +645,32 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                     //     ? setRightSidebarOpen(false)
                                     //     : refetch();
                                     setSelectedDiagramCompoent(undefined);
-                                    if(rightSidebarOpen) setRightSidebarOpen(false);
+                                    if (rightSidebarOpen)
+                                        setRightSidebarOpen(false);
                                     else {
-                                        const data = await queryClient.fetchQuery({
-                                        queryKey: ["report", existinguuid],
-                                        queryFn: () => getReport(existinguuid || ""),
-                                    })
-                                    if(data?.qum) { 
-                                        setQumData(data.qum);
-                                        setRightSidebarOpen(true);
+                                        const data =
+                                            await queryClient.fetchQuery({
+                                                queryKey: [
+                                                    "report",
+                                                    existinguuid
+                                                ],
+                                                queryFn: () =>
+                                                    getReport(
+                                                        existinguuid || ""
+                                                    )
+                                            });
+                                        if (data?.qum) {
+                                            setQumData(data.qum);
+                                            setRightSidebarOpen(true);
+                                        } else {
+                                            toast.error(
+                                                "Unified model unavailable right now, Please try again!",
+                                                {
+                                                    duration: 3000
+                                                }
+                                            );
+                                        }
                                     }
-                                    }
-                                    
                                 }}
                                 className="hover:bg-customLightGray p-2 rounded disabled:cursor-not-allowed disabled:opacity-50"
                             >
