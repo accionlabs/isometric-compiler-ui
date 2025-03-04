@@ -86,7 +86,6 @@ export default function RightSidebarPanel({
         }
     }, [reportData]);
 
-    console.log("activetab", activeTab);
     const { name, blueprint = {} } = componentData?.metadata || {};
     blueprint.name = name;
     let component: Component | Shape | null = null;
