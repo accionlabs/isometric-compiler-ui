@@ -1,4 +1,5 @@
-import { Outcome, PersonaData, Scenario, Step } from "@/Types";
+import { CUSTOM_SCROLLBAR } from "@/Constants";
+import { Component, DiagramComponent, Outcome, PersonaData, Scenario, Shape, Step, UnifiedElement } from "@/Types";
 import {
     CitationCard,
     ContentButton,
@@ -6,30 +7,39 @@ import {
     PersonaCard,
     Section
 } from "@/components/ui/CardGroup";
+import SVGPreview from "@/components/ui/SVGPreview";
+import { componentLibraryManager } from "@/lib/componentLib";
+import { shapesLibraryManager } from "@/lib/shapesLib";
 import { getSignedUrl } from "@/services/chat";
 import { useQuery } from "@tanstack/react-query";
 
 import clsx from "clsx";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { set } from "yaml/dist/schema/yaml-1.1/set";
 
 interface RightSidebarPanelProps {
     setRightSidebarOpen: (value: boolean) => void;
     svgContent: string;
     reportData: PersonaData[];
     canvasSize: { width: number; height: number };
+    componentData?: DiagramComponent
 }
+
+const defaultTabs = [
+    { name: "Business", enabled: true },
+    { name: "Design", enabled: false },
+    { name: "Metrics", enabled: false },
+    { name: "Technical", enabled: false },
+]
 export default function RightSidebarPanel({
     setRightSidebarOpen,
     reportData,
     svgContent,
-    canvasSize
+    canvasSize,
+    componentData
 }: RightSidebarPanelProps) {
-    const [tabs, setTabs] = useState([
-        { name: "Business", enabled: true },
-        { name: "Design", enabled: false },
-        { name: "Metrics", enabled: false },
-        { name: "Technical", enabled: false }
-    ]);
+    const [tabs, setTabs] = useState(defaultTabs);
+   
     const [activeTab, setActiveTab] = useState("Business");
     const [selectedPersona, setSelectedPersona] = useState<PersonaData | null>(
         null
@@ -41,6 +51,40 @@ export default function RightSidebarPanel({
         null
     );
     const [selectedStep, setSelectedStep] = useState<Step | null>(null);
+    useEffect(() => { 
+        if(!reportData) {
+            setSelectedPersona(null);
+            setSelectedOutcome(null);
+            setSelectedScenario(null);
+            setSelectedStep(null);
+            setActiveTab("")
+        } else {
+            setActiveTab(tabs[0].name)
+        }
+    }, [reportData])
+
+    const {name, blueprint = {}} = componentData?.metadata || {}
+    blueprint.name = name
+    let component: Component | Shape | null = null;
+    if(componentData?.source === 'shape') {
+        component = shapesLibraryManager.getShape(componentData?.shape ?? '');
+    }  else if (componentData?.source === 'component') {
+        component = componentLibraryManager.getComponent(componentData?.shape ?? '');
+
+    } 
+    useEffect(() => {
+        if(!!componentData) {
+            setTabs((prev) => {
+                if(prev.length === 4)
+                    prev.unshift({ name: "Blueprint", enabled: true });
+                return prev;
+            });
+            setActiveTab("Blueprint")
+        } else {
+            setActiveTab("Business")
+            setTabs(defaultTabs)
+        }
+    }, [componentData])
     // const { data } = useQuery({
     //     queryKey: ["signedUrl", "IA User Story Document Version v0.3.pdf"],
     //     queryFn: () =>
@@ -117,7 +161,7 @@ export default function RightSidebarPanel({
                 ))}
             </div>
             {activeTab === "Business" ? (
-                <div className="flex-col flex overflow-auto flex-grow px-4 py-3">
+                <div className={`flex-col flex overflow-auto flex-grow px-4 py-3 ${CUSTOM_SCROLLBAR}`}>
                     {/* component card */}
 
                     <Section title="Personas">
@@ -224,7 +268,7 @@ export default function RightSidebarPanel({
                 </Section> */}
                 </div>
             ) : activeTab === "Design" ? (
-                <div className="flex-col flex overflow-auto flex-grow px-4 py-3">
+                <div className={`flex-col flex overflow-auto flex-grow px-4 py-3 ${CUSTOM_SCROLLBAR}`}>
                     {selectedScenario && (
                         <Section title="Steps">
                             <div className="grid grid-cols-1 gap-2 text-left">
@@ -268,6 +312,29 @@ export default function RightSidebarPanel({
                         </>
                     )}
                 </div>
+            ) : (activeTab === 'Blueprint' && !!blueprint.name) ? (
+                    
+        
+                <div className={`flex-col flex overflow-auto flex-grow px-4 py-3 ${CUSTOM_SCROLLBAR}`}>
+                <div className="w-[106px] h-[106px] flex-shrink-0 pb-4">
+                    <SVGPreview
+                    svgContent={component?.svgContent ?? ''}
+            className="w-full h-full object-cover bg-white"
+        />
+                </div>
+                
+                    {Object.entries(blueprint ?? {}).map(([key, value]) => (
+                        <Section title={key.split('_').map(x => x.charAt(0).toUpperCase() + x.slice(1)).join(' ')} key={key}>
+                        <div className="grid grid-cols-1 gap-2 text-left">
+                            <ContentDiv
+                                content={typeof value === 'object' ? <pre>{JSON.stringify(value, undefined, 2)}</pre> : String(value)}
+                            />
+                        </div>
+                    </Section>
+                    ))}
+                </div>
+
+
             ) : null}
         </>
     );

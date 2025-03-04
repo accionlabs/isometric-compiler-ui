@@ -440,7 +440,7 @@ export interface ContributorCardProps {
 }
 
 export interface ContentCardProps {
-    content: string;
+    content: string | ReactNode;
     isActive?: boolean;
     onClick?: () => void;
 }
