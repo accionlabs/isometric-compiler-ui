@@ -368,7 +368,9 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     const handleOpenSaveDialog = () => {
         setIsSaveDiagramDialogOpen(true);
     };
-
+    const handleComponentMetadata = (data: any) => {
+        console.log("data", data);
+    };
     const handleSaveDiagram = async () => {
         console.log("CompositionPanel handleSaveDiagram started:", {
             fileName
@@ -905,6 +907,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                             setSelectedAttachmentPoint={
                                 handleSelectedAttachmentPoint
                             }
+                            handleComponentMetadata={handleComponentMetadata}
                         />
                     </div>
 

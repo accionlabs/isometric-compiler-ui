@@ -43,10 +43,10 @@ export default function RightSidebarPanel({
     const [selectedStep, setSelectedStep] = useState<Step | null>(null);
     // const { data } = useQuery({
     //     queryKey: ["signedUrl", "IA User Story Document Version v0.3.pdf"],
-    //     queryFn: () => getSignedUrl("IA User Story Document Version v0.3.pdf"),
+    //     queryFn: () =>
+    //         getSignedUrl("document", "IA User Story Document Version v0.3.pdf"),
     //     staleTime: 300000
     // });
-    // console.log("first", data);
     const handlePersonaClick = (persona: PersonaData): void => {
         setSelectedPersona(persona);
         setSelectedOutcome(null);
@@ -185,9 +185,15 @@ export default function RightSidebarPanel({
                                 <div className="grid grid-cols-1 gap-2 text-left">
                                     {selectedOutcome.citations.map(
                                         (citation) => (
-                                            <CitationCard
+                                            <ContentButton
                                                 key={citation.documentName}
-                                                title={citation.documentName}
+                                                content={citation.documentName}
+                                                onClick={() => {
+                                                    console.log(
+                                                        "citation",
+                                                        citation
+                                                    );
+                                                }}
                                             />
                                         )
                                     )}

@@ -16,6 +16,7 @@ export interface MetadataNodeData extends Record<string, unknown> {
     metadata: Record<string, any>;
     isInteractive?: boolean;
     alignment?: "left" | "right"; // New alignment property
+    onProcess?: (metadata: Record<string, any>) => void;
 }
 
 type MetadataNodeType = Node<MetadataNodeData>;
@@ -28,7 +29,6 @@ const MetadataNode: React.FC<NodeProps<MetadataNodeType>> = ({
     const [isExpanded, setIsExpanded] = useState(false);
     const componentType = schemaLoader.getComponentType(data.type);
     const alignment = data.alignment || "right"; // Default to right alignment
-
     if (!componentType || !data.metadata) {
         return null;
     }
@@ -74,7 +74,14 @@ const MetadataNode: React.FC<NodeProps<MetadataNodeType>> = ({
             <div
                 className="px-3 py-2 rounded-lg border bg-white shadow-lg cursor-pointer transition-all duration-200 hover:shadow-xl"
                 style={nodeStyle}
-                onClick={() => setIsExpanded(true)}
+                onClick={() => {
+                    if (
+                        data.onProcess &&
+                        typeof data.onProcess === "function"
+                    ) {
+                        data.onProcess(data.metadata);
+                    }
+                }}
                 onMouseEnter={(e) => {
                     const tooltip = document.createElement("div");
                     tooltip.className =

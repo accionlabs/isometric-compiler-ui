@@ -61,6 +61,7 @@ interface FlowSVGDisplayProps {
     settings: CanvasSettings | null;
     setSelectedPosition: (position: string) => void;
     setSelectedAttachmentPoint: (point: string) => void;
+    handleComponentMetadata: (metadata: Record<string, any>) => void;
 }
 
 type FlowEdge = Edge<CustomEdgeProps["data"]>;
@@ -87,10 +88,25 @@ const MarkerNode: React.FC<NodeProps<MarkerNodeType>> = ({ data }) => {
         />
     );
 };
+interface MetadataNodeProps extends NodeProps<Node<MetadataNodeData>> {
+    // No need to add onProcess here since it will go into the data prop
+}
 
+// Define your custom function
 const nodeTypes = {
     svgNode: SVGNode,
-    metadata: MetadataNode,
+    metadata: (props: MetadataNodeProps) => {
+        const { handleComponentMetadata } = props.data; // Extract the function from props
+
+        const enhancedData = {
+            ...props.data,
+            onProcess: handleComponentMetadata as (
+                metadata: Record<string, any>
+            ) => void
+        };
+
+        return <MetadataNode {...props} data={enhancedData} />;
+    },
     marker: MarkerNode,
     isometricText: IsometricTextNode
 };
@@ -127,7 +143,8 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
     canvasSize,
     settings,
     setSelectedPosition,
-    setSelectedAttachmentPoint
+    setSelectedAttachmentPoint,
+    handleComponentMetadata
 }) => {
     const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
@@ -221,7 +238,7 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
         const layoutType = "hull-based";
         let config = LAYOUT_CONFIG[layoutType];
         if (settings && settings.metadataLabel) {
-            config = {...config, ...settings.metadataLabel};
+            config = { ...config, ...settings.metadataLabel };
         }
 
         // Need to update LayoutManagerFactory to support smart layouts
@@ -613,7 +630,8 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
                         type: component.type,
                         metadata: component.metadata,
                         alignment: nodePosition.alignment,
-                        isInteractive
+                        isInteractive,
+                        handleComponentMetadata
                     } as MetadataNodeData,
                     draggable: false,
                     style: { zIndex: 4 }
@@ -658,13 +676,16 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
                     attachmentPoints[`attach-${attachment}`]
                 );
             }
-            const isoNodeData = { ...{
-                text: textString,
-                attachment: attachment,
-                width: 200,
-                scale: svgLayout?.scale,
-                isInteractive: true,
-            }, ...settings?.layerLabel} as IsometricTextNodeData;
+            const isoNodeData = {
+                ...{
+                    text: textString,
+                    attachment: attachment,
+                    width: 200,
+                    scale: svgLayout?.scale,
+                    isInteractive: true
+                },
+                ...settings?.layerLabel
+            } as IsometricTextNodeData;
             return {
                 id: `label-${layer.id}`,
                 type: "isometricText",

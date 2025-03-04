@@ -143,11 +143,11 @@ export async function getChatByuuid(uuid: string): Promise<ChatResponse> {
     return result.data;
 }
 
-export async function getSignedUrl(path: string) {
+export async function getSignedUrl(folderName: string, path: string) {
     const url = `${
         config.gatewayApiUrl
     }/isometric/get-signed-url/${encodeURIComponent(
-        `isometric/image/${path}`
+        `isometric/${folderName}/${path}`
     )}`;
     const response = await fetch(url);
 
