@@ -422,6 +422,7 @@ export interface PersonaCardProps {
 }
 export interface CitationCardProps {
     title: string;
+    onClick: () => void;
 }
 
 export interface OutcomeCardProps {
@@ -440,7 +441,7 @@ export interface ContributorCardProps {
 }
 
 export interface ContentCardProps {
-    content: string;
+    content: string | ReactNode;
     isActive?: boolean;
     onClick?: () => void;
 }

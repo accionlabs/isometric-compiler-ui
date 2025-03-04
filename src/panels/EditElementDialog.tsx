@@ -35,29 +35,38 @@ const EditElementDialog: React.FC<LibraryManagerDialogProps> = ({
     element
 }) => {
     const [elementData, setElementData] = useState(element);
-    const [category, setCategory] = useState<string>('');
-        const [error, setError] = useState<string | null>(null);
-    const [status, setStatus] = useState<string>(elementData.status || 'active'); 
+    const [category, setCategory] = useState<string>("");
+    const [error, setError] = useState<string | null>(null);
+    const [status, setStatus] = useState<string>(
+        elementData.status || "active"
+    );
     const queryClient = useQueryClient();
 
-    
+    useEffect(() => {
+        setElementData(element);
+    }, [element.name]);
+
     const { data: categories } = useQuery({
-            queryKey: ["categories_data_flat"],
-            queryFn: getCategoriesFlat
+        queryKey: ["categories_data_flat"],
+        queryFn: getCategoriesFlat
+    });
+
+    useEffect(() => {
+        categories?.data.forEach((category) => {
+            if (category.path == elementData.path) {
+                setCategory(category._id);
+            }
         });
+    }, [elementData, categories]);
 
-        useEffect(()=>{
-            categories?.data.forEach((category)=>{
-                if(category.path == elementData.path){
-                    setCategory(category._id)
-                }
-            })
-        }, [elementData, categories])
+    const {
+        mutate: shapeComponentMutation,
+        isPending: isShapeMutationPending
+    } = useMutation({
+        mutationFn: updateShapesComponent,
+        mutationKey: ["updatedShape"]
+    });
 
-   
-    const {mutate: shapeComponentMutation, isPending: isShapeMutationPending} = useMutation({mutationFn: updateShapesComponent, mutationKey:  ['updatedShape']})
-
-   
     // Update tags handler
     const handleTagsChange = (updatedTags: string[]) => {
         setElementData((prev) => ({
@@ -68,43 +77,66 @@ const EditElementDialog: React.FC<LibraryManagerDialogProps> = ({
 
     const handleStatusChange = (newStatus: string) => {
         setStatus(newStatus);
-        setElementData((prev)=> ({
+        setElementData((prev) => ({
             ...prev,
             status: newStatus as "active" | "inactive"
-        }))
+        }));
     };
-    
-    const handleSubmit = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+
+    const handleSubmit = (
+        e: React.MouseEvent<HTMLButtonElement, MouseEvent>
+    ) => {
         if (!category.trim()) {
             setError("Category is required");
             return;
         }
-        e.preventDefault()
-        shapeComponentMutation({...elementData, category},{onSuccess:()=>{
-            queryClient.setQueryData(['shapes_data', activeCategory], (oldData: { 
-                shapes: Shape[];
-                components: Component[];
-                total: number;
-            }) => {
+        e.preventDefault();
+        shapeComponentMutation(
+            { ...elementData, category },
+            {
+                onSuccess: () => {
+                    queryClient.setQueryData(
+                        ["shapes_data", activeCategory],
+                        (oldData: {
+                            shapes: Shape[];
+                            components: Component[];
+                            total: number;
+                        }) => {
+                            if (!oldData) return; // Ensure oldData exists
+                            const updatedShapes = oldData.shapes.map((shape) =>
+                                shape.name === elementData.name
+                                    ? ({
+                                          ...elementData,
+                                          path: categories?.data.find(
+                                              (el) => category == el._id
+                                          )?.path
+                                      } as Shape)
+                                    : shape
+                            );
 
-                if (!oldData) return; // Ensure oldData exists
-                const updatedShapes = oldData.shapes.map((shape) =>
-                    shape.name === elementData.name ? ({...elementData, 
-                        path: categories?.data.find((el)=>category == el._id)?.path
-                    } as Shape) : shape
-    
-                  );
-                
-                  const updatedComponents = oldData.components.map((component) =>
-                    component.name === elementData.name ? ({...elementData, 
-                        path: categories?.data.find((el)=>category == el._id)?.path
-                    } as Component) : component
-                  );
-                  return {shapes: updatedShapes, components: updatedComponents, total: oldData.total}
-              });
-            onClose()
-        }})
-    }
+                            const updatedComponents = oldData.components.map(
+                                (component) =>
+                                    component.name === elementData.name
+                                        ? ({
+                                              ...elementData,
+                                              path: categories?.data.find(
+                                                  (el) => category == el._id
+                                              )?.path
+                                          } as Component)
+                                        : component
+                            );
+                            return {
+                                shapes: updatedShapes,
+                                components: updatedComponents,
+                                total: oldData.total
+                            };
+                        }
+                    );
+                    onClose();
+                }
+            }
+        );
+    };
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
@@ -114,11 +146,12 @@ const EditElementDialog: React.FC<LibraryManagerDialogProps> = ({
                 </DialogHeader>
 
                 <form className="space-y-4 mt-4">
- 
                     {/* Version Field */}
 
                     <div>
-                        <Label  className="block text-sm font-medium text-gray-200 mb-1">Version</Label>
+                        <Label className="block text-sm font-medium text-gray-200 mb-1">
+                            Version
+                        </Label>
                         <Input
                             value={elementData.version || ""}
                             onChange={(e) =>
@@ -131,11 +164,12 @@ const EditElementDialog: React.FC<LibraryManagerDialogProps> = ({
                         />
                     </div>
 
-
                     {/* Tags Field */}
 
-                    <div >
-                        <Label  className="block text-sm font-medium text-gray-200 mb-1">Tags</Label>
+                    <div>
+                        <Label className="block text-sm font-medium text-gray-200 mb-1">
+                            Tags
+                        </Label>
                         <ChipInput
                             id="tags-input"
                             currentValue={elementData.tags || []}
@@ -146,7 +180,9 @@ const EditElementDialog: React.FC<LibraryManagerDialogProps> = ({
                     </div>
 
                     <div>
-                        <Label className="block text-sm font-medium text-gray-200 mb-1">Description</Label>
+                        <Label className="block text-sm font-medium text-gray-200 mb-1">
+                            Description
+                        </Label>
                         <Textarea
                             id="description"
                             value={elementData.description}
@@ -163,9 +199,10 @@ const EditElementDialog: React.FC<LibraryManagerDialogProps> = ({
                         />
                     </div>
 
-
                     <div>
-                        <Label  className="block text-sm font-medium text-gray-200 mb-1">Category</Label>
+                        <Label className="block text-sm font-medium text-gray-200 mb-1">
+                            Category
+                        </Label>
                         <RadixSelect
                             options={
                                 categories?.data.map((category) => ({
@@ -178,15 +215,17 @@ const EditElementDialog: React.FC<LibraryManagerDialogProps> = ({
                             placeholder="Select categoty"
                         />
                         {error && (
-                                <div className="text-red-400 text-sm mt-1">
-                                    {error}
-                                </div>
-                            )}
+                            <div className="text-red-400 text-sm mt-1">
+                                {error}
+                            </div>
+                        )}
                     </div>
 
-                     {/* Status Field */}
-                     <div>
-                        <Label  className="block text-sm font-medium text-gray-200 mb-1">Status</Label>
+                    {/* Status Field */}
+                    <div>
+                        <Label className="block text-sm font-medium text-gray-200 mb-1">
+                            Status
+                        </Label>
                         <RadixSelect
                             options={[
                                 { label: "Active", value: "active" },
@@ -221,7 +260,7 @@ const EditElementDialog: React.FC<LibraryManagerDialogProps> = ({
                         </div>
                     )}
 
-<div className="flex justify-end space-x-2">
+                    <div className="flex justify-end space-x-2">
                         <Button
                             type="button"
                             className="bg-gray-600 hover:bg-gray-700"
@@ -230,9 +269,11 @@ const EditElementDialog: React.FC<LibraryManagerDialogProps> = ({
                             Cancel
                         </Button>
                         <Button
-                        onClick={handleSubmit}
-                        disabled={isShapeMutationPending}
-                        >Update</Button>
+                            onClick={handleSubmit}
+                            disabled={isShapeMutationPending}
+                        >
+                            Update
+                        </Button>
                     </div>
                 </form>
             </DialogContent>

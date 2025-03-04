@@ -13,7 +13,7 @@ import FlowSVGDisplay from "./FlowSVGDIsplay";
 import ShapesPanel from "./panels/ShapesPanel";
 import CompositionPanel from "./panels/CompositionPanel";
 import AttachmentOptionsPanel from "./panels/AttachmentOptionsPanel";
-import { DiagramInfo, User } from "./Types";
+import { DiagramComponent, DiagramInfo, User } from "./Types";
 import ChatPanel from "./panels/ChatPanel";
 import { ChatProvider } from "./hooks/useChatProvider";
 import SaveDiagramDialog from "@/panels/SaveDiagramDialog";
@@ -52,6 +52,7 @@ import RightSidebarPanel from "./panels/RightSidebarPanel";
 import { getReport } from "./services/chat";
 import { toast } from "sonner";
 import { ImprovedLayoutProps } from "./Interfaces";
+import { set } from "yaml/dist/schema/yaml-1.1/set";
 const newUUID = uuidv4();
 
 type PanelType = "diagrams" | "shapes" | "composition" | "chat";
@@ -163,21 +164,23 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     const [isUnifiedModelFetched, setIsUnifiedModelFetched] = useState(false);
     const [leftSidebarOpen, setLeftSidebarOpen] = useState(true);
     const [rightSidebarOpen, setRightSidebarOpen] = useState(false);
+    const [selectedDiagramCompoent, setSelectedDiagramCompoent] = useState<DiagramComponent | undefined>(undefined);
+    const [qumData, setQumData] = useState<any>(undefined);
 
     const timeoutIdRef = useRef<NodeJS.Timeout | null>(null);
     const isFirstRender = useRef(true);
 
     const updateDiagramWithRateLimit = useCancelLatestCalls(updateDiagram);
-    const {
-        data: reportData,
-        isLoading: isReportLoading,
-        refetch,
-        isRefetching
-    } = useQuery({
-        queryKey: ["report", existinguuid],
-        queryFn: () => getReport(existinguuid || ""),
-        enabled: false
-    });
+    // const {
+    //     data: reportData,
+    //     isLoading: isReportLoading,
+    //     refetch,
+    //     isRefetching
+    // } = useQuery({
+    //     queryKey: ["report", existinguuid],
+    //     queryFn: () => getReport(existinguuid || ""),
+    //     enabled: false
+    // });
     const { mutate, isPending: isCreateDiagramPending } = useMutation({
         mutationFn: saveDiagram,
         onSettled: (res, error) => {
@@ -368,7 +371,14 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     const handleOpenSaveDialog = () => {
         setIsSaveDiagramDialogOpen(true);
     };
-
+    const handleComponentMetadata = (data: any) => {
+        setRightSidebarOpen(true);
+        const selectedComponentData = diagramComponents.find((component) => { 
+            return component?.metadata?.name === data.name;
+        })
+        setSelectedDiagramCompoent (selectedComponentData)
+        setQumData(selectedComponentData?.metadata?.qum);
+    };
     const handleSaveDiagram = async () => {
         console.log("CompositionPanel handleSaveDiagram started:", {
             fileName
@@ -417,23 +427,23 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
             window.removeEventListener("message", handleMessage);
         };
     }, []);
-    useEffect(() => {
-        if (isFirstRender.current) {
-            isFirstRender.current = false;
-            return;
-        }
-        if (isRefetching) return;
-        if (reportData?.qum) {
-            setRightSidebarOpen(true);
-        } else {
-            toast.error(
-                "Unified model unavailable right now, Please try again!",
-                {
-                    duration: 3000
-                }
-            );
-        }
-    }, [reportData, isRefetching]);
+    // useEffect(() => {
+    //     if (isFirstRender.current) {
+    //         isFirstRender.current = false;
+    //         return;
+    //     }
+    //     if (isRefetching) return;
+    //     if (reportData?.qum) {
+    //         setRightSidebarOpen(true);
+    //     } else {
+    //         toast.error(
+    //             "Unified model unavailable right now, Please try again!",
+    //             {
+    //                 duration: 3000
+    //             }
+    //         );
+    //     }
+    // }, [reportData, isRefetching]);
 
     // Trigger autoSave whenever the diagram composed svg changes
     useEffect(() => {
@@ -551,7 +561,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                         <button
                             key={panel.id}
                             onClick={() => setPanel(panel.id)}
-                            className={`relative rounded p-2  bg-customLightGray`}
+                            className={`relative rounded p-2  bg-customGray2`}
                         >
                             {/* Hidden bold reference text */}
                             <span
@@ -628,10 +638,23 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                     <CustomTooltip
                         action={
                             <button
-                                onClick={() => {
-                                    rightSidebarOpen
-                                        ? setRightSidebarOpen(false)
-                                        : refetch();
+                                onClick={async () => {
+                                    // rightSidebarOpen
+                                    //     ? setRightSidebarOpen(false)
+                                    //     : refetch();
+                                    setSelectedDiagramCompoent(undefined);
+                                    if(rightSidebarOpen) setRightSidebarOpen(false);
+                                    else {
+                                        const data = await queryClient.fetchQuery({
+                                        queryKey: ["report", existinguuid],
+                                        queryFn: () => getReport(existinguuid || ""),
+                                    })
+                                    if(data?.qum) { 
+                                        setQumData(data.qum);
+                                        setRightSidebarOpen(true);
+                                    }
+                                    }
+                                    
                                 }}
                                 className="hover:bg-customLightGray p-2 rounded disabled:cursor-not-allowed disabled:opacity-50"
                             >
@@ -905,6 +928,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                             setSelectedAttachmentPoint={
                                 handleSelectedAttachmentPoint
                             }
+                            handleComponentMetadata={handleComponentMetadata}
                         />
                     </div>
 
@@ -920,7 +944,8 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                             setRightSidebarOpen={setRightSidebarOpen}
                             svgContent={composedSVG}
                             canvasSize={canvasSize}
-                            reportData={reportData?.qum ?? []}
+                            reportData={qumData}
+                            componentData={selectedDiagramCompoent}
                         />
                     </div>
                 </div>

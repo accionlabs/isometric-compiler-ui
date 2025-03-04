@@ -61,6 +61,7 @@ interface FlowSVGDisplayProps {
     settings: CanvasSettings | null;
     setSelectedPosition: (position: string) => void;
     setSelectedAttachmentPoint: (point: string) => void;
+    handleComponentMetadata: (metadata: Record<string, any>) => void;
 }
 
 type FlowEdge = Edge<CustomEdgeProps["data"]>;
@@ -87,10 +88,25 @@ const MarkerNode: React.FC<NodeProps<MarkerNodeType>> = ({ data }) => {
         />
     );
 };
+interface MetadataNodeProps extends NodeProps<Node<MetadataNodeData>> {
+    // No need to add onProcess here since it will go into the data prop
+}
 
+// Define your custom function
 const nodeTypes = {
     svgNode: SVGNode,
-    metadata: MetadataNode,
+    metadata: (props: MetadataNodeProps) => {
+        const { handleComponentMetadata } = props.data; // Extract the function from props
+
+        const enhancedData = {
+            ...props.data,
+            onProcess: handleComponentMetadata as (
+                metadata: Record<string, any>
+            ) => void
+        };
+
+        return <MetadataNode {...props} data={enhancedData} />;
+    },
     marker: MarkerNode,
     isometricText: IsometricTextNode
 };
@@ -127,7 +143,8 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
     canvasSize,
     settings,
     setSelectedPosition,
-    setSelectedAttachmentPoint
+    setSelectedAttachmentPoint,
+    handleComponentMetadata
 }) => {
     const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
@@ -150,14 +167,14 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
 
     // Debug: Log state changes
     useEffect(() => {
-        console.log("State Change Debug:", {
-            nodesCount: nodes.length,
-            edgesCount: edges.length,
-            diagramComponentsCount: diagramComponents.length,
-            areComponentBoundsReady,
-            hasLayoutManager: !!layoutManager,
-            componentBoundsCount: Object.keys(componentBounds).length
-        });
+        // console.log("State Change Debug:", {
+        //     nodesCount: nodes.length,
+        //     edgesCount: edges.length,
+        //     diagramComponentsCount: diagramComponents.length,
+        //     areComponentBoundsReady,
+        //     hasLayoutManager: !!layoutManager,
+        //     componentBoundsCount: Object.keys(componentBounds).length
+        // });
     }, [
         nodes.length,
         edges.length,
@@ -221,7 +238,7 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
         const layoutType = "hull-based";
         let config = LAYOUT_CONFIG[layoutType];
         if (settings && settings.metadataLabel) {
-            config = {...config, ...settings.metadataLabel};
+            config = { ...config, ...settings.metadataLabel };
         }
 
         // Need to update LayoutManagerFactory to support smart layouts
@@ -362,11 +379,11 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
             (component) => component.type && component.metadata
         );
 
-        console.log("Processing Components:", {
-            total: diagramComponents.length,
-            withMetadata: componentsWithMetadata.length,
-            componentBounds: Object.keys(componentBounds)
-        });
+        // console.log("Processing Components:", {
+        //     total: diagramComponents.length,
+        //     withMetadata: componentsWithMetadata.length,
+        //     componentBounds: Object.keys(componentBounds)
+        // });
 
         const nodePositions = calculateMetadataNodePositions(
             componentsWithMetadata
@@ -377,13 +394,13 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
             return;
         }
 
-        console.log("Node Positions Calculated:", {
-            positionsCount: nodePositions.size,
-            positions: Array.from(nodePositions.entries()).map(([id, pos]) => ({
-                id,
-                position: pos.position
-            }))
-        });
+        // console.log("Node Positions Calculated:", {
+        //     positionsCount: nodePositions.size,
+        //     positions: Array.from(nodePositions.entries()).map(([id, pos]) => ({
+        //         id,
+        //         position: pos.position
+        //     }))
+        // });
 
         // Update both nodes and edges together to maintain synchronization
         setNodes((prevNodes) => {
@@ -407,12 +424,12 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
             });
 
             // Debug node updates
-            console.log("Nodes Updated:", {
-                prevCount: prevNodes.length,
-                newCount: updatedNodes.length,
-                metadataNodes: updatedNodes.filter((n) => n.type === "metadata")
-                    .length
-            });
+            // console.log("Nodes Updated:", {
+            //     prevCount: prevNodes.length,
+            //     newCount: updatedNodes.length,
+            //     metadataNodes: updatedNodes.filter((n) => n.type === "metadata")
+            //         .length
+            // });
             // Create new edges for the updated node positions
             const newEdges: FlowEdge[] = updatedNodes
                 .filter(
@@ -445,10 +462,10 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
                                 componentId: component.id,
                                 pointName: point.name
                             }));
-                            console.log(
-                                `Attachment points for ${component.id}:`,
-                                points
-                            );
+                            // console.log(
+                            //     `Attachment points for ${component.id}:`,
+                            //     points
+                            // );
                             return points;
                         }
                     );
@@ -460,12 +477,12 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
                             globalAttachmentPoints
                         );
 
-                    console.log("Edge Connection Details:", {
-                        nodeId: metadataNode.id,
-                        sourceHandle,
-                        targetHandle,
-                        sourcePosition
-                    });
+                    // console.log("Edge Connection Details:", {
+                    //     nodeId: metadataNode.id,
+                    //     sourceHandle,
+                    //     targetHandle,
+                    //     sourcePosition
+                    // });
 
                     if (!sourceHandle || !targetHandle) {
                         console.log(
@@ -613,7 +630,8 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
                         type: component.type,
                         metadata: component.metadata,
                         alignment: nodePosition.alignment,
-                        isInteractive
+                        isInteractive,
+                        handleComponentMetadata
                     } as MetadataNodeData,
                     draggable: false,
                     style: { zIndex: 4 }
@@ -658,13 +676,16 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
                     attachmentPoints[`attach-${attachment}`]
                 );
             }
-            const isoNodeData = { ...{
-                text: textString,
-                attachment: attachment,
-                width: 200,
-                scale: svgLayout?.scale,
-                isInteractive: true,
-            }, ...settings?.layerLabel} as IsometricTextNodeData;
+            const isoNodeData = {
+                ...{
+                    text: textString,
+                    attachment: attachment,
+                    width: 200,
+                    scale: svgLayout?.scale,
+                    isInteractive: true
+                },
+                ...settings?.layerLabel
+            } as IsometricTextNodeData;
             return {
                 id: `label-${layer.id}`,
                 type: "isometricText",

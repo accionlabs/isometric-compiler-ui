@@ -143,12 +143,25 @@ export async function getChatByuuid(uuid: string): Promise<ChatResponse> {
     return result.data;
 }
 
-export async function getSignedUrl(path: string) {
+export async function getSignedUrl(folderName: string, path: string) {
     const url = `${
         config.gatewayApiUrl
     }/isometric/get-signed-url/${encodeURIComponent(
-        `isometric/image/${path}`
+        `isometric/${folderName}/${path}`
     )}`;
+    const response = await fetch(url);
+
+    // Check if the response is ok (status code in the range 200-299)
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.text();
+    return result;
+}
+
+export async function getDocumentsSignedUrlById(id: string) {
+    const url = `${config.gatewayApiUrl}/isometric/document-url/${id}`;
     const response = await fetch(url);
 
     // Check if the response is ok (status code in the range 200-299)

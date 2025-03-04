@@ -235,7 +235,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                 const imageKey = urlArray[urlArray.length - 1];
                 signedUrl = await queryClient.fetchQuery({
                     queryKey: ["getSignedUrl", imageKey],
-                    queryFn: () => getSignedUrl(imageKey),
+                    queryFn: () => getSignedUrl("image", imageKey),
                     staleTime: 300000
                 });
             } else {
