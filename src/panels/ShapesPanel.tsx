@@ -24,6 +24,7 @@ import { Badge } from "@/components/ui/Badge";
 import clsx from "clsx";
 import { CUSTOM_SCROLLBAR } from "@/Constants";
 import { formatString } from "@/lib/utils";
+import CustomTooltip from "@/components/flow/CustomToolTip";
 
 type ElementType = "3D" | "2D" | "LAYERS" | "COMPONENT";
 
@@ -253,43 +254,48 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
         };
 
         return (
-            <div
+            <CustomTooltip
                 key={`${element.name}-${element.version}`}
-                onClick={handleElementClick}
-                className="flex flex-col  p-2 bg-customDarkGray cursor-pointer rounded-lg  relative aspect-[3/2]  disabled:opacity-80 disabled:cursor-not-allowed"
-            >
-                <div
-                    role="button"
-                    aria-disabled={isAddDisabled[elementType]}
-                    onClick={(e) => handlePreviewClick(e, elementType)}
-                    className={`relative w-full h-full ${
-                        isAddDisabled[elementType]
-                            ? "cursor-not-allowed opacity-50"
-                            : "cursor-pointer"
-                    }`}
-                >
-                    {renderPreview(element as UnifiedElement)}
-
-                    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm opacity-0 hover:opacity-100 transition-opacity">
-                        <CirclePlus className="text-white text-3xl select-none" />
-                    </div>
-                </div>
-
-                <div className="flex items-start gap-2 mt-2 ">
+                action={
                     <div
-                        className={clsx(
-                            `w-2 h-2 ${
-                                filterBgColors[
-                                    elementType.toLocaleUpperCase() as keyof typeof filterBgColors
-                                ]
-                            } rounded-full shrink-0 mt-1.5`
-                        )}
-                    />
-                    <p className="h-10 break-words text-white text-sm overflow-hidden text-ellipsis  line-clamp-2">
-                        {formatString(element.name)}
-                    </p>
-                </div>
-            </div>
+                        onClick={handleElementClick}
+                        className="flex flex-col  p-2 bg-customDarkGray cursor-pointer rounded-lg  relative aspect-[3/2]  disabled:opacity-80 disabled:cursor-not-allowed"
+                    >
+                        <div
+                            role="button"
+                            aria-disabled={isAddDisabled[elementType]}
+                            onClick={(e) => handlePreviewClick(e, elementType)}
+                            className={`relative w-full h-full ${
+                                isAddDisabled[elementType]
+                                    ? "cursor-not-allowed opacity-50"
+                                    : "cursor-pointer"
+                            }`}
+                        >
+                            {renderPreview(element as UnifiedElement)}
+
+                            <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm opacity-0 hover:opacity-100 transition-opacity">
+                                <CirclePlus className="text-white text-3xl select-none" />
+                            </div>
+                        </div>
+                        <div className="flex items-start gap-2 mt-2 ">
+                            <div
+                                className={clsx(
+                                    `w-2 h-2 ${
+                                        filterBgColors[
+                                            elementType.toLocaleUpperCase() as keyof typeof filterBgColors
+                                        ]
+                                    } rounded-full shrink-0 mt-1.5`
+                                )}
+                            />
+                            <p className="h-10 break-words text-white text-sm overflow-hidden text-ellipsis  line-clamp-2">
+                                {formatString(element.name)}
+                            </p>
+                        </div>
+                    </div>
+                }
+                header={formatString(element.name)}
+                side="bottom"
+            />
         );
     };
     const renderShapeDetails = (element: UnifiedElement) => {
@@ -393,7 +399,11 @@ const ShapesPanel: React.FC<ShapesPanelProps> = ({
                     {filterOptionsWithColor.map((item) => (
                         <button
                             key={item.name}
-                            className="flex items-center gap-1 bg-customGray2 rounded px-2 py-1 focus:outline-none"
+                            className={`flex items-center gap-1 ${
+                                selectedFilter === item.name
+                                    ? "bg-customLightGray "
+                                    : "bg-customGray2"
+                            } rounded px-2 py-1 focus:outline-none`}
                             onClick={() => setselectedFilter(item.name)}
                         >
                             {item.color && (
