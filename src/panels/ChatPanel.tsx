@@ -5,6 +5,7 @@ import { DiagramComponent } from "@/Types";
 import { Message, useChat } from "@/hooks/useChatProvider";
 import {
     getChatByuuid,
+    getReport,
     getSignedUrl,
     sendChatRequestV2
 } from "@/services/chat";
@@ -18,6 +19,26 @@ import Markdown from "react-markdown";
 import { CUSTOM_SCROLLBAR } from "@/Constants";
 import { getDiagramImageUrl } from "@/lib/exportUtils";
 import { config } from "@/config";
+import { toast } from "sonner";
+
+
+const SemanticModelStatus = {
+    ACTIVE: 'active',
+    INITIATED: 'initiated',
+    GENERATING_BUSINESS_SPEC: 'generating_business_spec',
+    GENERATING_QUM_DESIGN_SPEC: 'generating_qum_desing_spec',
+    GENERATING_BREEZE_SPEC: 'generating_breeze_spec',
+    INACTIVE: 'inactive'
+}
+
+const semanticModelInfoTexts = [{
+    status: undefined, infoText: 'Extracting components.'
+}, {status: SemanticModelStatus.INITIATED, infoText: 'Mapping to Unified Model...'}, 
+{status: SemanticModelStatus.GENERATING_BUSINESS_SPEC, infoText: 'Optimizing layout...'}, 
+{status: SemanticModelStatus.GENERATING_QUM_DESIGN_SPEC, infoText: 'Applying isometric view...'},
+ {status: SemanticModelStatus.GENERATING_BREEZE_SPEC, infoText: 'Finalizing diagram..'},
+{status: SemanticModelStatus.ACTIVE, infoText: 'Unified Model generated successfully!'}
+]
 
 interface ChatPanelProps {
     handleLoadDiagramFromJSON: (
@@ -84,6 +105,9 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     );
     const [isViewerOpen, setViewerOpen] = useState(false);
     const [showLoader, setShowLoader] = useState(false);
+    const [currentSemanicModelSatus, setCurrentSemanicModelInfoStatus] = useState(undefined);
+    const [isSemanticModelQueryEnabled, setIsSemanticModelQueryEnabled] = useState(false);
+    const [toastId, setToastId] = useState<string | number | null>(null);
     const [selectedFile, setSelectedFile] = React.useState<{
         file: File | null;
         src: string;
@@ -104,11 +128,28 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             },
             enabled: !!existinguuid
         });
+
+    useQuery({
+            queryKey: [
+                "report",
+                existinguuid
+            ],
+            queryFn: () =>
+                getReport(
+                    existinguuid || ""
+                ),
+            enabled: isSemanticModelQueryEnabled,
+            refetchInterval: isSemanticModelQueryEnabled ? 2000 : false,
+        })
     const { mutate: sendChatMutaion, isPending: isLoading } = useMutation({
         mutationFn: sendChatRequestV2,
         onSettled: async (res, error) => {
             if (res) {
-                queryClient.invalidateQueries({ queryKey: ["report"] });
+                queryClient.invalidateQueries({ queryKey: ["report", existinguuid] });
+
+                if(res.metadata?.isPdfUploaded){ 
+                    setIsSemanticModelQueryEnabled(true);
+                }
 
                 if (res.metadata.isEmailQuery && !!res.metadata.emailId) {
                     const imageUrl = await getDiagramImageUrl("png");
@@ -156,6 +197,23 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             }
         }
     });
+
+    // let toastId = useRef<string | number | null>(null);
+
+    // useEffect(() => {
+    //     if(semanticModel){
+    //         const { status } = semanticModel;
+    //         const semanticModelInfo = semanticModelInfoTexts.find((info) => info.status === status);
+    //         if(status ===  SemanticModelStatus.ACTIVE){
+    //             setIsSemanticModelQueryEnabled(false);
+    //             toast.success(semanticModelInfo?.infoText, { duration: 5000 });
+    //         } else {
+    //             // toast.dismiss(toastId);
+    //             toast.info(semanticModelInfo?.infoText,{ duration: 5000 });
+    //         }
+    //         setCurrentSemanicModelInfoStatus(semanticModel.status);
+    //     }
+    // },[semanticModel])
 
     useEffect(() => {
         const existingMessages = existingChatData?.chats.map((chat) => {
@@ -320,8 +378,35 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         addHistory(content);
     };
 
+    const setTost = (messge: string) => {
+        console.log('toastId', toastId);
+        if(toastId) {
+            console.log("disminssssssss");
+            const dismisedid = toast.dismiss(toastId);
+            console.log('dismisedid', dismisedid);
+        }
+        if(messge ===  'success'){
+            console.log('success');
+            // setIsSemanticModelQueryEnabled(false);
+            const toastIdSuccess = toast.success('Success', { duration: Infinity });
+            console.log('toastIdSuccess', toastIdSuccess);
+            setToastId(toastIdSuccess);
+        } else {
+            console.log('error');
+            const toastIdError = toast.info('Error', { duration: Infinity });
+            console.log('toastIdError', toastIdError);
+            setToastId(toastIdError);
+            
+        }
+    }
+
     return (
         <div className="p-4 h-full flex flex-col gap-4 ">
+            <button onClick={() => setTost('success')}>success</button>
+            <button onClick={() => setTost('Error')}>error</button>
+            {/* {toast("Something went wrong. Please try again.")} */}
+
+            {/* {i < 7 && toast(infoText)} */}
             {/* chat container */}
             <div
                 className={`flex-grow overflow-x-hidden flex flex-col gap-2 ${CUSTOM_SCROLLBAR}`}
@@ -401,6 +486,12 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                 <div ref={messagesEndRef} />
             </div>
 
+            <div className="w-full relative">
+            <div className="absolute -top-12 left-1/2 -translate-x-1/2 overflow-hidden">
+                <div className="whitespace-nowrap transition-transform duration-500 ease-in-out animate-slide-left bg-white text-black px-4 py-2 rounded-md drop-shadow-md">
+                    Generating ISometric diagrma...........
+                </div>
+            </div>
             {/* input container */}
             <form onSubmit={handleSend} ref={formRef} className="w-full">
                 <div className="relative flex max-h-60 w-full grow items-center overflow-hidden bg-background px-8 sm:rounded-md sm:border sm:p-1 sm:pr-20">
@@ -431,6 +522,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                             </button>
                         </div>
                     )}
+
 
                     {/* Text input next to image */}
                     <Textarea
@@ -474,6 +566,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                     </div>
                 </div>
             </form>
+            </div>
 
             {/* viewer Popup */}
             <ViewerPopup
