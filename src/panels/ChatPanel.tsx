@@ -19,8 +19,7 @@ import Markdown from "react-markdown";
 import { CUSTOM_SCROLLBAR } from "@/Constants";
 import { getDiagramImageUrl } from "@/lib/exportUtils";
 import { config } from "@/config";
-import { toast } from "sonner";
-
+import Toast from "@/components/ui/Toast";
 
 const SemanticModelStatus = {
     ACTIVE: 'active',
@@ -105,9 +104,8 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     );
     const [isViewerOpen, setViewerOpen] = useState(false);
     const [showLoader, setShowLoader] = useState(false);
-    const [currentSemanicModelSatus, setCurrentSemanicModelInfoStatus] = useState(undefined);
     const [isSemanticModelQueryEnabled, setIsSemanticModelQueryEnabled] = useState(false);
-    const [toastId, setToastId] = useState<string | number | null>(null);
+    const [toastData, setToastData] = useState<any>({});
     const [selectedFile, setSelectedFile] = React.useState<{
         file: File | null;
         src: string;
@@ -129,7 +127,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             enabled: !!existinguuid
         });
 
-    useQuery({
+    const {data: semanticModel} = useQuery({
             queryKey: [
                 "report",
                 existinguuid
@@ -139,7 +137,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                     existinguuid || ""
                 ),
             enabled: isSemanticModelQueryEnabled,
-            refetchInterval: isSemanticModelQueryEnabled ? 2000 : false,
+            refetchInterval: isSemanticModelQueryEnabled ? 5000 : false,
         })
     const { mutate: sendChatMutaion, isPending: isLoading } = useMutation({
         mutationFn: sendChatRequestV2,
@@ -200,20 +198,18 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
 
     // let toastId = useRef<string | number | null>(null);
 
-    // useEffect(() => {
-    //     if(semanticModel){
-    //         const { status } = semanticModel;
-    //         const semanticModelInfo = semanticModelInfoTexts.find((info) => info.status === status);
-    //         if(status ===  SemanticModelStatus.ACTIVE){
-    //             setIsSemanticModelQueryEnabled(false);
-    //             toast.success(semanticModelInfo?.infoText, { duration: 5000 });
-    //         } else {
-    //             // toast.dismiss(toastId);
-    //             toast.info(semanticModelInfo?.infoText,{ duration: 5000 });
-    //         }
-    //         setCurrentSemanicModelInfoStatus(semanticModel.status);
-    //     }
-    // },[semanticModel])
+    useEffect(() => {
+        if(semanticModel){
+            const { status } = semanticModel;
+            const semanticModelInfo = semanticModelInfoTexts.find((info) => info.status === status);
+            setToastData({
+                message: semanticModelInfo?.infoText,
+                type: status === SemanticModelStatus.ACTIVE ? 'success' : 'info',
+                duration: status === SemanticModelStatus.ACTIVE ? 5000: null, 
+                position: 'bottom-right'
+            });
+        }
+    },[semanticModel])
 
     useEffect(() => {
         const existingMessages = existingChatData?.chats.map((chat) => {
@@ -377,36 +373,9 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         handleLoadDiagramFromJSON(content);
         addHistory(content);
     };
-
-    const setTost = (messge: string) => {
-        console.log('toastId', toastId);
-        if(toastId) {
-            console.log("disminssssssss");
-            const dismisedid = toast.dismiss(toastId);
-            console.log('dismisedid', dismisedid);
-        }
-        if(messge ===  'success'){
-            console.log('success');
-            // setIsSemanticModelQueryEnabled(false);
-            const toastIdSuccess = toast.success('Success', { duration: Infinity });
-            console.log('toastIdSuccess', toastIdSuccess);
-            setToastId(toastIdSuccess);
-        } else {
-            console.log('error');
-            const toastIdError = toast.info('Error', { duration: Infinity });
-            console.log('toastIdError', toastIdError);
-            setToastId(toastIdError);
-            
-        }
-    }
-
+     
     return (
         <div className="p-4 h-full flex flex-col gap-4 ">
-            <button onClick={() => setTost('success')}>success</button>
-            <button onClick={() => setTost('Error')}>error</button>
-            {/* {toast("Something went wrong. Please try again.")} */}
-
-            {/* {i < 7 && toast(infoText)} */}
             {/* chat container */}
             <div
                 className={`flex-grow overflow-x-hidden flex flex-col gap-2 ${CUSTOM_SCROLLBAR}`}
@@ -485,13 +454,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                 )}
                 <div ref={messagesEndRef} />
             </div>
-
-            <div className="w-full relative">
-            <div className="absolute -top-12 left-1/2 -translate-x-1/2 overflow-hidden">
-                <div className="whitespace-nowrap transition-transform duration-500 ease-in-out animate-slide-left bg-white text-black px-4 py-2 rounded-md drop-shadow-md">
-                    Generating ISometric diagrma...........
-                </div>
-            </div>
+            {toastData?.message && <Toast {...toastData} />}
             {/* input container */}
             <form onSubmit={handleSend} ref={formRef} className="w-full">
                 <div className="relative flex max-h-60 w-full grow items-center overflow-hidden bg-background px-8 sm:rounded-md sm:border sm:p-1 sm:pr-20">
@@ -566,7 +529,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                     </div>
                 </div>
             </form>
-            </div>
+            
 
             {/* viewer Popup */}
             <ViewerPopup
