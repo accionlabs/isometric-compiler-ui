@@ -486,8 +486,8 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                 <div ref={messagesEndRef} />
             </div>
 
-            <div className="w-full relative">
-            <div className="absolute -top-12 left-1/2 -translate-x-1/2 overflow-hidden">
+            <div className="w-full">
+            <div className="absolute bottom-0 right-0 z-50 -translate-x-1/2 overflow-hidden">
                 <div className="whitespace-nowrap transition-transform duration-500 ease-in-out animate-slide-left bg-white text-black px-4 py-2 rounded-md drop-shadow-md">
                     Generating ISometric diagrma...........
                 </div>
