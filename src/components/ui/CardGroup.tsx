@@ -124,8 +124,8 @@ export const ContributorCard: React.FC<ContributorCardProps> = ({
     </div>
 );
 
-export const ContentDiv: React.FC<ContentCardProps> = ({ content }) => (
-    <div className={` p-2 text-xs rounded-md text-left  bg-customGray `}>
+export const ContentDiv: React.FC<ContentCardProps> = ({ content, isActive = false }) => (
+    <div className={` p-2 text-xs rounded-md text-left  ${isActive ? "bg-customBlue" : "bg-customGray"}`}>
         {content}
     </div>
 );

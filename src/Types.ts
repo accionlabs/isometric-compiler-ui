@@ -365,6 +365,7 @@ export interface MessageResponse {
         needFeedback: boolean;
         isEmailQuery?: boolean;
         emailId?: string;
+        isPdfUploaded?: boolean;
     };
     role: "user" | "system";
 }
