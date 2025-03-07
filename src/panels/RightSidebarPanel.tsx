@@ -16,6 +16,7 @@ import {
     Section
 } from "@/components/ui/CardGroup";
 import SVGPreview from "@/components/ui/SVGPreview";
+import { RadixSelect } from "@/components/ui/Select";
 import { componentLibraryManager } from "@/lib/componentLib";
 import { shapesLibraryManager } from "@/lib/shapesLib";
 import { getDocumentsSignedUrlById } from "@/services/chat";
@@ -34,10 +35,10 @@ interface RightSidebarPanelProps {
 
 const defaultTabs = [
     { name: "Blueprint", enabled: true, show: false },
-    { name: "Functional", enabled: true, show: true },
-    { name: "Design", enabled: false, show: true },
-    { name: "Metrics", enabled: false, show: true },
-    { name: "Technical", enabled: false, show: true }
+    { name: "Functional", enabled: true, show: true }
+    // { name: "Design", enabled: false, show: true },
+    // { name: "Metrics", enabled: false, show: true },
+    // { name: "Technical", enabled: false, show: true }
 ];
 
 export default function RightSidebarPanel({
@@ -109,8 +110,14 @@ export default function RightSidebarPanel({
         );
     };
 
-    const handleOutcomeClick = (outcome: Outcome): void => {
-        setSelectedOutcome(outcome);
+    const handleOutcomeClick = (selectedValue: string): void => {
+        const foundOutcome = selectedPersona?.outcomes.find(
+            (outcome) => outcome.outcome === selectedValue
+        );
+
+        if (!foundOutcome) return;
+
+        setSelectedOutcome(foundOutcome);
         setSelectedScenario(null);
         setTabs((prev) =>
             prev.map((tab) =>
@@ -119,8 +126,12 @@ export default function RightSidebarPanel({
         );
     };
 
-    const handleScenarioClick = (scenario: Scenario): void => {
-        setSelectedScenario(scenario);
+    const handleScenarioClick = (selectedValue: string): void => {
+        const foundScenario = selectedOutcome?.scenarios.find(
+            (scenario) => scenario.scenario === selectedValue
+        );
+        if (!foundScenario) return;
+        setSelectedScenario(foundScenario);
         setTabs((prev) =>
             prev.map((tab) =>
                 tab.name === "Design" ? { ...tab, enabled: true } : tab
@@ -165,153 +176,191 @@ export default function RightSidebarPanel({
             </div>
 
             {/* Tab Content */}
-            {activeTab === "Functional" && (
-                <div
-                    className={`flex-col flex overflow-auto flex-grow px-4 py-3 ${CUSTOM_SCROLLBAR}`}
-                >
-                    <Section title="Personas">
-                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-2">
-                            {reportData?.map((item, index) => (
-                                <PersonaCard
-                                    key={item.persona + index}
-                                    title={item.persona}
-                                    onClick={() => handlePersonaClick(item)}
-                                    isActive={
-                                        selectedPersona?.persona ===
-                                        item.persona
-                                    }
-                                />
-                            ))}
-                        </div>
-                    </Section>
 
-                    {selectedPersona && (
-                        <Section title="Outcomes">
-                            <div className="grid grid-cols-1 gap-2">
-                                {selectedPersona.outcomes.map(
-                                    (outcome, index) => (
-                                        <ContentButton
-                                            key={outcome.outcome + index}
+            {activeTab === "Functional" && reportData && (
+                <div
+                    className={`flex-col flex overflow-auto flex-grow px-4 pt-3 ${CUSTOM_SCROLLBAR}`}
+                >
+                    <Section title="Functional">
+                        <div className="flex flex-col gap-4">
+                            <div>
+                                <h6 className="mb-2 text-sm">Persona</h6>
+                                <div className="grid grid-cols-1 xl:grid-cols-2 gap-2">
+                                    {reportData?.map((item, index) => (
+                                        <PersonaCard
+                                            key={item.persona + index}
+                                            title={item.persona}
                                             onClick={() =>
-                                                handleOutcomeClick(outcome)
+                                                handlePersonaClick(item)
                                             }
-                                            content={outcome.outcome}
                                             isActive={
-                                                selectedOutcome?.outcome ===
-                                                outcome.outcome
-                                            }
-                                        />
-                                    )
-                                )}
-                            </div>
-                        </Section>
-                    )}
-                    {selectedOutcome && (
-                        <>
-                            <Section title="Scenarios">
-                                <div className="grid grid-cols-1 gap-2 text-left">
-                                    {selectedOutcome.scenarios.map(
-                                        (scenario, index) => (
-                                            <ContentButton
-                                                key={scenario.scenario + index}
-                                                content={scenario.scenario}
-                                                onClick={() =>
-                                                    handleScenarioClick(
-                                                        scenario
-                                                    )
-                                                }
-                                                isActive={
-                                                    selectedScenario?.scenario ===
-                                                    scenario.scenario
-                                                }
-                                            />
-                                        )
-                                    )}
-                                </div>
-                            </Section>
-                            <Section title="Citations">
-                                <div className="grid grid-cols-1 gap-2 text-left">
-                                    {selectedOutcome.citations.map(
-                                        (citation) => (
-                                            <CitationCard
-                                                key={citation.documentName}
-                                                title={citation.documentName}
-                                                onClick={() =>
-                                                    handleDocumentDownload(
-                                                        citation.documentId
-                                                    )
-                                                }
-                                            />
-                                        )
-                                    )}
-                                </div>
-                            </Section>
-                        </>
-                    )}
-                </div>
-            )}
-            {activeTab === "Design" && (
-                <div className="flex-col flex overflow-auto flex-grow px-4 py-3">
-                    
-                    {selectedScenario && (
-                        <><Section title="Scenarios">
-                        <div className="grid grid-cols-1 gap-2 text-left">
-                            <ContentDiv content={selectedScenario?.scenario}
-                            isActive={true}
-                             />
-                        </div>
-                        
-                    </Section>
-                    <Section title="Steps">
-                            <div className="grid grid-cols-1 gap-2 text-left">
-                                {selectedScenario.steps.map((step, index) => (
-                                    <ContentButton
-                                        key={step.step + index}
-                                        content={`${index + 1}. ${step.step}`}
-                                        onClick={() => handleStepClick(step)}
-                                        isActive={
-                                            selectedStep?.step === step.step
-                                        }
-                                    />
-                                ))}
-                            </div>
-                        </Section>
-                    </>
-                        
-                    )}
-                    {selectedStep && (
-                        <>
-                            <Section title="Actions">
-                                <div className="grid grid-cols-1 gap-2 text-left">
-                                    {selectedStep.actions.map(
-                                        (action, index) => (
-                                            <ContentDiv
-                                                key={action.action + index}
-                                                content={action.action}
-                                            />
-                                        )
-                                    )}
-                                </div>
-                            </Section>
-                            <Section title="Citations">
-                                <div className="grid grid-cols-1 gap-2 text-left">
-                                    {selectedStep.citations.map((citation) => (
-                                        <CitationCard
-                                            key={citation.documentName}
-                                            title={citation.documentName}
-                                            onClick={() =>
-                                                handleDocumentDownload(
-                                                    citation.documentId
-                                                )
+                                                selectedPersona?.persona ===
+                                                item.persona
                                             }
                                         />
                                     ))}
                                 </div>
+                            </div>
+
+                            {selectedPersona && (
+                                <div>
+                                    <h4 className="mb-2 text-sm">Tasks</h4>
+                                    <RadixSelect
+                                        placeholder="No outcome"
+                                        options={selectedPersona.outcomes.map(
+                                            (outcome) => ({
+                                                value: outcome.outcome,
+                                                label: outcome.outcome
+                                            })
+                                        )}
+                                        value={selectedOutcome?.outcome ?? ""}
+                                        onChange={(value) =>
+                                            handleOutcomeClick(value)
+                                        }
+                                    />
+                                </div>
+                            )}
+                            {selectedOutcome && (
+                                <>
+                                    <div>
+                                        <h4 className="mb-2 text-sm">
+                                            Scenarios
+                                        </h4>
+
+                                        <RadixSelect
+                                            placeholder="No scenario"
+                                            options={selectedOutcome.scenarios.map(
+                                                (scenario) => ({
+                                                    value: scenario.scenario,
+                                                    label: scenario.scenario
+                                                })
+                                            )}
+                                            value={
+                                                selectedScenario?.scenario ?? ""
+                                            }
+                                            onChange={(value) =>
+                                                handleScenarioClick(value)
+                                            }
+                                        />
+                                    </div>
+                                    <div>
+                                        <h4 className="mb-2 text-sm">
+                                            Links to Original Source
+                                        </h4>
+                                        <div className="grid grid-cols-1 gap-2 text-left">
+                                            {selectedOutcome.citations.map(
+                                                (citation) => (
+                                                    <CitationCard
+                                                        key={
+                                                            citation.documentName
+                                                        }
+                                                        title={
+                                                            citation.documentName
+                                                        }
+                                                        onClick={() =>
+                                                            handleDocumentDownload(
+                                                                citation.documentId
+                                                            )
+                                                        }
+                                                    />
+                                                )
+                                            )}
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    </Section>
+
+                    {selectedScenario && (
+                        <>
+                            <Section title="Design">
+                                <div className="flex flex-col gap-4">
+                                    <div>
+                                        <h4 className="mb-2 text-sm">Steps</h4>
+                                        <div className="grid grid-cols-1 gap-2 text-left">
+                                            {selectedScenario.steps.map(
+                                                (step, index) => (
+                                                    <ContentButton
+                                                        key={step.step + index}
+                                                        content={`${
+                                                            index + 1
+                                                        }. ${step.step}`}
+                                                        onClick={() =>
+                                                            handleStepClick(
+                                                                step
+                                                            )
+                                                        }
+                                                        isActive={
+                                                            selectedStep?.step ===
+                                                            step.step
+                                                        }
+                                                    />
+                                                )
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {selectedStep?.actions && (
+                                        <div>
+                                            <h4 className="mb-2 text-sm">
+                                                Links to Original Source
+                                            </h4>
+                                            <div className="grid grid-cols-1 gap-2 text-left">
+                                                {selectedStep.actions.map(
+                                                    (action, index) => (
+                                                        <ContentDiv
+                                                            key={
+                                                                action.action +
+                                                                index
+                                                            }
+                                                            content={
+                                                                action.action
+                                                            }
+                                                        />
+                                                    )
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {selectedStep?.citations && (
+                                        <div>
+                                            <h4 className="mb-2 text-sm">
+                                                Links to Original Source
+                                            </h4>
+                                            <div className="grid grid-cols-1 gap-2 text-left">
+                                                {selectedStep.citations.map(
+                                                    (citation) => (
+                                                        <CitationCard
+                                                            key={
+                                                                citation.documentName
+                                                            }
+                                                            title={
+                                                                citation.documentName
+                                                            }
+                                                            onClick={() =>
+                                                                handleDocumentDownload(
+                                                                    citation.documentId
+                                                                )
+                                                            }
+                                                        />
+                                                    )
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
                             </Section>
                         </>
                     )}
                 </div>
             )}
+
+            {/* <div className="flex-col flex overflow-auto flex-grow px-4 ">
+              
+            </div> */}
+
             {activeTab === "Blueprint" && !!blueprint.name && (
                 <div
                     className={`flex-col flex overflow-auto flex-grow px-4 py-3 ${CUSTOM_SCROLLBAR}`}

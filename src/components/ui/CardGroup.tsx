@@ -11,26 +11,37 @@ import { useState } from "react";
 import { PersonaIcon } from "./IconGroup";
 import pdf from "../../assets/pdf.png";
 import image from "../../assets/image.png";
+import { Message } from "@/hooks/useChatProvider";
 
 // Define TypeScript interfaces for our data structure
 
 export const Section: React.FC<SectionProps> = ({ title, children }) => {
     const [expanded, setExpanded] = useState(true);
     return (
-        <div className="bg-customGray2 flex flex-col  rounded-md p-3 mb-3">
+        <div className="mb-3">
             <div
-                className="flex justify-between items-center cursor-pointer"
-                onClick={() => setExpanded(!expanded)}
+                className={`bg-customLightGray flex flex-col  ${
+                    expanded ? "rounded-t-md" : "rounded-md"
+                } p-3 `}
             >
-                <span className="text-sm">{title}</span>
-                <ChevronUp
-                    size={16}
-                    className={`transition-transform ${
-                        expanded ? "rotate-0" : "rotate-180"
-                    }`}
-                />
+                <div
+                    className="flex justify-between items-center cursor-pointer"
+                    onClick={() => setExpanded(!expanded)}
+                >
+                    <span className="text-base">{title}</span>
+                    <ChevronUp
+                        size={16}
+                        className={`transition-transform ${
+                            expanded ? "rotate-0" : "rotate-180"
+                        }`}
+                    />
+                </div>
             </div>
-            {expanded && <div className="mt-2">{children}</div>}
+            {expanded && (
+                <div className="p-3 bg-customGray2 rounded-b-md ">
+                    {children}
+                </div>
+            )}
         </div>
     );
 };
@@ -124,8 +135,15 @@ export const ContributorCard: React.FC<ContributorCardProps> = ({
     </div>
 );
 
-export const ContentDiv: React.FC<ContentCardProps> = ({ content, isActive = false }) => (
-    <div className={` p-2 text-xs rounded-md text-left  ${isActive ? "bg-customBlue" : "bg-customGray"}`}>
+export const ContentDiv: React.FC<ContentCardProps> = ({
+    content,
+    isActive = false
+}) => (
+    <div
+        className={` p-2 text-xs rounded-md text-left  ${
+            isActive ? "bg-customBlue" : "bg-customGray"
+        }`}
+    >
         {content}
     </div>
 );
@@ -144,3 +162,5 @@ export const ContentButton: React.FC<ContentCardProps> = ({
         {content}
     </button>
 );
+
+export const UserMessage: React.FC<Message> = () => <div></div>;

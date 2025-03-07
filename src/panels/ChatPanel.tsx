@@ -20,24 +20,43 @@ import { CUSTOM_SCROLLBAR } from "@/Constants";
 import { getDiagramImageUrl } from "@/lib/exportUtils";
 import { config } from "@/config";
 import Toast from "@/components/ui/Toast";
+import { BreezeIcon, MenuIcon2 } from "@/components/ui/IconGroup";
 
 const SemanticModelStatus = {
-    ACTIVE: 'active',
-    INITIATED: 'initiated',
-    GENERATING_BUSINESS_SPEC: 'generating_business_spec',
-    GENERATING_QUM_DESIGN_SPEC: 'generating_qum_desing_spec',
-    GENERATING_BREEZE_SPEC: 'generating_breeze_spec',
-    INACTIVE: 'inactive'
-}
+    ACTIVE: "active",
+    INITIATED: "initiated",
+    GENERATING_BUSINESS_SPEC: "generating_business_spec",
+    GENERATING_QUM_DESIGN_SPEC: "generating_qum_desing_spec",
+    GENERATING_BREEZE_SPEC: "generating_breeze_spec",
+    INACTIVE: "inactive"
+};
 
-const semanticModelInfoTexts = [{
-    status: undefined, infoText: 'Extracting components.'
-}, {status: SemanticModelStatus.INITIATED, infoText: 'Mapping to Unified Model...'}, 
-{status: SemanticModelStatus.GENERATING_BUSINESS_SPEC, infoText: 'Optimizing layout...'}, 
-{status: SemanticModelStatus.GENERATING_QUM_DESIGN_SPEC, infoText: 'Applying isometric view...'},
- {status: SemanticModelStatus.GENERATING_BREEZE_SPEC, infoText: 'Finalizing diagram..'},
-{status: SemanticModelStatus.ACTIVE, infoText: 'Unified Model generated successfully!'}
-]
+const semanticModelInfoTexts = [
+    {
+        status: undefined,
+        infoText: "Extracting components."
+    },
+    {
+        status: SemanticModelStatus.INITIATED,
+        infoText: "Mapping to Unified Model..."
+    },
+    {
+        status: SemanticModelStatus.GENERATING_BUSINESS_SPEC,
+        infoText: "Optimizing layout..."
+    },
+    {
+        status: SemanticModelStatus.GENERATING_QUM_DESIGN_SPEC,
+        infoText: "Applying isometric view..."
+    },
+    {
+        status: SemanticModelStatus.GENERATING_BREEZE_SPEC,
+        infoText: "Finalizing diagram.."
+    },
+    {
+        status: SemanticModelStatus.ACTIVE,
+        infoText: "Unified Model generated successfully!"
+    }
+];
 
 interface ChatPanelProps {
     handleLoadDiagramFromJSON: (
@@ -104,7 +123,8 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     );
     const [isViewerOpen, setViewerOpen] = useState(false);
     const [showLoader, setShowLoader] = useState(false);
-    const [isSemanticModelQueryEnabled, setIsSemanticModelQueryEnabled] = useState(false);
+    const [isSemanticModelQueryEnabled, setIsSemanticModelQueryEnabled] =
+        useState(false);
     const [toastData, setToastData] = useState<any>({});
     const [selectedFile, setSelectedFile] = React.useState<{
         file: File | null;
@@ -127,25 +147,21 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             enabled: !!existinguuid
         });
 
-    const {data: semanticModel} = useQuery({
-            queryKey: [
-                "report",
-                existinguuid
-            ],
-            queryFn: () =>
-                getReport(
-                    existinguuid || ""
-                ),
-            enabled: isSemanticModelQueryEnabled,
-            refetchInterval: isSemanticModelQueryEnabled ? 5000 : false,
-        })
+    const { data: semanticModel } = useQuery({
+        queryKey: ["report", existinguuid],
+        queryFn: () => getReport(existinguuid || ""),
+        enabled: isSemanticModelQueryEnabled,
+        refetchInterval: isSemanticModelQueryEnabled ? 5000 : false
+    });
     const { mutate: sendChatMutaion, isPending: isLoading } = useMutation({
         mutationFn: sendChatRequestV2,
         onSettled: async (res, error) => {
             if (res) {
-                queryClient.invalidateQueries({ queryKey: ["report", existinguuid] });
+                queryClient.invalidateQueries({
+                    queryKey: ["report", existinguuid]
+                });
 
-                if(res.metadata?.isPdfUploaded){ 
+                if (res.metadata?.isPdfUploaded) {
                     setIsSemanticModelQueryEnabled(true);
                 }
 
@@ -199,17 +215,20 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     // let toastId = useRef<string | number | null>(null);
 
     useEffect(() => {
-        if(semanticModel){
+        if (semanticModel) {
             const { status } = semanticModel;
-            const semanticModelInfo = semanticModelInfoTexts.find((info) => info.status === status);
+            const semanticModelInfo = semanticModelInfoTexts.find(
+                (info) => info.status === status
+            );
             setToastData({
                 message: semanticModelInfo?.infoText,
-                type: status === SemanticModelStatus.ACTIVE ? 'success' : 'info',
-                duration: status === SemanticModelStatus.ACTIVE ? 5000: null, 
-                position: 'bottom-right'
+                type:
+                    status === SemanticModelStatus.ACTIVE ? "success" : "info",
+                duration: status === SemanticModelStatus.ACTIVE ? 5000 : null,
+                position: "bottom-right"
             });
         }
-    },[semanticModel])
+    }, [semanticModel]);
 
     useEffect(() => {
         const existingMessages = existingChatData?.chats.map((chat) => {
@@ -243,10 +262,10 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     ];
 
     const [loadMessages, setLoadMessages] = useState(LoadMessagesWithImage);
-    let messageDuration
-    if(loadMessages === LoadMessagesWithPDF){
+    let messageDuration;
+    if (loadMessages === LoadMessagesWithPDF) {
         messageDuration = 6;
-    }else{
+    } else {
         messageDuration = 4;
     }
 
@@ -373,9 +392,22 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         handleLoadDiagramFromJSON(content);
         addHistory(content);
     };
-     
+
     return (
-        <div className="p-4 h-full flex flex-col gap-4 ">
+        <div className="px-4 pt-3 h-full flex flex-col gap-4">
+            <div className="flex justify-between">
+                <div className="flex gap-2 justify-center items-center">
+                    <BreezeIcon />
+                    <p className="text-xl font-medium">Breeze.AI</p>
+                </div>
+
+                {/* <button
+                    className="bg-customGray2 p-1 rounded"
+                    onClick={() => {}}
+                >
+                    <MenuIcon2 />
+                </button> */}
+            </div>
             {/* chat container */}
             <div
                 className={`flex-grow overflow-x-hidden flex flex-col gap-2 ${CUSTOM_SCROLLBAR}`}
@@ -416,8 +448,8 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                             <div
                                 className={`max-w-xs px-4 py-2 rounded-lg break-words ${
                                     message.isUser
-                                        ? "bg-blue-600"
-                                        : "bg-gray-700"
+                                        ? "bg-[#245B75]"
+                                        : "bg-customLightGray"
                                 }`}
                             >
                                 <Markdown>{message.text}</Markdown>
@@ -454,7 +486,6 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                 )}
                 <div ref={messagesEndRef} />
             </div>
-            {toastData?.message && <Toast {...toastData} />}
             {/* input container */}
             <form onSubmit={handleSend} ref={formRef} className="w-full">
                 <div className="relative flex max-h-60 w-full grow items-center overflow-hidden bg-background px-8 sm:rounded-md sm:border sm:p-1 sm:pr-20">
@@ -486,14 +517,13 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                         </div>
                     )}
 
-
                     {/* Text input next to image */}
                     <Textarea
                         id="messageInput"
                         ref={inputRef}
                         tabIndex={0}
                         onKeyDown={onKeyDown}
-                        placeholder="Send a message."
+                        placeholder="Reply to Breeze.AI"
                         className="ml-1 min-h-[60px] w-full resize-none bg-transparent px-4 py-[1.3rem] focus-within:outline-none sm:text-sm scrollbar-hide"
                         autoFocus
                         spellCheck={false}
@@ -529,7 +559,6 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                     </div>
                 </div>
             </form>
-            
 
             {/* viewer Popup */}
             <ViewerPopup
@@ -548,6 +577,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                     duration={messageDuration}
                 />
             )}
+            {toastData?.message && <Toast {...toastData} />}
         </div>
     );
 };
