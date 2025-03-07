@@ -336,7 +336,6 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             message.metaData.content = message.metaData?.content
         }
 
-        console.log(message,'message openViewerPopup')
         setViewerContent(await getViewerContent(message));
         setViewerOpen(true);
     };
