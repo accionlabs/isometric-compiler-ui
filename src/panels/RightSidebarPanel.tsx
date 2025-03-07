@@ -34,7 +34,7 @@ interface RightSidebarPanelProps {
 
 const defaultTabs = [
     { name: "Blueprint", enabled: true, show: false },
-    { name: "Business", enabled: true, show: true },
+    { name: "Functional", enabled: true, show: true },
     { name: "Design", enabled: false, show: true },
     { name: "Metrics", enabled: false, show: true },
     { name: "Technical", enabled: false, show: true }
@@ -46,7 +46,7 @@ export default function RightSidebarPanel({
 }: RightSidebarPanelProps) {
     const queryClient = useQueryClient();
     const [tabs, setTabs] = useState(defaultTabs);
-    const [activeTab, setActiveTab] = useState("Business");
+    const [activeTab, setActiveTab] = useState("Functional");
     const [selectedPersona, setSelectedPersona] = useState<PersonaData | null>(
         null
     );
@@ -70,7 +70,7 @@ export default function RightSidebarPanel({
 
         setActiveTab((prev) => {
             if (componentData) return "Blueprint"; // Always prioritize Blueprint if available
-            return prev === "Blueprint" ? "Business" : prev; // Prevents unwanted resets
+            return prev === "Blueprint" ? "Functional" : prev; // Prevents unwanted resets
         });
     }, [componentData]);
 
@@ -82,7 +82,7 @@ export default function RightSidebarPanel({
             setSelectedStep(null);
             setActiveTab((prev) => (prev === "Blueprint" ? "Blueprint" : ""));
         } else {
-            setActiveTab((prev) => prev || "Business");
+            setActiveTab((prev) => prev || "Functional");
         }
     }, [reportData]);
 
@@ -165,7 +165,7 @@ export default function RightSidebarPanel({
             </div>
 
             {/* Tab Content */}
-            {activeTab === "Business" && (
+            {activeTab === "Functional" && (
                 <div
                     className={`flex-col flex overflow-auto flex-grow px-4 py-3 ${CUSTOM_SCROLLBAR}`}
                 >
@@ -252,8 +252,17 @@ export default function RightSidebarPanel({
             )}
             {activeTab === "Design" && (
                 <div className="flex-col flex overflow-auto flex-grow px-4 py-3">
+                    
                     {selectedScenario && (
-                        <Section title="Steps">
+                        <><Section title="Scenarios">
+                        <div className="grid grid-cols-1 gap-2 text-left">
+                            <ContentDiv content={selectedScenario?.scenario}
+                            isActive={true}
+                             />
+                        </div>
+                        
+                    </Section>
+                    <Section title="Steps">
                             <div className="grid grid-cols-1 gap-2 text-left">
                                 {selectedScenario.steps.map((step, index) => (
                                     <ContentButton
@@ -267,6 +276,8 @@ export default function RightSidebarPanel({
                                 ))}
                             </div>
                         </Section>
+                    </>
+                        
                     )}
                     {selectedStep && (
                         <>
