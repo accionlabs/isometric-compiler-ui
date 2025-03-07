@@ -103,7 +103,7 @@ export default function CategoriesPanel({
         return (
             <div
                 className={clsx(`flex flex-col items-center justify-start gap-2 
-                p-2 rounded-lg h-[6.375rem]
+                p-2 rounded-lg h-28
                 ${isSelected ? "bg-customBlue" : "bg-customLightGray"}`)}
             >
                 {/* Icon */}
@@ -118,7 +118,7 @@ export default function CategoriesPanel({
                     <DefaultShapeIcon className="w-6 h-6" />
                 )}
 
-                <div className="flex flex-col min-w-20">
+                <div className="flex flex-col min-w-20 ">
                     <span className="text-sm font-medium text-center whitespace-normal line-clamp-2">
                         {category.name}
                     </span>
@@ -136,7 +136,7 @@ export default function CategoriesPanel({
         return (
             <div
                 className={`flex flex-col items-center justify-start gap-2 
-                            p-2 rounded-lg h-[7.375rem]
+                            p-2 rounded-lg h-32
                             ${
                                 isSelected
                                     ? "bg-customBlue"
