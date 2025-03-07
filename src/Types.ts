@@ -366,6 +366,7 @@ export interface MessageResponse {
         isEmailQuery?: boolean;
         emailId?: string;
         isPdfUploaded?: boolean;
+        isGherkinScriptQuery?: boolean;
     };
     role: "user" | "system";
 }

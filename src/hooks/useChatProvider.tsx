@@ -10,7 +10,7 @@ import React, {
 } from "react";
 
 export type Message = { text: string; isUser: boolean; isSystemQuery?: boolean, metaData: {
-  fileUrl?: string, fileType?: 'image' | 'pdf', fileName?: string, content?: any ;
+  fileUrl?: string, fileType?: 'image' | 'pdf', fileName?: string, content?: any, isGherkinScriptQuery?: boolean ;
 } };
 interface ChatProviderProps {
   children: ReactNode;
