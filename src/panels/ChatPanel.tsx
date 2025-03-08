@@ -448,7 +448,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                             <div
                                 className={`max-w-xs px-4 py-2 rounded-lg break-words ${
                                     message.isUser
-                                        ? "bg-[#245B75]"
+                                        ? "bg-customBlue"
                                         : "bg-customLightGray"
                                 }`}
                             >

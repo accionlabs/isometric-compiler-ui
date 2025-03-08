@@ -181,7 +181,6 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
         queryFn: () => getReport(existinguuid || ""),
         refetchInterval: 5000
     });
-    console.log("semanticModel", semanticModel);
     const { mutate, isPending: isCreateDiagramPending } = useMutation({
         mutationFn: saveDiagram,
         onSettled: (res, error) => {
@@ -378,7 +377,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
             return component?.metadata?.name === data.name;
         });
         setSelectedDiagramCompoent(selectedComponentData);
-        setQumData(selectedComponentData?.metadata?.qum);
+        setQumData(selectedComponentData?.metadata?.qum?.length>0?selectedComponentData?.metadata?.qum:[]);
     };
     const handleSaveDiagram = async () => {
         console.log("CompositionPanel handleSaveDiagram started:", {
@@ -646,22 +645,13 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                             <button
                                 onClick={async () => {
                                     setSelectedDiagramCompoent(undefined);
-                                    if (rightSidebarOpen)
-                                        setRightSidebarOpen(false);
+                                    if (rightSidebarOpen){
+                                        setQumData([]);
+                                        setRightSidebarOpen(false);}
                                     else {
-                                        const data =
-                                            await queryClient.fetchQuery({
-                                                queryKey: [
-                                                    "report",
-                                                    existinguuid
-                                                ],
-                                                queryFn: () =>
-                                                    getReport(
-                                                        existinguuid || ""
-                                                    )
-                                            });
-                                        if (data?.qum) {
-                                            setQumData(data.qum);
+                                           
+                                        if (semanticModel?.qum?.length>0) {
+                                            setQumData([...semanticModel.qum]);
                                             setRightSidebarOpen(true);
                                         } else {
                                             toast.error(
