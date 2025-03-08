@@ -58,7 +58,6 @@ export default function RightSidebarPanel({
         null
     );
     const [selectedStep, setSelectedStep] = useState<Step | null>(null);
-
     // Ensure `Blueprint` tab is shown/active when `componentData` is available
     useEffect(() => {
         setTabs((prev) =>
@@ -98,6 +97,7 @@ export default function RightSidebarPanel({
             componentData.shape ?? ""
         );
     }
+    if(!!component?.description) blueprint.description = component?.description;
 
     const handlePersonaClick = (persona: PersonaData): void => {
         setSelectedPersona(persona);
