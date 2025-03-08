@@ -21,8 +21,9 @@ import { getDiagramImageUrl } from "@/lib/exportUtils";
 import { config } from "@/config";
 import Toast from "@/components/ui/Toast";
 import {
+    Attachment,
     BreezeIcon,
-    MenuIcon2,
+    SendIcon,
     UnifiedModelIcon
 } from "@/components/ui/IconGroup";
 
@@ -533,7 +534,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             </div>
             {/* input container */}
             <form onSubmit={handleSend} ref={formRef} className="w-full">
-                <div className="relative flex max-h-60 w-full grow items-center overflow-hidden bg-background px-8 sm:rounded-md sm:border sm:p-1 sm:pr-20">
+                <div className="relative flex max-h-60 w-full grow items-center overflow-hidden bg-[#1A1A1A] border-customLightGray px-8 sm:rounded-md sm:border sm:p-1 sm:pr-20">
                     {/* Image on the left side */}
                     {selectedFile.file && (
                         <div className="relative w-12 h-12 flex-shrink-0">
@@ -581,26 +582,30 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                     />
 
                     <div className="flex gap-1 justify-center items-center absolute right-0 top-[13px] sm:right-4">
-                        <Paperclip
-                            className="mt-1 cursor-pointer"
-                            onClick={() => fileInputRef.current?.click()}
-                        />
-                        <input
-                            type="file"
-                            accept="image/*,.pdf"
-                            ref={fileInputRef}
-                            className="hidden"
-                            onChange={handleFileSelect}
-                        />
-                        <Button
+                        <div className="h-6">
+                            <Attachment
+                                className="mt-1 cursor-pointer"
+                                onClick={() => fileInputRef.current?.click()}
+                            />
+                            <input
+                                type="file"
+                                accept="image/*,.pdf"
+                                ref={fileInputRef}
+                                className="hidden"
+                                onChange={handleFileSelect}
+                            />
+                        </div>
+
+                        <button
+                            className="h-6 mt-2 disabled:opacity-50"
                             type="submit"
                             disabled={
                                 (!input && !selectedFile.file) || isLoading
                             }
                         >
-                            send
+                            <SendIcon />
                             <span className="sr-only">Send message</span>
-                        </Button>
+                        </button>
                     </div>
                 </div>
             </form>

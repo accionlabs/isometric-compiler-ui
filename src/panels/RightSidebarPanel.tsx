@@ -75,14 +75,25 @@ export default function RightSidebarPanel({
     }, [componentData]);
 
     useEffect(() => {
-        if (!reportData) {
+        console.log("reportData", reportData);
+        if (!reportData?.length) {
             setSelectedPersona(null);
             setSelectedOutcome(null);
             setSelectedScenario(null);
             setSelectedStep(null);
             setActiveTab((prev) => (prev === "Blueprint" ? "Blueprint" : ""));
+            setTabs((prev) =>
+                prev.map((tab) =>
+                    tab.name === "Functional" ? { ...tab, enabled: false } : tab
+                )
+            );
         } else {
             setActiveTab((prev) => prev || "Functional");
+            setTabs((prev) =>
+                prev.map((tab) =>
+                    tab.name === "Functional" ? { ...tab, enabled: true } : tab
+                )
+            );
         }
     }, [reportData]);
 

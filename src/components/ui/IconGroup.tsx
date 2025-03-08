@@ -298,3 +298,56 @@ export const UnifiedModelIcon = (props: SVGProps<SVGSVGElement>) => (
         </g>
     </svg>
 );
+
+export const Attachment = (props: SVGProps<SVGSVGElement>) => (
+    <svg
+        width="100%"
+        height="100%"
+        viewBox="0 0 20 20"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        {...props}
+    >
+        <g id="attach_file/Outlined">
+            <path
+                id="Vector"
+                d="M13.3327 4.99967V14.583C13.3327 16.4247 11.841 17.9163 9.99935 17.9163C8.15768 17.9163 6.66602 16.4247 6.66602 14.583V4.16634C6.66602 3.01634 7.59935 2.08301 8.74935 2.08301C9.89935 2.08301 10.8327 3.01634 10.8327 4.16634V12.9163C10.8327 13.3747 10.4577 13.7497 9.99935 13.7497C9.54102 13.7497 9.16602 13.3747 9.16602 12.9163V4.99967H7.91602V12.9163C7.91602 14.0663 8.84935 14.9997 9.99935 14.9997C11.1493 14.9997 12.0827 14.0663 12.0827 12.9163V4.16634C12.0827 2.32467 10.591 0.833008 8.74935 0.833008C6.90768 0.833008 5.41602 2.32467 5.41602 4.16634V14.583C5.41602 17.1163 7.46602 19.1663 9.99935 19.1663C12.5327 19.1663 14.5827 17.1163 14.5827 14.583V4.99967H13.3327Z"
+                fill="white"
+            />
+        </g>
+    </svg>
+);
+
+export const SendIcon = (props: SVGProps<SVGSVGElement>) => (
+    <svg
+        width="100%"
+        height="100%"
+        viewBox="0 0 20 20"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        {...props}
+    >
+        <g id="send">
+            <mask
+                id="mask0_5249_23566"
+                style={{
+                    maskType: "alpha"
+                }}
+                maskUnits="userSpaceOnUse"
+                x={0}
+                y={0}
+                width={20}
+                height={20}
+            >
+                <rect id="Bounding box" width={20} height={20} fill="#D9D9D9" />
+            </mask>
+            <g mask="url(#mask0_5249_23566)">
+                <path
+                    id="send_2"
+                    d="M2.5 16.6663V3.33301L18.3333 9.99967L2.5 16.6663ZM4.16667 14.1663L14.0417 9.99967L4.16667 5.83301V8.74967L9.16667 9.99967L4.16667 11.2497V14.1663Z"
+                    fill="white"
+                />
+            </g>
+        </g>
+    </svg>
+);
