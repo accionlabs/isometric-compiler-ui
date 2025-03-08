@@ -178,15 +178,31 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                     );
                 }
                 if (res.metadata.needFeedback) {
-                    setMessages((prev) => [
-                        ...prev,
-                        {
-                            text: res.message,
-                            isUser: false,
-                            isSystemQuery: true,
-                            metaData: {}
-                        }
-                    ]);
+                    if (res.metadata.isGherkinScriptQuery) {
+                        setMessages((prev) => [
+                            ...prev,
+                            {
+                                text: res.message,
+                                isUser: false,
+                                isSystemQuery: true,
+                                metaData: {
+                                    isGherkinScriptQuery:
+                                        res.metadata.isGherkinScriptQuery,
+                                    content: res.metadata.content
+                                }
+                            }
+                        ]);
+                    } else {
+                        setMessages((prev) => [
+                            ...prev,
+                            {
+                                text: res.message,
+                                isUser: false,
+                                isSystemQuery: true,
+                                metaData: {}
+                            }
+                        ]);
+                    }
                 } else {
                     handleLoadDiagramFromJSON(res.metadata.content ?? []);
                     addHistory(res.metadata.content ?? []);
@@ -305,7 +321,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
 
     const queryClient = useQueryClient();
     const getViewerContent = async (message: Message) => {
-        if (message.metaData.fileType === "image") {
+        if (message.metaData?.fileType === "image") {
             let signedUrl;
             if (message.metaData.fileUrl?.startsWith("https://")) {
                 const urlArray = message.metaData.fileUrl.split("/");
@@ -325,6 +341,14 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                     className="w-full h-auto rounded-md"
                 />
             );
+        } else if (message.metaData.isGherkinScriptQuery) {
+            return (
+                <Markdown className="text-black">
+                    {"```gherkin\n" +
+                        message.metaData.content.replace(/\\n/g, "\n") +
+                        "\n```"}
+                </Markdown>
+            );
         } else {
             return (
                 <pre className="max-h-96 overflow-auto bg-gray-100 p-4 rounded-md text-sm text-black whitespace-pre-wrap">
@@ -335,6 +359,10 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     };
     // Open viewer
     const openViewerPopup = async (message: Message) => {
+        if (message.metaData.isGherkinScriptQuery) {
+            message.metaData.content = message.metaData?.content;
+        }
+
         setViewerContent(await getViewerContent(message));
         setViewerOpen(true);
     };
@@ -464,23 +492,29 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                         {message.metaData.content && (
                             <div className="flex items-center gap-2">
                                 <div
-                                    className="max-w-xs px-2 py-1 bg-customGray2 cursor-pointer rounded-xl    flex items-center"
+                                    className="max-w-xs px-2 py-1 bg-customGray2 cursor-pointer rounded-xl flex items-center"
                                     onClick={() => openViewerPopup(message)}
                                 >
-                                    <div className="text-lightGray2  text-xs flex items-center gap-1">
+                                    <div className="text-lightGray2 text-xs flex items-center gap-1">
                                         <span className="h-4 w-4">
                                             <UnifiedModelIcon />
                                         </span>
-                                        View Unified Model
+                                        {message.metaData?.isGherkinScriptQuery
+                                            ? "View Gherkin Script"
+                                            : "View Unified Model"}
                                     </div>
                                 </div>
-                                <Eye
-                                    size={16}
-                                    className="cursor-pointer"
-                                    onClick={() => {
-                                        loadDiagram(message.metaData.content);
-                                    }}
-                                />
+                                {!message.metaData.isGherkinScriptQuery && (
+                                    <Eye
+                                        size={16}
+                                        className="cursor-pointer"
+                                        onClick={() => {
+                                            loadDiagram(
+                                                message.metaData.content
+                                            );
+                                        }}
+                                    />
+                                )}
                             </div>
                         )}
                     </div>
