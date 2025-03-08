@@ -108,7 +108,6 @@ export default function RightSidebarPanel({
             componentData.shape ?? ""
         );
     }
-    if(!!component?.description) blueprint.description = component?.description;
 
     const handlePersonaClick = (persona: PersonaData): void => {
         setSelectedPersona(persona);
