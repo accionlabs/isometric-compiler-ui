@@ -82,23 +82,23 @@ const MetadataNode: React.FC<NodeProps<MetadataNodeType>> = ({
                         data.onProcess(data.metadata);
                     }
                 }}
-                onMouseEnter={(e) => {
-                    const tooltip = document.createElement("div");
-                    tooltip.className =
-                        "fixed bg-customGray text-white p-3 rounded text-sm z-50 max-w-xs";
-                    tooltip.style.left = `${e.clientX + 10}px`;
-                    tooltip.style.top = `${e.clientY + 10}px`;
-                    tooltip.id = "metadata-tooltip";
-                    tooltip.innerHTML = `
-            <div class="font-medium text-gray-200 mb-1">${componentType.displayName}</div>
-            <div class="text-gray-400">${description}</div>
-          `;
-                    document.body.appendChild(tooltip);
-                }}
-                onMouseLeave={() => {
-                    const tooltip = document.getElementById("metadata-tooltip");
-                    if (tooltip) tooltip.remove();
-                }}
+                //         onMouseEnter={(e) => {
+                //             const tooltip = document.createElement("div");
+                //             tooltip.className =
+                //                 "fixed bg-customGray text-white p-3 rounded text-sm z-50 max-w-xs";
+                //             tooltip.style.left = `${e.clientX + 10}px`;
+                //             tooltip.style.top = `${e.clientY + 10}px`;
+                //             tooltip.id = "metadata-tooltip";
+                //             tooltip.innerHTML = `
+                //     <div class="font-medium text-gray-200 mb-1">${componentType.displayName}</div>
+                //     <div class="text-gray-400">${description}</div>
+                //   `;
+                //             document.body.appendChild(tooltip);
+                //         }}
+                //         onMouseLeave={() => {
+                //             const tooltip = document.getElementById("metadata-tooltip");
+                //             if (tooltip) tooltip.remove();
+                //         }}
             >
                 {/* Always visible connection points */}
                 <Handle

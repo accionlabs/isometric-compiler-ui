@@ -275,3 +275,26 @@ export const MenuIcon2 = (props: SVGProps<SVGSVGElement>) => (
         </g>
     </svg>
 );
+
+export const UnifiedModelIcon = (props: SVGProps<SVGSVGElement>) => (
+    <svg
+        width="100%"
+        height="100%"
+        viewBox="0 0 16 17"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        {...props}
+    >
+        <g id="view_timeline">
+            <g id="Vector">
+                <path d="M8 10.5H4V11.8333H8V10.5Z" fill="#DEDEDE" />
+                <path d="M12 5.16667H8V6.5H12V5.16667Z" fill="#DEDEDE" />
+                <path d="M10 7.83333H6V9.16667H10V7.83333Z" fill="#DEDEDE" />
+                <path
+                    d="M12.6667 2.5H3.33333C2.6 2.5 2 3.1 2 3.83333V13.1667C2 13.9 2.6 14.5 3.33333 14.5H12.6667C13.4 14.5 14 13.9 14 13.1667V3.83333C14 3.1 13.4 2.5 12.6667 2.5ZM12.6667 13.1667H3.33333V3.83333H12.6667V13.1667Z"
+                    fill="#DEDEDE"
+                />
+            </g>
+        </g>
+    </svg>
+);

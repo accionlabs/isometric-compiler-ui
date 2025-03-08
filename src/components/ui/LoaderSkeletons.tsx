@@ -10,8 +10,8 @@ export function Loader() {
 
 export const ShapesGroupLoadingSkeleton = () => {
     return (
-        <div className="grid grid-cols-1 scrollbar-hide sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4">
-            {Array.from({ length: 16 }).map((_, index) => (
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 scrollbar-hide ">
+            {Array.from({ length: 12 }).map((_, index) => (
                 <div
                     key={index}
                     className="flex flex-col p-1 rounded-lg hover:bg-customLightGray mb-2 relative aspect-[3/2] transition-all hover:scale-105 focus:outline-none  animate-pulse"

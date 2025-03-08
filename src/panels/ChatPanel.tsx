@@ -20,7 +20,11 @@ import { CUSTOM_SCROLLBAR } from "@/Constants";
 import { getDiagramImageUrl } from "@/lib/exportUtils";
 import { config } from "@/config";
 import Toast from "@/components/ui/Toast";
-import { BreezeIcon, MenuIcon2 } from "@/components/ui/IconGroup";
+import {
+    BreezeIcon,
+    MenuIcon2,
+    UnifiedModelIcon
+} from "@/components/ui/IconGroup";
 
 const SemanticModelStatus = {
     ACTIVE: "active",
@@ -460,14 +464,18 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                         {message.metaData.content && (
                             <div className="flex items-center gap-2">
                                 <div
-                                    className="max-w-xs p-3 rounded-lg bg-gray-700 cursor-pointer border border-gray-500 hover:bg-gray-600 flex items-center"
+                                    className="max-w-xs px-2 py-1 bg-customGray2 cursor-pointer rounded-xl    flex items-center"
                                     onClick={() => openViewerPopup(message)}
                                 >
-                                    <span className="text-blue-400 font-semibold">
-                                        📄 View Unified Model
-                                    </span>
+                                    <div className="text-lightGray2  text-xs flex items-center gap-1">
+                                        <span className="h-4 w-4">
+                                            <UnifiedModelIcon />
+                                        </span>
+                                        View Unified Model
+                                    </div>
                                 </div>
                                 <Eye
+                                    size={16}
                                     className="cursor-pointer"
                                     onClick={() => {
                                         loadDiagram(message.metaData.content);

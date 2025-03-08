@@ -37,7 +37,11 @@ import {
     Undo,
     X
 } from "lucide-react";
-import { DoubleArrow, MenuIcon } from "./components/ui/IconGroup";
+import {
+    DoubleArrow,
+    MenuIcon,
+    UnifiedModelIcon
+} from "./components/ui/IconGroup";
 import { useKeycloak } from "@react-keycloak/web";
 import CustomTooltip from "./components/flow/CustomToolTip";
 import DiagramPanel from "./panels/DiagramPanel";
@@ -674,7 +678,13 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                 }}
                                 className="hover:bg-customLightGray p-2 rounded disabled:cursor-not-allowed disabled:opacity-50"
                             >
-                                {rightSidebarOpen ? <X /> : <Text />}
+                                {rightSidebarOpen ? (
+                                    <X />
+                                ) : (
+                                    <div className="h-6 w-6">
+                                        <UnifiedModelIcon />
+                                    </div>
+                                )}
                             </button>
                         }
                         header="Unified model"
