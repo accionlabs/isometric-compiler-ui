@@ -35,13 +35,12 @@ export const RadixSelect: React.FC<SelectProps> = ({
                     "leading-none h-10 gap-1 bg-customLightGray text-white",
                     "shadow-md hover:bg-gray-600 focus:outline-none focus:ring-2",
                     " focus:ring-offset-2 focus:ring-offset-gray-900",
-                    "w-full"
+                    "w-full",
+                    "text-left"
                 )}
             >
-                <Select.Value className="float-left">
-                    {value || placeholder}
-                </Select.Value>
-                <Select.Icon className="text-gray-400">
+                <Select.Value>{value || placeholder}</Select.Value>
+                <Select.Icon className="text-gray-400 flex-shrink-0">
                     <ChevronDownIcon />
                 </Select.Icon>
             </Select.Trigger>
@@ -69,7 +68,7 @@ export const RadixSelect: React.FC<SelectProps> = ({
                                 value={option.value}
                                 className={cn(
                                     "text-sm leading-none text-gray-200 rounded flex items-center",
-                                    "h-8 pr-8 pl-6 relative select-none",
+                                    " pr-8 pl-6 py-3 relative select-none",
                                     "data-[highlighted]:outline-none data-[highlighted]:bg-customLightGray",
                                     "data-[highlighted]:text-white cursor-pointer"
                                 )}
