@@ -143,6 +143,8 @@ export default function RightSidebarPanel({
         );
         if (!foundScenario) return;
         setSelectedScenario(foundScenario);
+        setSelectedStep(null);
+
         setTabs((prev) =>
             prev.map((tab) =>
                 tab.name === "Design" ? { ...tab, enabled: true } : tab
@@ -312,28 +314,29 @@ export default function RightSidebarPanel({
                                         </div>
                                     </div>
 
-                                    {selectedStep?.actions && (
-                                        <div>
-                                            <h4 className="mb-2 text-sm">
-                                                Links to Original Source
-                                            </h4>
-                                            <div className="grid grid-cols-1 gap-2 text-left">
-                                                {selectedStep.actions.map(
-                                                    (action, index) => (
-                                                        <ContentDiv
-                                                            key={
-                                                                action.action +
-                                                                index
-                                                            }
-                                                            content={
-                                                                action.action
-                                                            }
-                                                        />
-                                                    )
-                                                )}
+                                    {selectedScenario?.steps &&
+                                        selectedStep?.actions && (
+                                            <div>
+                                                <h4 className="mb-2 text-sm">
+                                                    Actions
+                                                </h4>
+                                                <div className="grid grid-cols-1 gap-2 text-left">
+                                                    {selectedStep.actions.map(
+                                                        (action, index) => (
+                                                            <ContentDiv
+                                                                key={
+                                                                    action.action +
+                                                                    index
+                                                                }
+                                                                content={
+                                                                    action.action
+                                                                }
+                                                            />
+                                                        )
+                                                    )}
+                                                </div>
                                             </div>
-                                        </div>
-                                    )}
+                                        )}
 
                                     {selectedStep?.citations && (
                                         <div>

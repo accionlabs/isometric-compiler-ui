@@ -56,7 +56,7 @@ import RightSidebarPanel from "./panels/RightSidebarPanel";
 import { getReport } from "./services/chat";
 import { toast } from "sonner";
 import { ImprovedLayoutProps } from "./Interfaces";
-import { set } from "yaml/dist/schema/yaml-1.1/set";
+import { SEMANTIC_MODEL_STATUS } from "./Constants";
 const newUUID = uuidv4();
 
 type PanelType = "diagrams" | "shapes" | "composition" | "chat";
@@ -176,16 +176,12 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     const timeoutIdRef = useRef<NodeJS.Timeout | null>(null);
 
     const updateDiagramWithRateLimit = useCancelLatestCalls(updateDiagram);
-    // const {
-    //     data: reportData,
-    //     isLoading: isReportLoading,
-    //     refetch,
-    //     isRefetching
-    // } = useQuery({
-    //     queryKey: ["report", existinguuid],
-    //     queryFn: () => getReport(existinguuid || ""),
-    //     enabled: false
-    // });
+    const { data: semanticModel } = useQuery({
+        queryKey: ["report", existinguuid],
+        queryFn: () => getReport(existinguuid || ""),
+        refetchInterval: 5000
+    });
+    console.log("semanticModel", semanticModel);
     const { mutate, isPending: isCreateDiagramPending } = useMutation({
         mutationFn: saveDiagram,
         onSettled: (res, error) => {
@@ -631,6 +627,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                         header="Undo"
                         side="top"
                     />
+
                     <CustomTooltip
                         action={
                             <button
@@ -682,12 +679,22 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                     <X />
                                 ) : (
                                     <div className="h-6 w-6">
-                                        <UnifiedModelIcon />
+                                        {SEMANTIC_MODEL_STATUS[
+                                            semanticModel?.status as keyof typeof SEMANTIC_MODEL_STATUS
+                                        ] ? (
+                                            <Loader2 className="animate-spin text-white" />
+                                        ) : (
+                                            <UnifiedModelIcon />
+                                        )}
                                     </div>
                                 )}
                             </button>
                         }
-                        header="Unified model"
+                        header={
+                            SEMANTIC_MODEL_STATUS[
+                                semanticModel?.status as keyof typeof SEMANTIC_MODEL_STATUS
+                            ] ?? "Unified model"
+                        }
                         side="top"
                     />
                 </div>

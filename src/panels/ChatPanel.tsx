@@ -16,7 +16,7 @@ import ViewerPopup from "@/components/ui/ViewerPopup";
 import ProgressPopup from "@/components/ui/ProgressPopup";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Markdown from "react-markdown";
-import { CUSTOM_SCROLLBAR } from "@/Constants";
+import { CUSTOM_SCROLLBAR, SEMANTIC_MODEL_STATUS } from "@/Constants";
 import { getDiagramImageUrl } from "@/lib/exportUtils";
 import { config } from "@/config";
 import Toast from "@/components/ui/Toast";
@@ -26,42 +26,6 @@ import {
     SendIcon,
     UnifiedModelIcon
 } from "@/components/ui/IconGroup";
-
-const SemanticModelStatus = {
-    ACTIVE: "active",
-    INITIATED: "initiated",
-    GENERATING_BUSINESS_SPEC: "generating_business_spec",
-    GENERATING_QUM_DESIGN_SPEC: "generating_qum_desing_spec",
-    GENERATING_BREEZE_SPEC: "generating_breeze_spec",
-    INACTIVE: "inactive"
-};
-
-const semanticModelInfoTexts = [
-    {
-        status: undefined,
-        infoText: "Extracting components."
-    },
-    {
-        status: SemanticModelStatus.INITIATED,
-        infoText: "Mapping to Unified Model..."
-    },
-    {
-        status: SemanticModelStatus.GENERATING_BUSINESS_SPEC,
-        infoText: "Optimizing layout..."
-    },
-    {
-        status: SemanticModelStatus.GENERATING_QUM_DESIGN_SPEC,
-        infoText: "Applying isometric view..."
-    },
-    {
-        status: SemanticModelStatus.GENERATING_BREEZE_SPEC,
-        infoText: "Finalizing diagram.."
-    },
-    {
-        status: SemanticModelStatus.ACTIVE,
-        infoText: "Unified Model generated successfully!"
-    }
-];
 
 interface ChatPanelProps {
     handleLoadDiagramFromJSON: (
@@ -235,21 +199,21 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
 
     // let toastId = useRef<string | number | null>(null);
 
-    useEffect(() => {
-        if (semanticModel) {
-            const { status } = semanticModel;
-            const semanticModelInfo = semanticModelInfoTexts.find(
-                (info) => info.status === status
-            );
-            setToastData({
-                message: semanticModelInfo?.infoText,
-                type:
-                    status === SemanticModelStatus.ACTIVE ? "success" : "info",
-                duration: status === SemanticModelStatus.ACTIVE ? 5000 : null,
-                position: "bottom-right"
-            });
-        }
-    }, [semanticModel]);
+    // useEffect(() => {
+    //     if (semanticModel) {
+    //         const { status } = semanticModel;
+    //         const semanticModelInfo =SEMANTIC_MODEL_STATUS[status as keyof typeof SEMANTIC_MODEL_STATUS];
+    //         // setToastData({
+    //         //     message: semanticModelInfo?.infoText,
+    //         //     type:
+    //         //         status === SEMANTIC_MODEL_STATUS.ACTIVE
+    //         //             ? "success"
+    //         //             : "info",
+    //         //     duration: status === SEMANTIC_MODEL_STATUS.ACTIVE ? 5000 : null,
+    //         //     position: "bottom-right"
+    //         // });
+    //     }
+    // }, [semanticModel]);
 
     useEffect(() => {
         const existingMessages = existingChatData?.chats.map((chat) => {

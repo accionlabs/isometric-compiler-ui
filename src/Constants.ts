@@ -25,3 +25,11 @@ export const DEFAULT_SETTINGS: CanvasSettings = {
         fontWeight: "bold"
     }
 };
+
+export const SEMANTIC_MODEL_STATUS = {
+    // active: "Unified Model generated successfully!",
+    initiated: "Mapping to Unified Model...",
+    generating_business_spec: "Optimizing layout...",
+    generating_qum_desing_spec: "Applying isometric view...",
+    generating_breeze_spec: "Finalizing diagram.."
+};
