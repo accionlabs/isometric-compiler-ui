@@ -75,7 +75,6 @@ export default function RightSidebarPanel({
     }, [componentData]);
 
     useEffect(() => {
-        console.log("reportData", reportData);
         if (!reportData?.length) {
             setSelectedPersona(null);
             setSelectedOutcome(null);
