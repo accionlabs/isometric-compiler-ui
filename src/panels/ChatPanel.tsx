@@ -316,8 +316,11 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         }
     };
 
-    const clearFile = () =>
+    const clearFile = () => {
         setSelectedFile({ file: null, src: "", fileType: null });
+        fileInputRef.current!.value = "";
+    }
+        
 
     const queryClient = useQueryClient();
     const getViewerContent = async (message: Message) => {
