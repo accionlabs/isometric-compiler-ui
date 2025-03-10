@@ -27,9 +27,8 @@ export const DEFAULT_SETTINGS: CanvasSettings = {
 };
 
 export const SEMANTIC_MODEL_STATUS = {
-    // active: "Unified Model generated successfully!",
-    initiated: "Mapping to Unified Model...",
-    generating_business_spec: "Optimizing layout...",
-    generating_qum_desing_spec: "Applying isometric view...",
-    generating_breeze_spec: "Finalizing diagram.."
+    initiated: "Initializing Unified Model",
+    generating_business_spec: "Generating Unified Model Business Artifacts",
+    generating_qum_desing_spec: "Generating Unified Model Design Artifacts",
+    generating_breeze_spec: "Generating breeze spec.."
 };

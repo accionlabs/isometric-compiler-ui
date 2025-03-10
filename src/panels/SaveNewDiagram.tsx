@@ -87,6 +87,7 @@ const SaveNewDiagram: React.FC<SaveComponentDialogProps> = ({
         setName(diagramInfo?.name ?? "");
         setDescription(diagramInfo?.metadata?.description ?? "");
     }, [diagramInfo]);
+
     return (
         <>
             <Dialog open={isOpen} onOpenChange={handleClose}>
