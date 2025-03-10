@@ -633,7 +633,7 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
                         isInteractive,
                         handleComponentMetadata
                     } as MetadataNodeData,
-                    draggable: false,
+                    draggable: true,
                     style: { zIndex: 4 }
                 };
             }
