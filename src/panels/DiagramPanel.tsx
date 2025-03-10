@@ -320,7 +320,7 @@ export default function DiagramPanel({
                     <h1 className=" text-md font-medium bg-customGray text-white">
                         Diagrams
                     </h1>
-                    <button
+                    {/* <button
                         onClick={() => {
                             setTempDiagramInfo(null);
                             setMode("save");
@@ -330,7 +330,7 @@ export default function DiagramPanel({
                         className="hover:bg-customLightGray rounded"
                     >
                         <SquarePlus />
-                    </button>
+                    </button> */}
                 </div>
                 <div className="flex-grow overflow-auto p-4 ">
                     {isLoading ? (
