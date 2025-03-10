@@ -33,6 +33,8 @@ interface ChatPanelProps {
     ) => Promise<void>;
     diagramComponents: DiagramComponent[];
     addHistory: (diagramComponent: DiagramComponent[]) => void;
+    handleUndo: () => void,
+    handleRedo: () => void
 }
 
 const sendDiagramImage = async (
@@ -74,7 +76,9 @@ const sendDiagramImage = async (
 const ChatPanel: React.FC<ChatPanelProps> = ({
     handleLoadDiagramFromJSON,
     diagramComponents,
-    addHistory
+    addHistory,
+    handleRedo,
+    handleUndo
 }) => {
     const { messages, setMessages } = useChat();
     const { formRef, onKeyDown } = useEnterSubmit();
@@ -142,6 +146,12 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                         res.metadata.emailId
                     );
                 }
+                if(res.metadata?.action?.[0]?.action === 'undo') {
+                    handleUndo();
+                }
+                if(res.metadata?.action?.[0]?.action === 'redo') {
+                    handleRedo();
+                }
                 if (res.metadata.needFeedback) {
                     if (res.metadata.isGherkinScriptQuery) {
                         setMessages((prev) => [
@@ -169,8 +179,10 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                         ]);
                     }
                 } else {
-                    handleLoadDiagramFromJSON(res.metadata.content ?? []);
-                    addHistory(res.metadata.content ?? []);
+                    if(res.metadata?.action?.[0]?.action !== 'undo' && res.metadata?.action?.[0]?.action !== 'redo' && JSON.stringify(res.metadata.content) !== JSON.stringify(diagramComponents)) {
+                        handleLoadDiagramFromJSON(res.metadata.content ?? []);
+                        addHistory(res.metadata.content ?? []);
+                    }
                     setMessages((prev) => [
                         ...prev,
                         {
