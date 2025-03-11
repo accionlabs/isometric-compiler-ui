@@ -165,7 +165,6 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
 
     const [saveLoadMessage, setSaveLoadMessage] = useState<string | null>(null);
     const [isPending, setIsPending] = useState(false);
-    const [isUnifiedModelFetched, setIsUnifiedModelFetched] = useState(false);
     const [leftSidebarOpen, setLeftSidebarOpen] = useState(true);
     const [rightSidebarOpen, setRightSidebarOpen] = useState(false);
     const [selectedDiagramCompoent, setSelectedDiagramCompoent] = useState<

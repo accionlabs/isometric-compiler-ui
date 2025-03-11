@@ -35,10 +35,10 @@ interface RightSidebarPanelProps {
 
 const defaultTabs = [
     { name: "Blueprint", enabled: true, show: false },
-    { name: "Functional", enabled: true, show: true }
+    { name: "Functional", enabled: true, show: true },
     // { name: "Design", enabled: false, show: true },
-    // { name: "Metrics", enabled: false, show: true },
-    // { name: "Technical", enabled: false, show: true }
+    { name: "Metrics", enabled: false, show: true },
+    { name: "Technical", enabled: false, show: true }
 ];
 
 export default function RightSidebarPanel({

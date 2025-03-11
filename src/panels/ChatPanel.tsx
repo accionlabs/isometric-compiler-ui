@@ -1,11 +1,9 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
-import { Button } from "../components/ui/Button";
 import { DiagramComponent } from "@/Types";
 import { Message, useChat } from "@/hooks/useChatProvider";
 import {
     getChatByuuid,
-    getReport,
     getSignedUrl,
     sendChatRequestV2
 } from "@/services/chat";
@@ -16,7 +14,7 @@ import ViewerPopup from "@/components/ui/ViewerPopup";
 import ProgressPopup from "@/components/ui/ProgressPopup";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Markdown from "react-markdown";
-import { CUSTOM_SCROLLBAR, SEMANTIC_MODEL_STATUS } from "@/Constants";
+import { CUSTOM_SCROLLBAR } from "@/Constants";
 import { getDiagramImageUrl } from "@/lib/exportUtils";
 import { config } from "@/config";
 import Toast from "@/components/ui/Toast";
@@ -92,9 +90,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     );
     const [isViewerOpen, setViewerOpen] = useState(false);
     const [showLoader, setShowLoader] = useState(false);
-    const [isSemanticModelQueryEnabled, setIsSemanticModelQueryEnabled] =
-        useState(false);
-    const [toastData, setToastData] = useState<any>({});
+
     const [selectedFile, setSelectedFile] = React.useState<{
         file: File | null;
         src: string;
@@ -116,24 +112,10 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             enabled: !!existinguuid
         });
 
-    const { data: semanticModel } = useQuery({
-        queryKey: ["report", existinguuid],
-        queryFn: () => getReport(existinguuid || ""),
-        enabled: isSemanticModelQueryEnabled,
-        refetchInterval: isSemanticModelQueryEnabled ? 5000 : false
-    });
     const { mutate: sendChatMutaion, isPending: isLoading } = useMutation({
         mutationFn: sendChatRequestV2,
         onSettled: async (res, error) => {
             if (res) {
-                queryClient.invalidateQueries({
-                    queryKey: ["report", existinguuid]
-                });
-
-                if (res.metadata?.isPdfUploaded) {
-                    setIsSemanticModelQueryEnabled(true);
-                }
-
                 if (res.metadata.isEmailQuery && !!res.metadata.emailId) {
                     const imageUrl = await getDiagramImageUrl("png");
                     await sendDiagramImage(
@@ -196,24 +178,6 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             }
         }
     });
-
-    // let toastId = useRef<string | number | null>(null);
-
-    // useEffect(() => {
-    //     if (semanticModel) {
-    //         const { status } = semanticModel;
-    //         const semanticModelInfo =SEMANTIC_MODEL_STATUS[status as keyof typeof SEMANTIC_MODEL_STATUS];
-    //         // setToastData({
-    //         //     message: semanticModelInfo?.infoText,
-    //         //     type:
-    //         //         status === SEMANTIC_MODEL_STATUS.ACTIVE
-    //         //             ? "success"
-    //         //             : "info",
-    //         //     duration: status === SEMANTIC_MODEL_STATUS.ACTIVE ? 5000 : null,
-    //         //     position: "bottom-right"
-    //         // });
-    //     }
-    // }, [semanticModel]);
 
     useEffect(() => {
         const existingMessages = existingChatData?.chats.map((chat) => {
@@ -593,7 +557,6 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                     duration={messageDuration}
                 />
             )}
-            {toastData?.message && <Toast {...toastData} />}
         </div>
     );
 };
