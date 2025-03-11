@@ -377,7 +377,11 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
             return component?.metadata?.name === data.name;
         });
         setSelectedDiagramCompoent(selectedComponentData);
-        setQumData(selectedComponentData?.metadata?.qum?.length>0?selectedComponentData?.metadata?.qum:[]);
+        setQumData(
+            selectedComponentData?.metadata?.qum?.length > 0
+                ? selectedComponentData?.metadata?.qum
+                : []
+        );
     };
     const handleSaveDiagram = async () => {
         console.log("CompositionPanel handleSaveDiagram started:", {
@@ -487,13 +491,13 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                             >
                                 Load Diagram
                             </DropdownMenuItem>
-                            {/* <DropdownMenuItem
+                            <DropdownMenuItem
                                 onSelect={handleMenuSelect(() =>
                                     setIsCreateDiagramOpen(true)
                                 )}
                             >
                                 Save Diagram
-                            </DropdownMenuItem> */}
+                            </DropdownMenuItem>
                             <DropdownMenuItem
                                 onSelect={handleMenuSelect(
                                     handleOpenSaveComponentDialog
@@ -645,12 +649,11 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                             <button
                                 onClick={async () => {
                                     setSelectedDiagramCompoent(undefined);
-                                    if (rightSidebarOpen){
+                                    if (rightSidebarOpen) {
                                         setQumData([]);
-                                        setRightSidebarOpen(false);}
-                                    else {
-                                           
-                                        if (semanticModel?.qum?.length>0) {
+                                        setRightSidebarOpen(false);
+                                    } else {
+                                        if (semanticModel?.qum?.length > 0) {
                                             setQumData([...semanticModel.qum]);
                                             setRightSidebarOpen(true);
                                         } else {
@@ -691,112 +694,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
             </div>
         );
     };
-    const RenderAllDialogs = () => (
-        <>
-            <Dialog
-                open={isLoadingDialogOpen}
-                onOpenChange={setIsLoadingDialogOpen}
-            >
-                <DialogContent className="bg-gray-800 text-white">
-                    <DialogHeader>
-                        <DialogTitle className="text-white">
-                            Loading Shapes from Google Drive
-                        </DialogTitle>
-                        <DialogDescription className="text-gray-300">
-                            Please wait while we load the shapes from your
-                            Google Drive.
-                        </DialogDescription>
-                    </DialogHeader>
-                    {errorMessage && (
-                        <div className="mt-4">
-                            <p className="text-red-400">{errorMessage}</p>
-                            <Button
-                                onClick={() => setIsLoadingDialogOpen(false)}
-                                className="mt-2"
-                            >
-                                Close
-                            </Button>
-                        </div>
-                    )}
-                    {loadingProgress && (
-                        <div className="mt-4 text-white">
-                            <p>Loading: {loadingProgress.currentFile}</p>
-                            <p>
-                                Progress: {loadingProgress.loadedFiles} /
-                                {loadingProgress.totalFiles}
-                            </p>
-                            <div className="w-full bg-gray-700 rounded-full h-2.5 mt-2">
-                                <div
-                                    className="bg-blue-500 h-2.5 rounded-full"
-                                    style={{
-                                        width: `${
-                                            (loadingProgress.loadedFiles /
-                                                loadingProgress.totalFiles) *
-                                            100
-                                        }%`
-                                    }}
-                                ></div>
-                            </div>
-                        </div>
-                    )}
-                </DialogContent>
-            </Dialog>
 
-            <SettingsDialog
-                isOpen={isSettingsDialogOpen}
-                onClose={() => setIsSettingsDialogOpen(false)}
-                settings={settings}
-                canvasSize={canvasSize}
-                onSetCanvasSize={onSetCanvasSize}
-                onSetCanvasSettings={onSetCanvasSettings}
-                showAttachmentPoints={showAttachmentPoints}
-                setShowAttachmentPoints={setShowAttachmentPoints}
-            />
-            <LibraryManagerDialog
-                isOpen={isLibraryDialogOpen}
-                onClose={() => setIsLibraryDialogOpen(false)}
-                activeLibrary={activeLibrary}
-                onLibraryChange={onLibraryChange}
-                onUpdateShapes={onUpdateSvgLibrary}
-            />
-            <SaveDiagramDialog
-                isOpen={isSaveDiagramDialogOpen}
-                onClose={() => setIsSaveDiagramDialogOpen(false)}
-                onSave={handleSaveDiagram}
-                fileName={fileName}
-                setFileName={handleSetFileName}
-            />
-            <SaveComponentDialog
-                isOpen={isSaveComponentDialogOpen}
-                onClose={() => setIsSaveComponentDialogOpen(false)}
-                onSave={onSaveAsComponent}
-            />
-            <SaveNewDiagram
-                mode={"save"}
-                isOpen={isCreateDiagramOpen}
-                isPending={isCreateDiagramPending}
-                onClose={() => setIsCreateDiagramOpen(false)}
-                onSubmit={handleDiagramSave}
-                diagramInfo={{ diagramComponents: diagramComponents }}
-            />
-            {/* Save/Load Diagram Dialog */}
-            <Dialog
-                open={isSaveLoadDialogOpen}
-                onOpenChange={setIsSaveLoadDialogOpen}
-            >
-                <DialogContent className="bg-gray-800 text-white">
-                    <DialogHeader>
-                        <DialogTitle className="text-white">
-                            Diagram Operation
-                        </DialogTitle>
-                        <DialogDescription className="text-gray-300">
-                            {saveLoadMessage}
-                        </DialogDescription>
-                    </DialogHeader>
-                </DialogContent>
-            </Dialog>
-        </>
-    );
     return (
         <ChatProvider>
             <div className="flex flex-col h-screen w-full text-white">
@@ -975,7 +873,114 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                     </div>
                 </div>
             </div>
-            <RenderAllDialogs />
+            {/* all dialogs */}
+            <>
+                <SaveNewDiagram
+                    mode={"save"}
+                    isOpen={isCreateDiagramOpen}
+                    isPending={isCreateDiagramPending}
+                    onClose={() => setIsCreateDiagramOpen(false)}
+                    onSubmit={handleDiagramSave}
+                    diagramInfo={currentDiagramInfo}
+                />
+                <Dialog
+                    open={isLoadingDialogOpen}
+                    onOpenChange={setIsLoadingDialogOpen}
+                >
+                    <DialogContent className="bg-gray-800 text-white">
+                        <DialogHeader>
+                            <DialogTitle className="text-white">
+                                Loading Shapes from Google Drive
+                            </DialogTitle>
+                            <DialogDescription className="text-gray-300">
+                                Please wait while we load the shapes from your
+                                Google Drive.
+                            </DialogDescription>
+                        </DialogHeader>
+                        {errorMessage && (
+                            <div className="mt-4">
+                                <p className="text-red-400">{errorMessage}</p>
+                                <Button
+                                    onClick={() =>
+                                        setIsLoadingDialogOpen(false)
+                                    }
+                                    className="mt-2"
+                                >
+                                    Close
+                                </Button>
+                            </div>
+                        )}
+                        {loadingProgress && (
+                            <div className="mt-4 text-white">
+                                <p>Loading: {loadingProgress.currentFile}</p>
+                                <p>
+                                    Progress: {loadingProgress.loadedFiles} /
+                                    {loadingProgress.totalFiles}
+                                </p>
+                                <div className="w-full bg-gray-700 rounded-full h-2.5 mt-2">
+                                    <div
+                                        className="bg-blue-500 h-2.5 rounded-full"
+                                        style={{
+                                            width: `${
+                                                (loadingProgress.loadedFiles /
+                                                    loadingProgress.totalFiles) *
+                                                100
+                                            }%`
+                                        }}
+                                    ></div>
+                                </div>
+                            </div>
+                        )}
+                    </DialogContent>
+                </Dialog>
+
+                <SettingsDialog
+                    isOpen={isSettingsDialogOpen}
+                    onClose={() => setIsSettingsDialogOpen(false)}
+                    settings={settings}
+                    canvasSize={canvasSize}
+                    onSetCanvasSize={onSetCanvasSize}
+                    onSetCanvasSettings={onSetCanvasSettings}
+                    showAttachmentPoints={showAttachmentPoints}
+                    setShowAttachmentPoints={setShowAttachmentPoints}
+                />
+                <LibraryManagerDialog
+                    isOpen={isLibraryDialogOpen}
+                    onClose={() => setIsLibraryDialogOpen(false)}
+                    activeLibrary={activeLibrary}
+                    onLibraryChange={onLibraryChange}
+                    onUpdateShapes={onUpdateSvgLibrary}
+                />
+                <SaveDiagramDialog
+                    isOpen={isSaveDiagramDialogOpen}
+                    onClose={() => setIsSaveDiagramDialogOpen(false)}
+                    onSave={handleSaveDiagram}
+                    fileName={fileName}
+                    setFileName={handleSetFileName}
+                />
+                <SaveComponentDialog
+                    isOpen={isSaveComponentDialogOpen}
+                    onClose={() => setIsSaveComponentDialogOpen(false)}
+                    onSave={onSaveAsComponent}
+                />
+
+                {/* Save/Load Diagram Dialog */}
+                <Dialog
+                    open={isSaveLoadDialogOpen}
+                    onOpenChange={setIsSaveLoadDialogOpen}
+                >
+                    <DialogContent className="bg-gray-800 text-white">
+                        <DialogHeader>
+                            <DialogTitle className="text-white">
+                                Diagram Operation
+                            </DialogTitle>
+                            <DialogDescription className="text-gray-300">
+                                {saveLoadMessage}
+                            </DialogDescription>
+                        </DialogHeader>
+                    </DialogContent>
+                </Dialog>
+            </>
         </ChatProvider>
     );
 };

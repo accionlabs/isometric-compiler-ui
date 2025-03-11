@@ -11,7 +11,7 @@ import {
 } from "@/services/chat";
 import { useEnterSubmit } from "@/hooks/useEnterSubmit";
 import { Textarea } from "@/components/ui/Textarea";
-import { Eye, FileText, Paperclip, X } from "lucide-react";
+import { Eye, FileText, X } from "lucide-react";
 import ViewerPopup from "@/components/ui/ViewerPopup";
 import ProgressPopup from "@/components/ui/ProgressPopup";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -296,8 +296,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     const clearFile = () => {
         setSelectedFile({ file: null, src: "", fileType: null });
         fileInputRef.current!.value = "";
-    }
-        
+    };
 
     const queryClient = useQueryClient();
     const getViewerContent = async (message: Message) => {
@@ -461,7 +460,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                                 className={`max-w-xs px-4 py-2 rounded-lg break-words ${
                                     message.isUser
                                         ? "bg-customBlue"
-                                        : "bg-customLightGray"
+                                        : "bg-customLightGray "
                                 }`}
                             >
                                 <Markdown>{message.text}</Markdown>
@@ -501,9 +500,12 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                 ))}
                 {isLoading && (
                     <div
-                        className={`max-w-xs px-4 py-2 rounded-lg  bg-gray-700"}`}
+                        className={`max-w-xs px-4 py-2 rounded-lg break-words bg-customLightGray`}
                     >
-                        AI Thinking....
+                        <span className="animate-pulse">
+                            Breeze.AI processing
+                        </span>
+                        <span className="before:content-['.'] before:animate-dots" />
                     </div>
                 )}
                 <div ref={messagesEndRef} />
