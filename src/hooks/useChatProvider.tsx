@@ -35,7 +35,6 @@ const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
 export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
     const [messages, setMessages] = useState<Message[]>([]);
-    console.log("messages", messages);
     return (
         <ChatContext.Provider value={{ messages, setMessages }}>
             {children}
