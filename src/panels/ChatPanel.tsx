@@ -258,6 +258,16 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         { time: 6, message: "Generating semantic model..." }
     ];
 
+    const LoadMessagesFoeInput = [
+        { time: 0, message: "Extracting text from PDF..." },
+        { time: 1, message: "Analyzing document structure..." },
+        { time: 2, message: "Detecting diagrams or tables..." },
+        { time: 3, message: "Extracting business specification..." },
+        { time: 4, message: "Extracting design specification..." },
+        { time: 5, message: "Extracting Breeze blueprint..." },
+        { time: 6, message: "Generating semantic model..." }
+    ];
+
     const [loadMessages, setLoadMessages] = useState(LoadMessagesWithImage);
     let messageDuration;
     if (loadMessages === LoadMessagesWithPDF) {
@@ -365,6 +375,12 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         if (selectedFile.file) {
             setShowLoader(true);
             setIsLoader(true);
+        }
+
+        if(input === 'generate blueprint') {
+            setShowLoader(true);
+            setIsLoader(true);
+            setLoadMessages(LoadMessagesFoeInput)
         }
         setMessages((prev) => [
             ...prev,
