@@ -15,7 +15,12 @@ import { Message } from "@/hooks/useChatProvider";
 
 // Define TypeScript interfaces for our data structure
 
-export const Section: React.FC<SectionProps> = ({ title, children }) => {
+export const Section: React.FC<SectionProps> = ({
+    title,
+    children,
+    headerSize = "text-base"
+}) => {
+    console.log("headerSize", title, headerSize);
     const [expanded, setExpanded] = useState(true);
     return (
         <div className="mb-3">
@@ -28,7 +33,7 @@ export const Section: React.FC<SectionProps> = ({ title, children }) => {
                     className="flex justify-between items-center cursor-pointer"
                     onClick={() => setExpanded(!expanded)}
                 >
-                    <span className="text-base">{title}</span>
+                    <span className={headerSize}>{title}</span>
                     <ChevronUp
                         size={16}
                         className={`transition-transform ${
@@ -50,7 +55,9 @@ export const PersonaCard: React.FC<PersonaCardProps> = ({
     title,
     subtitle,
     onClick,
-    isActive
+    isActive,
+    headerSize = "text-sm",
+    contentSize = "text-xs"
 }) => (
     <button
         className={`${
@@ -69,8 +76,8 @@ export const PersonaCard: React.FC<PersonaCardProps> = ({
 
         {/* Wrap text content in a div to ensure proper spacing */}
         <div className="flex flex-col">
-            <span className="text-sm line-clamp-2">{title}</span>
-            <span className="text-lightGray2 text-xs line-clamp-1">
+            <span className={`${headerSize} line-clamp-2`}>{title}</span>
+            <span className={`text-lightGray2 ${contentSize} line-clamp-1`}>
                 {subtitle}
             </span>
         </div>
@@ -79,7 +86,8 @@ export const PersonaCard: React.FC<PersonaCardProps> = ({
 
 export const CitationCard: React.FC<CitationCardProps> = ({
     title,
-    onClick
+    onClick,
+    contentSize = "text-xs"
 }) => (
     <button
         className={`bg-customGray p-2 rounded-md flex items-center text-sm gap-2 text-left`}
@@ -98,7 +106,7 @@ export const CitationCard: React.FC<CitationCardProps> = ({
 
         {/* Wrap text content in a div to ensure proper spacing */}
         <div className="flex flex-col">
-            <span className="text-xs line-clamp-2">{title}</span>
+            <span className={`${contentSize}  line-clamp-2`}>{title}</span>
         </div>
     </button>
 );
@@ -137,10 +145,11 @@ export const ContributorCard: React.FC<ContributorCardProps> = ({
 
 export const ContentDiv: React.FC<ContentCardProps> = ({
     content,
-    isActive = false
+    isActive = false,
+    contentSize = "text-xs"
 }) => (
     <div
-        className={` p-2 text-xs rounded-md text-left  ${
+        className={` p-2 ${contentSize} rounded-md text-left  ${
             isActive ? "bg-customBlue" : "bg-customGray"
         }`}
     >
@@ -151,11 +160,12 @@ export const ContentDiv: React.FC<ContentCardProps> = ({
 export const ContentButton: React.FC<ContentCardProps> = ({
     content,
     onClick,
-    isActive
+    isActive,
+    contentSize = "text-xs"
 }) => (
     <button
         onClick={onClick}
-        className={` p-2 text-xs rounded-md text-left ${
+        className={` p-2 ${contentSize} rounded-md text-left ${
             isActive ? "bg-customBlue" : "bg-customGray"
         }`}
     >

@@ -23,10 +23,15 @@ import { getDocumentsSignedUrlById } from "@/services/chat";
 import { useQueryClient } from "@tanstack/react-query";
 
 import clsx from "clsx";
+import { Expand, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
 interface RightSidebarPanelProps {
     setRightSidebarOpen: (value: boolean) => void;
+    fullscreenControls: {
+        fullScreenPanel: boolean;
+        setFullScreenPanel: (value: boolean) => void;
+    };
     svgContent: string;
     reportData: PersonaData[];
     canvasSize: { width: number; height: number };
@@ -43,9 +48,11 @@ const defaultTabs = [
 
 export default function RightSidebarPanel({
     reportData,
-    componentData
+    componentData,
+    fullscreenControls
 }: RightSidebarPanelProps) {
     const queryClient = useQueryClient();
+    const { fullScreenPanel, setFullScreenPanel } = fullscreenControls;
     const [tabs, setTabs] = useState(defaultTabs);
     const [activeTab, setActiveTab] = useState("Functional");
     const [selectedPersona, setSelectedPersona] = useState<PersonaData | null>(
@@ -166,24 +173,33 @@ export default function RightSidebarPanel({
     return (
         <>
             {/* Tab Selection Buttons */}
-            <div className="flex gap-2 px-4 py-3 flex-wrap">
-                {tabs.map((tab) =>
-                    tab.show ? (
-                        <button
-                            key={tab.name}
-                            onClick={() => setActiveTab(tab.name)}
-                            disabled={!tab.enabled}
-                            className={clsx(
-                                "px-3 py-1 rounded text-base font-medium transition disabled:opacity-50",
-                                activeTab === tab.name
-                                    ? "bg-blue-600 font-bold text-white"
-                                    : "bg-gray-700 text-lightGray2"
-                            )}
-                        >
-                            {tab.name}
-                        </button>
-                    ) : null
-                )}
+            <div className="flex items-center justify-between px-4 py-3">
+                <div className="flex gap-2  flex-wrap">
+                    {tabs.map((tab) =>
+                        tab.show ? (
+                            <button
+                                key={tab.name}
+                                onClick={() => setActiveTab(tab.name)}
+                                disabled={!tab.enabled}
+                                className={clsx(
+                                    "px-3 py-1 rounded  font-medium transition disabled:opacity-50",
+                                    activeTab === tab.name
+                                        ? "bg-blue-600 font-bold text-white"
+                                        : "bg-gray-700 text-lightGray2",
+                                    fullScreenPanel ? "text-xl" : "text-base"
+                                )}
+                            >
+                                {tab.name}
+                            </button>
+                        ) : null
+                    )}
+                </div>
+                <button
+                    className="shrink-0"
+                    onClick={() => setFullScreenPanel(!fullScreenPanel)}
+                >
+                    {fullScreenPanel ? <X size={20} /> : <Expand size={20} />}
+                </button>
             </div>
 
             {/* Tab Content */}
@@ -192,11 +208,20 @@ export default function RightSidebarPanel({
                 <div
                     className={`flex-col flex overflow-auto flex-grow px-4 pt-3 ${CUSTOM_SCROLLBAR}`}
                 >
-                    <Section title="Functional">
+                    <Section
+                        title="Functional"
+                        headerSize={fullScreenPanel ? "text-xl" : undefined}
+                    >
                         <div className="flex flex-col gap-4">
                             <div>
-                                <h6 className="mb-2 text-sm">Persona</h6>
-                                <div className="grid grid-cols-1 xl:grid-cols-2 gap-2">
+                                <h6
+                                    className={`mb-2 ${
+                                        fullScreenPanel ? "text-lg" : "text-sm"
+                                    }`}
+                                >
+                                    Persona
+                                </h6>
+                                <div className="grid grid-cols-1 xl:grid-cols-2 gap-2 text-">
                                     {reportData?.map((item, index) => (
                                         <PersonaCard
                                             key={item.persona + index}
@@ -208,6 +233,16 @@ export default function RightSidebarPanel({
                                                 selectedPersona?.persona ===
                                                 item.persona
                                             }
+                                            headerSize={
+                                                fullScreenPanel
+                                                    ? "text-lg"
+                                                    : undefined
+                                            }
+                                            contentSize={
+                                                fullScreenPanel
+                                                    ? "text-base"
+                                                    : undefined
+                                            }
                                         />
                                     ))}
                                 </div>
@@ -215,7 +250,15 @@ export default function RightSidebarPanel({
 
                             {selectedPersona && (
                                 <div>
-                                    <h4 className="mb-2 text-sm">Tasks</h4>
+                                    <h4
+                                        className={`mb-2 ${
+                                            fullScreenPanel
+                                                ? "text-lg"
+                                                : "text-sm"
+                                        }`}
+                                    >
+                                        Tasks
+                                    </h4>
                                     <RadixSelect
                                         placeholder="No outcome"
                                         options={selectedPersona.outcomes.map(
@@ -228,13 +271,24 @@ export default function RightSidebarPanel({
                                         onChange={(value) =>
                                             handleOutcomeClick(value)
                                         }
+                                        textSize={
+                                            fullScreenPanel
+                                                ? "text-lg"
+                                                : undefined
+                                        }
                                     />
                                 </div>
                             )}
                             {selectedOutcome && (
                                 <>
                                     <div>
-                                        <h4 className="mb-2 text-sm">
+                                        <h4
+                                            className={`mb-2 ${
+                                                fullScreenPanel
+                                                    ? "text-lg"
+                                                    : "text-sm"
+                                            }`}
+                                        >
                                             Scenarios
                                         </h4>
 
@@ -252,10 +306,21 @@ export default function RightSidebarPanel({
                                             onChange={(value) =>
                                                 handleScenarioClick(value)
                                             }
+                                            textSize={
+                                                fullScreenPanel
+                                                    ? "text-lg"
+                                                    : undefined
+                                            }
                                         />
                                     </div>
                                     <div>
-                                        <h4 className="mb-2 text-sm">
+                                        <h4
+                                            className={`mb-2 ${
+                                                fullScreenPanel
+                                                    ? "text-lg"
+                                                    : "text-sm"
+                                            }`}
+                                        >
                                             Links to Original Source
                                         </h4>
                                         <div className="grid grid-cols-1 gap-2 text-left">
@@ -273,6 +338,11 @@ export default function RightSidebarPanel({
                                                                 citation.documentId
                                                             )
                                                         }
+                                                        contentSize={
+                                                            fullScreenPanel
+                                                                ? "text-base"
+                                                                : undefined
+                                                        }
                                                     />
                                                 )
                                             )}
@@ -285,10 +355,23 @@ export default function RightSidebarPanel({
 
                     {selectedScenario && (
                         <>
-                            <Section title="Design">
+                            <Section
+                                title="Design"
+                                headerSize={
+                                    fullScreenPanel ? "text-xl" : undefined
+                                }
+                            >
                                 <div className="flex flex-col gap-4">
                                     <div>
-                                        <h4 className="mb-2 text-sm">Steps</h4>
+                                        <h4
+                                            className={`mb-2 ${
+                                                fullScreenPanel
+                                                    ? "text-lg"
+                                                    : "text-sm"
+                                            }`}
+                                        >
+                                            Steps
+                                        </h4>
                                         <div className="grid grid-cols-1 gap-2 text-left">
                                             {selectedScenario.steps.map(
                                                 (step, index) => (
@@ -306,6 +389,11 @@ export default function RightSidebarPanel({
                                                             selectedStep?.step ===
                                                             step.step
                                                         }
+                                                        contentSize={
+                                                            fullScreenPanel
+                                                                ? "text-base"
+                                                                : undefined
+                                                        }
                                                     />
                                                 )
                                             )}
@@ -315,13 +403,24 @@ export default function RightSidebarPanel({
                                     {selectedScenario?.steps &&
                                         selectedStep?.actions && (
                                             <div>
-                                                <h4 className="mb-2 text-sm">
+                                                <h4
+                                                    className={`mb-2 ${
+                                                        fullScreenPanel
+                                                            ? "text-lg"
+                                                            : "text-sm"
+                                                    }`}
+                                                >
                                                     Actions
                                                 </h4>
                                                 <div className="grid grid-cols-1 gap-2 text-left">
                                                     {selectedStep.actions.map(
                                                         (action, index) => (
                                                             <ContentDiv
+                                                                contentSize={
+                                                                    fullScreenPanel
+                                                                        ? "text-base"
+                                                                        : undefined
+                                                                }
                                                                 key={
                                                                     action.action +
                                                                     index
@@ -338,7 +437,13 @@ export default function RightSidebarPanel({
 
                                     {selectedStep?.citations && (
                                         <div>
-                                            <h4 className="mb-2 text-sm">
+                                            <h4
+                                                className={`mb-2 ${
+                                                    fullScreenPanel
+                                                        ? "text-lg"
+                                                        : "text-sm"
+                                                }`}
+                                            >
                                                 Links to Original Source
                                             </h4>
                                             <div className="grid grid-cols-1 gap-2 text-left">
@@ -355,6 +460,11 @@ export default function RightSidebarPanel({
                                                                 handleDocumentDownload(
                                                                     citation.documentId
                                                                 )
+                                                            }
+                                                            contentSize={
+                                                                fullScreenPanel
+                                                                    ? "text-base"
+                                                                    : undefined
                                                             }
                                                         />
                                                     )
@@ -390,9 +500,15 @@ export default function RightSidebarPanel({
                                 .replace(/_/g, " ")
                                 .replace(/\b\w/g, (l) => l.toUpperCase())}
                             key={key}
+                            headerSize={fullScreenPanel ? "text-xl" : undefined}
                         >
                             <div className="grid grid-cols-1 gap-2 text-left">
                                 <ContentDiv
+                                    contentSize={
+                                        fullScreenPanel
+                                            ? "text-base"
+                                            : undefined
+                                    }
                                     content={
                                         typeof value === "object" ? (
                                             <pre>
