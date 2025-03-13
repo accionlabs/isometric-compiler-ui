@@ -821,6 +821,8 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                     handleLoadDiagramFromJSON={
                                         handleLoadDiagramFromJSON
                                     }
+                                    handleRedo={handleRedo}
+                                    handleUndo={handleUndo}
                                 />
                             )}
                         </div>

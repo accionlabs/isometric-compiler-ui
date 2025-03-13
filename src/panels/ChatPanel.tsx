@@ -31,6 +31,8 @@ interface ChatPanelProps {
     ) => Promise<void>;
     diagramComponents: DiagramComponent[];
     addHistory: (diagramComponent: DiagramComponent[]) => void;
+    handleUndo: () => void,
+    handleRedo: () => void
 }
 
 const sendDiagramImage = async (
@@ -72,7 +74,9 @@ const sendDiagramImage = async (
 const ChatPanel: React.FC<ChatPanelProps> = ({
     handleLoadDiagramFromJSON,
     diagramComponents,
-    addHistory
+    addHistory,
+    handleRedo,
+    handleUndo
 }) => {
     const { messages, setMessages } = useChat();
     const { formRef, onKeyDown } = useEnterSubmit();
@@ -124,6 +128,12 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                         res.metadata.emailId
                     );
                 }
+                if(res.metadata?.action?.[0]?.action === 'undo') {
+                    handleUndo();
+                }
+                if(res.metadata?.action?.[0]?.action === 'redo') {
+                    handleRedo();
+                }
                 if (res.metadata.needFeedback) {
                     if (res.metadata.isGherkinScriptQuery) {
                         setMessages((prev) => [
@@ -151,8 +161,10 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                         ]);
                     }
                 } else {
-                    handleLoadDiagramFromJSON(res.metadata.content ?? []);
-                    addHistory(res.metadata.content ?? []);
+                    if(res.metadata?.action?.[0]?.action !== 'undo' && res.metadata?.action?.[0]?.action !== 'redo' && JSON.stringify(res.metadata.content) !== JSON.stringify(diagramComponents)) {
+                        handleLoadDiagramFromJSON(res.metadata.content ?? []);
+                        addHistory(res.metadata.content ?? []);
+                    }
                     setMessages((prev) => [
                         ...prev,
                         {
@@ -201,6 +213,16 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     ];
 
     const LoadMessagesWithPDF = [
+        { time: 0, message: "Extracting text from PDF..." },
+        { time: 1, message: "Analyzing document structure..." },
+        { time: 2, message: "Detecting diagrams or tables..." },
+        { time: 3, message: "Extracting business specification..." },
+        { time: 4, message: "Extracting design specification..." },
+        { time: 5, message: "Extracting Breeze blueprint..." },
+        { time: 6, message: "Generating semantic model..." }
+    ];
+
+    const LoadMessagesFoeInput = [
         { time: 0, message: "Extracting text from PDF..." },
         { time: 1, message: "Analyzing document structure..." },
         { time: 2, message: "Detecting diagrams or tables..." },
@@ -317,6 +339,12 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         if (selectedFile.file) {
             setShowLoader(true);
             setIsLoader(true);
+        }
+
+        if(input === 'generate blueprint') {
+            setShowLoader(true);
+            setIsLoader(true);
+            setLoadMessages(LoadMessagesFoeInput)
         }
         setMessages((prev) => [
             ...prev,

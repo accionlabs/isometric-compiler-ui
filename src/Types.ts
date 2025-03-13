@@ -373,7 +373,7 @@ export interface MessageResponse {
 
 interface MessageAction {
     name: string;
-    action: "add" | "remove" | "update";
+    action: "add" | "remove" | "update" | "undo" | "redo";
     shapeType: "3D" | "2D" | "COMPONENT" | "LAYERS";
     shapeName: string;
     position: "top" | "front-right" | "front-left";
