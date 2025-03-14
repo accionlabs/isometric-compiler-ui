@@ -260,7 +260,7 @@ export default function RightSidebarPanel({
                                         Tasks
                                     </h4>
                                     <RadixSelect
-                                        placeholder="No outcome"
+                                        placeholder="Select a task"
                                         options={selectedPersona.outcomes.map(
                                             (outcome) => ({
                                                 value: outcome.outcome,
@@ -293,7 +293,7 @@ export default function RightSidebarPanel({
                                         </h4>
 
                                         <RadixSelect
-                                            placeholder="No scenario"
+                                            placeholder="Select a scenario"
                                             options={selectedOutcome.scenarios.map(
                                                 (scenario) => ({
                                                     value: scenario.scenario,
