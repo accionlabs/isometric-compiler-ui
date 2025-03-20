@@ -179,10 +179,13 @@ export default function DiagramPanel({
 
     const handleLoadDiagram = async (element: DiagramInfo) => {
         if (isMyDiagramLoading) return;
-        // const currentUrl = new URL(window.location.href);
-        // currentUrl.searchParams.delete('uuid')
-        // currentUrl.searchParams.append('uuid', element.metadata?.uuid ||  uuidv4() );
-        // window.history.pushState({}, '', currentUrl);
+        if (element.metadata?.uuid) {
+            const currentUrl = new URL(window.location.href);
+            currentUrl.searchParams.delete("uuid");
+            currentUrl.searchParams.append("uuid", element.metadata.uuid);
+            window.history.pushState({}, "", currentUrl);
+        }
+
         if (currentDiagramInfo?._id !== element._id) setIsDiagramLoading(true);
         await handleLoadDiagramFromJSON(element.diagramComponents);
         setIsDiagramLoading(false);

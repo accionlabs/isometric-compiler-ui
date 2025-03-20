@@ -124,7 +124,12 @@ const SaveComponentDialog: React.FC<SaveComponentDialogProps> = ({
                                         value: category._id
                                     })) ?? []
                                 }
-                                value={category}
+                                value={
+                                    categories?.data.find(
+                                        (catergory) =>
+                                            catergory._id === category
+                                    )?.name ?? ""
+                                }
                                 onChange={(value) => setCategory(value)}
                                 placeholder="Select categoty"
                             />
