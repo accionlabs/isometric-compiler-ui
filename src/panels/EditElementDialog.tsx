@@ -86,7 +86,7 @@ const EditElementDialog: React.FC<LibraryManagerDialogProps> = ({
     const handleSubmit = (
         e: React.MouseEvent<HTMLButtonElement, MouseEvent>
     ) => {
-        if (!category.trim()) {
+        if (!category) {
             setError("Category is required");
             return;
         }
