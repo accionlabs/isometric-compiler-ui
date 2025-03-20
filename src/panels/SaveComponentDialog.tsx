@@ -46,7 +46,7 @@ const SaveComponentDialog: React.FC<SaveComponentDialogProps> = ({
         queryFn: getCategoriesFlat
     });
     const handleSubmit = () => {
-        if (!name.trim() && !category.trim()) {
+        if (!name.trim() && !category) {
             setError("Component name and category is required");
             return;
         }
@@ -54,7 +54,7 @@ const SaveComponentDialog: React.FC<SaveComponentDialogProps> = ({
             setError("Component name is required");
             return;
         }
-        if (!category.trim()) {
+        if (!category) {
             setError("Category is required");
             return;
         }
@@ -64,7 +64,6 @@ const SaveComponentDialog: React.FC<SaveComponentDialogProps> = ({
             setShowOverwriteDialog(true);
             return;
         }
-
         handleSaveComponent();
     };
 
