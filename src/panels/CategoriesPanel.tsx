@@ -15,7 +15,7 @@ export default function CategoriesPanel({
     categories: Category[];
     onCategoryChange: (id: string) => void;
 }) {
-    const buttonRefs = useRef<Record<string, HTMLButtonElement | null>>({}); // Correctly typed refs
+    const buttonRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
     const [selected, setSelected] = useState<Category>(categories[0]);
     const [selectedChild, setSelectedChild] = useState<Category | null>();

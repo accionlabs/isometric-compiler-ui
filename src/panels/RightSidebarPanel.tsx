@@ -15,6 +15,7 @@ import {
     PersonaCard,
     Section
 } from "@/components/ui/CardGroup";
+import { Input } from "@/components/ui/Input";
 import SVGPreview from "@/components/ui/SVGPreview";
 import { RadixSelect } from "@/components/ui/Select";
 import { componentLibraryManager } from "@/lib/componentLib";
@@ -64,7 +65,13 @@ export default function RightSidebarPanel({
     const [selectedScenario, setSelectedScenario] = useState<Scenario | null>(
         null
     );
+
     const [selectedStep, setSelectedStep] = useState<Step | null>(null);
+    const [edit, setEdit] = useState<{
+        key: keyof typeof editKeySelection;
+        value: any[];
+    } | null>(null);
+
     // Ensure `Blueprint` tab is shown/active when `componentData` is available
     useEffect(() => {
         setTabs((prev) =>
@@ -170,6 +177,100 @@ export default function RightSidebarPanel({
         window.open(signedUrl, "_blank", "noopener,noreferrer");
     };
 
+    const Header = ({ title }: { title: string }) => (
+        <div className="flex justify-between items-center mb-2">
+            <h6 className={`${fullScreenPanel ? "text-lg" : "text-sm"}`}>
+                {title}
+            </h6>
+            <button
+                onClick={() =>
+                    setEdit({
+                        key: title as keyof typeof editKeySelection,
+                        value:
+                            editSelection?.[
+                                title as keyof typeof editSelection
+                            ] ?? []
+                    })
+                }
+                className="bg-customBlue px-[0.375rem] py-[0.125rem] rounded text-xs"
+            >
+                Modify
+            </button>
+        </div>
+    );
+    const editSelection = {
+        Persona: reportData,
+        Tasks: selectedPersona?.outcomes ?? [],
+        Scenarios: selectedOutcome?.scenarios ?? [],
+        Steps: selectedScenario?.steps ?? [],
+        Actions: selectedStep?.actions ?? []
+    };
+    const editKeySelection = {
+        Persona: "persona",
+        Tasks: "outcome",
+        Scenarios: "scenario",
+        Steps: "step",
+        Actions: "action"
+    } as const;
+    if (edit?.key.length)
+        return (
+            <div className=" px-4 py-3">
+                <div className="flex justify-between items-center mb-2">
+                    <h6
+                        className={`${fullScreenPanel ? "text-lg" : "text-sm"}`}
+                    >
+                        {edit.key}
+                    </h6>
+                    <button
+                        onClick={() => setEdit(null)}
+                        className="bg-customBlue px-[0.375rem] py-[0.125rem] rounded text-xs"
+                    >
+                        Back
+                    </button>
+                </div>
+                <div className="flex flex-col gap-2">
+                    {edit?.value.map((item: string, idx) => (
+                        <div key={idx} className="flex gap-2">
+                            <Input
+                                value={
+                                    typeof item === "object" && item !== null
+                                        ? item[
+                                              editKeySelection[
+                                                  edit.key
+                                              ] as keyof typeof item
+                                          ] || ""
+                                        : ""
+                                }
+                                onChange={(e) => {
+                                    setEdit((prev) => {
+                                        if (!prev) return null;
+                                        const newValue = prev.value;
+                                        newValue[idx] = {
+                                            ...newValue[idx],
+                                            [editKeySelection[prev.key]]:
+                                                e.target.value
+                                        };
+                                        return { ...prev, value: newValue };
+                                    });
+                                }}
+                                className="flex-1"
+                            />
+                            <button className="bg-customBlue px-[0.375rem] py-[0.125rem] rounded text-xs">
+                                back
+                            </button>
+                        </div>
+                    ))}
+                </div>
+                <div className="flex gap-2 mt-6">
+                    <button className="bg-customBlue px-[0.375rem] py-[0.125rem] rounded">
+                        Cancel
+                    </button>
+                    <button className="bg-customBlue px-[0.375rem] py-[0.125rem] rounded">
+                        Save
+                    </button>
+                </div>
+            </div>
+        );
     return (
         <>
             {/* Tab Selection Buttons */}
@@ -214,13 +315,7 @@ export default function RightSidebarPanel({
                     >
                         <div className="flex flex-col gap-4">
                             <div>
-                                <h6
-                                    className={`mb-2 ${
-                                        fullScreenPanel ? "text-lg" : "text-sm"
-                                    }`}
-                                >
-                                    Persona
-                                </h6>
+                                <Header title="Persona" />
                                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-2 text-">
                                     {reportData?.map((item, index) => (
                                         <PersonaCard
@@ -250,15 +345,7 @@ export default function RightSidebarPanel({
 
                             {selectedPersona && (
                                 <div>
-                                    <h4
-                                        className={`mb-2 ${
-                                            fullScreenPanel
-                                                ? "text-lg"
-                                                : "text-sm"
-                                        }`}
-                                    >
-                                        Tasks
-                                    </h4>
+                                    <Header title="Tasks" />
                                     <RadixSelect
                                         placeholder="Select a task"
                                         options={selectedPersona.outcomes.map(
@@ -282,15 +369,7 @@ export default function RightSidebarPanel({
                             {selectedOutcome && (
                                 <>
                                     <div>
-                                        <h4
-                                            className={`mb-2 ${
-                                                fullScreenPanel
-                                                    ? "text-lg"
-                                                    : "text-sm"
-                                            }`}
-                                        >
-                                            Scenarios
-                                        </h4>
+                                        <Header title="Scenarios" />
 
                                         <RadixSelect
                                             placeholder="Select a scenario"
@@ -323,6 +402,7 @@ export default function RightSidebarPanel({
                                         >
                                             Links to Original Source
                                         </h4>
+
                                         <div className="grid grid-cols-1 gap-2 text-left">
                                             {selectedOutcome.citations.map(
                                                 (citation) => (
@@ -363,15 +443,8 @@ export default function RightSidebarPanel({
                             >
                                 <div className="flex flex-col gap-4">
                                     <div>
-                                        <h4
-                                            className={`mb-2 ${
-                                                fullScreenPanel
-                                                    ? "text-lg"
-                                                    : "text-sm"
-                                            }`}
-                                        >
-                                            Steps
-                                        </h4>
+                                        <Header title="Steps" />
+
                                         <div className="grid grid-cols-1 gap-2 text-left">
                                             {selectedScenario.steps.map(
                                                 (step, index) => (
@@ -403,15 +476,8 @@ export default function RightSidebarPanel({
                                     {selectedScenario?.steps &&
                                         selectedStep?.actions && (
                                             <div>
-                                                <h4
-                                                    className={`mb-2 ${
-                                                        fullScreenPanel
-                                                            ? "text-lg"
-                                                            : "text-sm"
-                                                    }`}
-                                                >
-                                                    Actions
-                                                </h4>
+                                                <Header title="Actions" />
+
                                                 <div className="grid grid-cols-1 gap-2 text-left">
                                                     {selectedStep.actions.map(
                                                         (action, index) => (
