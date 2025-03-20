@@ -414,6 +414,7 @@ export interface PersonaData {
 export interface SectionProps {
     title: string;
     children: React.ReactNode;
+    headerSize?: string;
 }
 
 export interface PersonaCardProps {
@@ -421,10 +422,13 @@ export interface PersonaCardProps {
     subtitle?: string;
     onClick: () => void;
     isActive: boolean;
+    headerSize?: string;
+    contentSize?: string;
 }
 export interface CitationCardProps {
     title: string;
     onClick: () => void;
+    contentSize?: string;
 }
 
 export interface OutcomeCardProps {
@@ -446,4 +450,5 @@ export interface ContentCardProps {
     content: string | ReactNode;
     isActive?: boolean;
     onClick?: () => void;
+    contentSize?: string;
 }

@@ -64,8 +64,8 @@ type PanelType = "diagrams" | "shapes" | "composition" | "chat";
 const panels: Array<{ id: PanelType; label: string }> = [
     { id: "shapes", label: "Shapes" },
     { id: "composition", label: "Composition" },
-    { id: "diagrams", label: "Diagrams" },
-    { id: "chat", label: "AI Model" }
+    { id: "chat", label: "AI Agent" },
+    { id: "diagrams", label: "Diagrams" }
 ];
 
 const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
@@ -165,9 +165,9 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
 
     const [saveLoadMessage, setSaveLoadMessage] = useState<string | null>(null);
     const [isPending, setIsPending] = useState(false);
-    const [isUnifiedModelFetched, setIsUnifiedModelFetched] = useState(false);
     const [leftSidebarOpen, setLeftSidebarOpen] = useState(true);
     const [rightSidebarOpen, setRightSidebarOpen] = useState(false);
+    const [fullScreenPanel, setFullScreenPanel] = useState(false);
     const [selectedDiagramCompoent, setSelectedDiagramCompoent] = useState<
         DiagramComponent | undefined
     >(undefined);
@@ -652,6 +652,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                                     if (rightSidebarOpen) {
                                         setQumData([]);
                                         setRightSidebarOpen(false);
+                                        setFullScreenPanel(false);
                                     } else {
                                         if (semanticModel?.qum?.length > 0) {
                                             setQumData([...semanticModel.qum]);
@@ -700,7 +701,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
             <div className="flex flex-col h-screen w-full text-white">
                 {/* Header */}
                 <div className="w-full  bg-customGray  flex ">
-                    <div className="flex flex-col  bg-customGray  border-[#1E1E1E] border-r-[1px] w-1/4">
+                    <div className="flex flex-col  bg-customGray  border-[#1E1E1E] border-r-[1px] w-1/4 shrink-0">
                         <Header />
                         {!leftSidebarOpen &&
                             selected3DShape &&
@@ -838,33 +839,47 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                     </div>
 
                     {/* Main content */}
-                    <div className="flex-grow  p-4 bg-white flex flex-col items-center justify-center transition-all duration-300 ease-in-out">
-                        <FlowSVGDisplay
-                            svgContent={composedSVG}
-                            selected3DShape={selected3DShape}
-                            diagramComponents={diagramComponents}
-                            isCopied={isCopied}
-                            onSelect3DShape={handleSelect3DShape}
-                            canvasSize={canvasSize}
-                            settings={settings}
-                            setSelectedPosition={handleSelectedPosition}
-                            setSelectedAttachmentPoint={
-                                handleSelectedAttachmentPoint
-                            }
-                            handleComponentMetadata={handleComponentMetadata}
-                        />
-                    </div>
+                    {!fullScreenPanel && (
+                        <div className="flex-grow  p-4 bg-white flex flex-col items-center justify-center transition-all duration-300 ease-in-out">
+                            <FlowSVGDisplay
+                                svgContent={composedSVG}
+                                selected3DShape={selected3DShape}
+                                diagramComponents={diagramComponents}
+                                isCopied={isCopied}
+                                onSelect3DShape={handleSelect3DShape}
+                                canvasSize={canvasSize}
+                                settings={settings}
+                                setSelectedPosition={handleSelectedPosition}
+                                setSelectedAttachmentPoint={
+                                    handleSelectedAttachmentPoint
+                                }
+                                handleComponentMetadata={
+                                    handleComponentMetadata
+                                }
+                            />
+                        </div>
+                    )}
 
                     {/* Right sidebar */}
                     <div
-                        className={`overflow-hidden flex flex-col  border-t-[1px] border-[#1E1E1E] bg-customGray transition-all duration-300 ease-in-out  ${
-                            rightSidebarOpen
+                        className={`overflow-hidden flex flex-col  border-t-[1px] ml-auto border-[#1E1E1E] bg-customGray transition-all duration-300 ease-in-out  ${
+                            !leftSidebarOpen &&
+                            rightSidebarOpen &&
+                            fullScreenPanel
+                                ? "w-full"
+                                : rightSidebarOpen && fullScreenPanel
+                                ? "w-3/4"
+                                : rightSidebarOpen
                                 ? SIDEBAR_WIDTH + " opacity-100"
                                 : "w-0 opacity-0"
                         }`}
                     >
                         <RightSidebarPanel
                             setRightSidebarOpen={setRightSidebarOpen}
+                            fullscreenControls={{
+                                fullScreenPanel,
+                                setFullScreenPanel
+                            }}
                             svgContent={composedSVG}
                             canvasSize={canvasSize}
                             reportData={qumData}

@@ -19,24 +19,27 @@ interface SelectProps {
     onChange: (value: string) => void;
     placeholder?: string;
     value?: string;
+    textSize?: string;
 }
 
 export const RadixSelect: React.FC<SelectProps> = ({
     options,
     onChange,
     placeholder,
-    value
+    value,
+    textSize = "text-sm"
 }) => {
     return (
         <Select.Root value={value} onValueChange={onChange}>
             <Select.Trigger
                 className={cn(
-                    "inline-flex items-center justify-between rounded px-3 py-2 text-sm",
+                    "inline-flex items-center justify-between rounded px-3 py-2 ",
                     "leading-none h-10 gap-1 bg-customLightGray text-white",
                     "shadow-md hover:bg-gray-600 focus:outline-none focus:ring-2",
                     " focus:ring-offset-2 focus:ring-offset-gray-900",
                     "w-full",
-                    "text-left"
+                    "text-left",
+                    textSize
                 )}
             >
                 <Select.Value>{value || placeholder}</Select.Value>
@@ -59,7 +62,7 @@ export const RadixSelect: React.FC<SelectProps> = ({
                     style={{ width: "var(--radix-select-trigger-width)" }} // Match trigger width
                 >
                     <Select.ScrollUpButton className="flex items-center justify-center h-6 bg-customGray text-gray-400 cursor-default">
-                        <ChevronUpIcon />
+                        <ChevronUpIcon className={textSize} />
                     </Select.ScrollUpButton>
                     <Select.Viewport className="p-1 max-h-60 overflow-y-auto">
                         {options.map((option) => (
@@ -67,10 +70,11 @@ export const RadixSelect: React.FC<SelectProps> = ({
                                 key={option.value}
                                 value={option.value}
                                 className={cn(
-                                    "text-sm leading-none text-gray-200 rounded flex items-center",
+                                    "leading-none text-gray-200 rounded flex items-center",
                                     " pr-8 pl-6 py-3 relative select-none",
                                     "data-[highlighted]:outline-none data-[highlighted]:bg-customLightGray",
-                                    "data-[highlighted]:text-white cursor-pointer"
+                                    "data-[highlighted]:text-white cursor-pointer",
+                                    textSize
                                 )}
                             >
                                 <Select.ItemText>
