@@ -64,6 +64,7 @@ export default function DiagramPanel({
 }) {
     const [isMyDiagramLoading, setIsDiagramLoading] = useState(false);
     const [error, setError] = useState({ isError: false, message: "" });
+    const [loadDiagram, setLoadDiagram] = useState(false);
     const [autoSaveMode, setAutoSaveMode] = autoSaveState;
     const {
         data: diagrams,
@@ -179,10 +180,13 @@ export default function DiagramPanel({
 
     const handleLoadDiagram = async (element: DiagramInfo) => {
         if (isMyDiagramLoading) return;
-        // const currentUrl = new URL(window.location.href);
-        // currentUrl.searchParams.delete('uuid')
-        // currentUrl.searchParams.append('uuid', element.metadata?.uuid ||  uuidv4() );
-        // window.history.pushState({}, '', currentUrl);
+        if (element.metadata?.uuid) {
+            const currentUrl = new URL(window.location.href);
+            currentUrl.searchParams.delete("uuid");
+            currentUrl.searchParams.append("uuid", element.metadata.uuid);
+            window.history.pushState({}, "", currentUrl);
+        }
+
         if (currentDiagramInfo?._id !== element._id) setIsDiagramLoading(true);
         await handleLoadDiagramFromJSON(element.diagramComponents);
         setIsDiagramLoading(false);
@@ -191,6 +195,10 @@ export default function DiagramPanel({
         setAutoSaveMode(user?._id === element.author);
     };
 
+    const handleLoadDiagramConfirmation = (element?: DiagramInfo) => {
+        setTempDiagramInfo(element || null);
+        setLoadDiagram(Boolean(element));
+    };
     const DiagramDetails = ({ result }: { result: DiagramInfo }) => {
         const isMyDiagram = user?._id === result.author;
 
@@ -203,7 +211,7 @@ export default function DiagramPanel({
                         ? "bg-customLightGray"
                         : ""
                 }`}
-                onClick={() => handleLoadDiagram(result)}
+                onClick={() => handleLoadDiagramConfirmation(result)}
             >
                 <div className={`flex flex-grow items-center gap-4`}>
                     <div className="w-[76px] h-[76px] flex-shrink-0">
@@ -367,6 +375,45 @@ export default function DiagramPanel({
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+
+            <AlertDialog open={loadDiagram} onOpenChange={setLoadDiagram}>
+                <AlertDialogContent className="bg-gray-800 text-white">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>
+                            Load Diagram: {tempDiagramInfo?.name}
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                            You are about to load the{" "}
+                            <strong>{tempDiagramInfo?.name}</strong> diagram.
+                            <br />
+                            <span className="text-red-400">
+                                Warning: Loading this diagram will overwrite
+                                your current progress.
+                            </span>
+                            <br />
+                            If you want to keep your changes, click{" "}
+                            <strong>Cancel</strong> and save your current
+                            diagram first.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel
+                            onClick={() => handleLoadDiagramConfirmation()}
+                        >
+                            Cancel
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={() =>
+                                tempDiagramInfo &&
+                                handleLoadDiagram(tempDiagramInfo)
+                            }
+                        >
+                            Confirm & Load
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
             <SaveNewDiagram
                 mode={mode}
                 isOpen={isOpen}
