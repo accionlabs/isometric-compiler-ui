@@ -217,13 +217,15 @@ export default function RightSidebarPanel({
             <div className=" px-4 py-3">
                 <div className="flex justify-between items-center mb-2">
                     <h6
-                        className={`${fullScreenPanel ? "text-lg" : "text-sm"}`}
+                        className={`${
+                            fullScreenPanel ? "text-xl" : "text-base"
+                        }`}
                     >
                         {edit.key}
                     </h6>
                     <button
                         onClick={() => setEdit(null)}
-                        className="bg-customBlue px-[0.375rem] py-[0.125rem] rounded text-xs"
+                        className="bg-customBlue px-[0.375rem] py-[0.125rem] rounded text-sm"
                     >
                         Back
                     </button>
@@ -255,20 +257,30 @@ export default function RightSidebarPanel({
                                 }}
                                 className="flex-1"
                             />
-                            <button className="bg-customBlue px-[0.375rem] py-[0.125rem] rounded text-xs">
-                                back
+                            <button
+                                onClick={() => {
+                                    setEdit((prev) => {
+                                        if (!prev) return null;
+                                        const newValue = prev.value;
+                                        newValue.splice(idx, 1);
+                                        return { ...prev, value: newValue };
+                                    });
+                                }}
+                                className="rounded bg-customLightGray px-2"
+                            >
+                                <X size={16} />
                             </button>
                         </div>
                     ))}
                 </div>
-                <div className="flex gap-2 mt-6">
+                {/* <div className="flex gap-2 mt-6">
                     <button className="bg-customBlue px-[0.375rem] py-[0.125rem] rounded">
                         Cancel
                     </button>
                     <button className="bg-customBlue px-[0.375rem] py-[0.125rem] rounded">
                         Save
                     </button>
-                </div>
+                </div> */}
             </div>
         );
     return (
