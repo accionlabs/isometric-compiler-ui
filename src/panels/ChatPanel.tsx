@@ -192,7 +192,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     });
 
     useEffect(() => {
-        const existingMessages = existingChatData?.chats.map((chat) => {
+        const existingMessages = existingChatData?.data.map((chat) => {
             const existingMessage: Message = {
                 text: chat.message,
                 isUser: chat.role === "user",
