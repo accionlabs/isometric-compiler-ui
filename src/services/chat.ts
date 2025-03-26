@@ -6,6 +6,7 @@ import { getShapesByName } from "./shapes";
 import { shapesLibraryManager } from "../lib/shapesLib";
 import { componentLibraryManager } from "../lib/componentLib";
 import { DiagramComponent, MessageResponse } from "@/Types";
+import keycloak from "./keycloak";
 const newUUID = uuidv4();
 
 interface Chat {
@@ -22,61 +23,8 @@ interface Chat {
     };
 }
 interface ChatResponse {
-    chats: Chat[];
-}
-
-export async function sendChatRequest(
-    query: string,
-    currentState: DiagramComponent[]
-) {
-    const url = `${config.gatewayApiUrl}/document/isometric/v2?uuid=${newUUID}`;
-
-    try {
-        const response = await fetch(url, {
-            method: "POST", // Specify the method as POST
-            headers: {
-                "Content-Type": "application/json" // Set the Content-Type header
-            },
-            body: JSON.stringify({ query, currentState: currentState }) // Convert the data object to a JSON string
-        });
-
-        // Check if the response is ok (status code in the range 200-299)
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const res = await response.json(); // Parse the JSON response
-        return res;
-    } catch (error) {
-        console.error("Error:", error); // Handle errors
-    }
-}
-
-export async function sendImageChatRequest(image: string) {
-    const formData = new FormData();
-    if (image) {
-        const imageFile = await fetch(image)
-            .then((res) => res.blob())
-            .then(
-                (blob) =>
-                    new File([blob], "selectedImage.jpg", { type: blob.type })
-            );
-        formData.append("image", imageFile);
-    }
-
-    const response = await fetch(
-        `${config.gatewayApiUrl}/document/isometric/v2/image`,
-        {
-            method: "POST",
-            body: formData
-        }
-    );
-
-    if (!response.ok) {
-        throw new Error("Failed to send the message.");
-    }
-
-    const result = await response.json();
-    return result;
+    data: Chat[];
+    total: number
 }
 
 export async function sendChatRequestV2({
@@ -100,9 +48,12 @@ export async function sendChatRequestV2({
     formData.append("query", query);
     formData.append("uuid", uuid);
 
-    const response = await fetch(`${config.gatewayApiUrl}/isometric/chat`, {
+    const response = await fetch(`${config.isometricApiUrl}/chat`, {
         method: "POST",
-        body: formData
+        body: formData,
+        headers: {
+            Authorization: `Bearer ${keycloak.token}`,
+        },
     });
 
     if (!response.ok) {
@@ -130,9 +81,11 @@ export async function sendChatRequestV2({
 }
 
 export async function getChatByuuid(uuid: string): Promise<ChatResponse> {
-    const url = `${config.gatewayApiUrl}/isometric/chat/${uuid}`;
+    const url = `${config.isometricApiUrl}/chat/byUUID/${uuid}`;
 
-    const response = await fetch(url);
+    const response = await fetch(url, {  headers: {
+        Authorization: `Bearer ${keycloak.token}`,
+    },});
 
     // Check if the response is ok (status code in the range 200-299)
     if (!response.ok) {
@@ -140,16 +93,18 @@ export async function getChatByuuid(uuid: string): Promise<ChatResponse> {
     }
 
     const result = await response.json();
-    return result.data;
+    return result;
 }
 
 export async function getSignedUrl(folderName: string, path: string) {
     const url = `${
-        config.gatewayApiUrl
-    }/isometric/get-signed-url/${encodeURIComponent(
+        config.isometricApiUrl
+    }/documents/get-signed-url/${encodeURIComponent(
         `isometric/${folderName}/${path}`
     )}`;
-    const response = await fetch(url);
+    const response = await fetch(url, { headers: {
+        Authorization: `Bearer ${keycloak.token}`,
+    },});
 
     // Check if the response is ok (status code in the range 200-299)
     if (!response.ok) {
@@ -161,8 +116,10 @@ export async function getSignedUrl(folderName: string, path: string) {
 }
 
 export async function getDocumentsSignedUrlById(id: string) {
-    const url = `${config.gatewayApiUrl}/isometric/document-url/${id}`;
-    const response = await fetch(url);
+    const url = `${config.isometricApiUrl}/documents/get-signed-url/${id}`;
+    const response = await fetch(url, { headers: {
+        Authorization: `Bearer ${keycloak.token}`,
+    },});
 
     // Check if the response is ok (status code in the range 200-299)
     if (!response.ok) {
@@ -174,8 +131,10 @@ export async function getDocumentsSignedUrlById(id: string) {
 }
 
 export async function getReport(uuid: string) {
-    const url = `${config.gatewayApiUrl}/isometric/semantic-model/${uuid}`;
-    const response = await fetch(url);
+    const url = `${config.isometricApiUrl}/semantic-model/byUUID/${uuid}`;
+    const response = await fetch(url, { headers: {
+        Authorization: `Bearer ${keycloak.token}`,
+    },});
 
     // Check if the response is ok (status code in the range 200-299)
     if (!response.ok) {
