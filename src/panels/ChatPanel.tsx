@@ -24,6 +24,14 @@ import {
     SendIcon,
     UnifiedModelIcon
 } from "@/components/ui/IconGroup";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuGroup,
+    DropdownMenuItem,
+    DropdownMenuTrigger
+} from "@/components/ui/DropDownMenu";
+import GitRepoDialog from "./GitRepoDialog";
 
 interface ChatPanelProps {
     handleLoadDiagramFromJSON: (
@@ -31,8 +39,8 @@ interface ChatPanelProps {
     ) => Promise<void>;
     diagramComponents: DiagramComponent[];
     addHistory: (diagramComponent: DiagramComponent[]) => void;
-    handleUndo: () => void,
-    handleRedo: () => void
+    handleUndo: () => void;
+    handleRedo: () => void;
 }
 
 const sendDiagramImage = async (
@@ -82,6 +90,8 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     const { formRef, onKeyDown } = useEnterSubmit();
 
     const [input, setInput] = useState("");
+    const [isAttachmentMenuOpen, setIsAttachmentMenuOpen] = useState(false);
+    const [isGitRepoDialoagOpen, setIsGitRepoDialoagOpen] = useState(false);
     // const [isLoading, setLoading] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = React.useRef<HTMLTextAreaElement>(null);
@@ -128,10 +138,10 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                         res.metadata.emailId
                     );
                 }
-                if(res.metadata?.action?.[0]?.action === 'undo') {
+                if (res.metadata?.action?.[0]?.action === "undo") {
                     handleUndo();
                 }
-                if(res.metadata?.action?.[0]?.action === 'redo') {
+                if (res.metadata?.action?.[0]?.action === "redo") {
                     handleRedo();
                 }
                 if (res.metadata.needFeedback) {
@@ -161,7 +171,12 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                         ]);
                     }
                 } else {
-                    if(res.metadata?.action?.[0]?.action !== 'undo' && res.metadata?.action?.[0]?.action !== 'redo' && JSON.stringify(res.metadata.content) !== JSON.stringify(diagramComponents)) {
+                    if (
+                        res.metadata?.action?.[0]?.action !== "undo" &&
+                        res.metadata?.action?.[0]?.action !== "redo" &&
+                        JSON.stringify(res.metadata.content) !==
+                            JSON.stringify(diagramComponents)
+                    ) {
                         handleLoadDiagramFromJSON(res.metadata.content ?? []);
                         addHistory(res.metadata.content ?? []);
                     }
@@ -341,10 +356,10 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             setIsLoader(true);
         }
 
-        if(input === 'generate blueprint') {
+        if (input === "generate blueprint") {
             setShowLoader(true);
             setIsLoader(true);
-            setLoadMessages(LoadMessagesFoeInput)
+            setLoadMessages(LoadMessagesFoeInput);
         }
         setMessages((prev) => [
             ...prev,
@@ -384,6 +399,22 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         addHistory(content);
     };
 
+    const handleMenuSelect = React.useCallback(
+        (action: () => void | Promise<void>) => async (e: Event) => {
+            e.preventDefault();
+            // Close the dropdown immediately
+            setIsAttachmentMenuOpen(false);
+
+            if (document.activeElement instanceof HTMLElement) {
+                document.activeElement.blur();
+            }
+            // Wait a tick for the dropdown to close
+            await new Promise((resolve) => setTimeout(resolve, 0));
+            // Then execute the action
+            await action();
+        },
+        []
+    );
     return (
         <div className="px-4 pt-3 h-full flex flex-col gap-4">
             <div className="flex justify-between">
@@ -541,10 +572,38 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
 
                     <div className="flex gap-1 justify-center items-center absolute right-0 top-[13px] sm:right-4">
                         <div className="h-6">
-                            <Attachment
-                                className="mt-1 cursor-pointer"
-                                onClick={() => fileInputRef.current?.click()}
-                            />
+                            <DropdownMenu
+                                open={isAttachmentMenuOpen}
+                                onOpenChange={setIsAttachmentMenuOpen}
+                            >
+                                <DropdownMenuTrigger asChild>
+                                    <button className="h-6">
+                                        <Attachment className="mt-1 cursor-pointer" />
+                                    </button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent
+                                    align="end"
+                                    className="w-[200px] bg-customGray"
+                                >
+                                    <DropdownMenuGroup>
+                                        <DropdownMenuItem
+                                            onSelect={handleMenuSelect(() =>
+                                                fileInputRef.current?.click()
+                                            )}
+                                        >
+                                            Attach file
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                            onSelect={handleMenuSelect(() =>
+                                                setIsGitRepoDialoagOpen(true)
+                                            )}
+                                        >
+                                            Attach git repo
+                                        </DropdownMenuItem>
+                                    </DropdownMenuGroup>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+
                             <input
                                 type="file"
                                 accept="image/*,.pdf"
@@ -573,6 +632,10 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                 isOpen={isViewerOpen}
                 onClose={closeViewerPopup}
                 content={viewerContent || ""}
+            />
+            <GitRepoDialog
+                isOpen={isGitRepoDialoagOpen}
+                onClose={() => setIsGitRepoDialoagOpen(false)}
             />
             {showLoader && (
                 <ProgressPopup
