@@ -593,13 +593,13 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                                         >
                                             Attach file
                                         </DropdownMenuItem>
-                                        <DropdownMenuItem
+                                        {/* <DropdownMenuItem
                                             onSelect={handleMenuSelect(() =>
                                                 setIsGitRepoDialoagOpen(true)
                                             )}
                                         >
                                             Attach git repo
-                                        </DropdownMenuItem>
+                                        </DropdownMenuItem> */}
                                     </DropdownMenuGroup>
                                 </DropdownMenuContent>
                             </DropdownMenu>
