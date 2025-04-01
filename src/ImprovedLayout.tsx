@@ -700,144 +700,149 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
         <ChatProvider>
             <div className="flex flex-col h-screen w-full text-white">
                 {/* Header */}
-                <div className="w-full  bg-customGray  flex ">
-                    <div className="flex flex-col  bg-customGray  border-[#1E1E1E] border-r-[1px] w-1/4 shrink-0">
-                        <Header />
-                        {!leftSidebarOpen &&
-                            selected3DShape &&
-                            !rightSidebarOpen && <div className="m-4 " />}
-                        {!leftSidebarOpen && (
-                            <button
-                                onClick={() => {
-                                    setLeftSidebarOpen(true);
-                                }}
-                                className="flex p-2 border-t-[0.5px] border-[#1E1E1E] bg-customGray items-center justify-center w-full"
-                            >
-                                <DoubleArrow />
-                            </button>
-                        )}
-                        {/* border-top: 0.5px solid ; background: ; */}
-                    </div>
-                    <div className="flex-grow relative">
-                        <Header2 />
+                {!isReadModeEnabled && (
+                    <div className="w-full  bg-customGray  flex ">
+                        <div className="flex flex-col  bg-customGray  border-[#1E1E1E] border-r-[1px] w-1/4 shrink-0">
+                            <Header />
+                            {!leftSidebarOpen &&
+                                selected3DShape &&
+                                !rightSidebarOpen && <div className="m-4 " />}
+                            {!leftSidebarOpen && (
+                                <button
+                                    onClick={() => {
+                                        setLeftSidebarOpen(true);
+                                    }}
+                                    className="flex p-2 border-t-[0.5px] border-[#1E1E1E] bg-customGray items-center justify-center w-full"
+                                >
+                                    <DoubleArrow />
+                                </button>
+                            )}
+                            {/* border-top: 0.5px solid ; background: ; */}
+                        </div>
+                        <div className="flex-grow relative">
+                            <Header2 />
 
-                        <div
-                            className={`left-0 right-0 absolute z-10 transition-all duration-300 ease-in-out transform border-t-[1px] border-[#1E1E1E] ${
-                                selected3DShape && !rightSidebarOpen
-                                    ? "translate-y-0 opacity-100 pointer-events-auto"
-                                    : "-translate-y-full opacity-0 pointer-events-none"
-                            }`}
-                        >
-                            <AttachmentOptionsPanel
-                                selectedPosition={selectedPosition}
-                                setSelectedPosition={handleSelectedPosition}
-                                selectedAttachmentPoint={
-                                    selectedAttachmentPoint
-                                }
-                                setSelectedAttachmentPoint={
-                                    handleSelectedAttachmentPoint
-                                }
-                                availableAttachmentPoints={
-                                    availableAttachmentPoints
-                                }
-                            />
+                            <div
+                                className={`left-0 right-0 absolute z-10 transition-all duration-300 ease-in-out transform border-t-[1px] border-[#1E1E1E] ${
+                                    selected3DShape && !rightSidebarOpen
+                                        ? "translate-y-0 opacity-100 pointer-events-auto"
+                                        : "-translate-y-full opacity-0 pointer-events-none"
+                                }`}
+                            >
+                                <AttachmentOptionsPanel
+                                    selectedPosition={selectedPosition}
+                                    setSelectedPosition={handleSelectedPosition}
+                                    selectedAttachmentPoint={
+                                        selectedAttachmentPoint
+                                    }
+                                    setSelectedAttachmentPoint={
+                                        handleSelectedAttachmentPoint
+                                    }
+                                    availableAttachmentPoints={
+                                        availableAttachmentPoints
+                                    }
+                                />
+                            </div>
                         </div>
                     </div>
-                </div>
+                )}
 
                 {/* Main content area with sidebars */}
                 <div className="flex flex-1 w-full overflow-hidden">
                     {/* Left sidebar */}
-                    <div
-                        className={`overflow-hidden bg-customGray transition-all duration-300 ease-in-out flex flex-col ${
-                            leftSidebarOpen
-                                ? SIDEBAR_WIDTH + " opacity-100"
-                                : "w-0 opacity-0"
-                        }`}
-                    >
-                        <div className="flex-grow overflow-auto">
-                            {activePanel === "shapes" && (
-                                <ShapesPanel
-                                    svgLibrary={svgLibrary}
-                                    shapesByCategory={shapesByCategory}
-                                    categories={categories}
-                                    searchQuery={searchQuery}
-                                    searchedData={searchedData}
-                                    setSearchQuery={setSearchQuery}
-                                    activeCategory={activeCategory}
-                                    onCategoryChange={onCategoryChange}
-                                    canvasSize={canvasSize}
-                                    activeLibrary={activeLibrary}
-                                    onAdd3DShape={handleAdd3DShape}
-                                    onAddComponent={onAddComponent}
-                                    onDeleteComponent={onDeleteComponent}
-                                    onAdd2DShape={onAdd2DShape}
-                                    selected3DShape={selected3DShape}
-                                    diagramComponents={diagramComponents}
-                                    components={components}
-                                    isDataLoading={isDataLoading}
-                                />
-                            )}
-                            {activePanel === "composition" && (
-                                <CompositionPanel
-                                    diagramComponents={diagramComponents}
-                                    canvasSize={canvasSize}
-                                    isCopied={isCopied}
-                                    svgLibrary={svgLibrary}
-                                    onRemove3DShape={onRemove3DShape}
-                                    onRemove2DShape={onRemove2DShape}
-                                    onSelect3DShape={onSelect3DShape}
-                                    selected3DShape={selected3DShape}
-                                    onCut3DShape={onCut3DShape}
-                                    onCopy3DShape={handleCopy3DShape}
-                                    onCancelCut3DShape={onCancelCut3DShape}
-                                    onPaste3DShape={handlePaste3DShape}
-                                    onUpdateMetadata={onUpdateMetadata}
-                                />
-                            )}
-                            {activePanel === "diagrams" && (
-                                <DiagramPanel
-                                    currentDiagramInfo={currentDiagramInfo}
-                                    setCurrentDiagramInfo={
-                                        setCurrentDiagramInfo
-                                    }
-                                    autoSaveState={[
-                                        autoSaveMode,
-                                        setAutoSaveMode
-                                    ]}
-                                    diagramComponents={diagramComponents}
-                                    composedSVG={composedSVG}
-                                    canvasSize={canvasSize}
-                                    handleLoadDiagramFromJSON={
-                                        handleLoadDiagramFromJSON
-                                    }
-                                    user={user}
-                                />
-                            )}
-                            {activePanel === "chat" && (
-                                <ChatPanel
-                                    diagramComponents={diagramComponents}
-                                    addHistory={addHistory}
-                                    handleLoadDiagramFromJSON={
-                                        handleLoadDiagramFromJSON
-                                    }
-                                    handleRedo={handleRedo}
-                                    handleUndo={handleUndo}
-                                />
+                    {!isReadModeEnabled && (
+                        <div
+                            className={`overflow-hidden bg-customGray transition-all duration-300 ease-in-out flex flex-col ${
+                                leftSidebarOpen
+                                    ? SIDEBAR_WIDTH + " opacity-100"
+                                    : "w-0 opacity-0"
+                            }`}
+                        >
+                            <div className="flex-grow overflow-auto">
+                                {activePanel === "shapes" && (
+                                    <ShapesPanel
+                                        svgLibrary={svgLibrary}
+                                        shapesByCategory={shapesByCategory}
+                                        categories={categories}
+                                        searchQuery={searchQuery}
+                                        searchedData={searchedData}
+                                        setSearchQuery={setSearchQuery}
+                                        activeCategory={activeCategory}
+                                        onCategoryChange={onCategoryChange}
+                                        canvasSize={canvasSize}
+                                        activeLibrary={activeLibrary}
+                                        onAdd3DShape={handleAdd3DShape}
+                                        onAddComponent={onAddComponent}
+                                        onDeleteComponent={onDeleteComponent}
+                                        onAdd2DShape={onAdd2DShape}
+                                        selected3DShape={selected3DShape}
+                                        diagramComponents={diagramComponents}
+                                        components={components}
+                                        isDataLoading={isDataLoading}
+                                    />
+                                )}
+                                {activePanel === "composition" && (
+                                    <CompositionPanel
+                                        diagramComponents={diagramComponents}
+                                        canvasSize={canvasSize}
+                                        isCopied={isCopied}
+                                        svgLibrary={svgLibrary}
+                                        onRemove3DShape={onRemove3DShape}
+                                        onRemove2DShape={onRemove2DShape}
+                                        onSelect3DShape={onSelect3DShape}
+                                        selected3DShape={selected3DShape}
+                                        onCut3DShape={onCut3DShape}
+                                        onCopy3DShape={handleCopy3DShape}
+                                        onCancelCut3DShape={onCancelCut3DShape}
+                                        onPaste3DShape={handlePaste3DShape}
+                                        onUpdateMetadata={onUpdateMetadata}
+                                    />
+                                )}
+                                {activePanel === "diagrams" && (
+                                    <DiagramPanel
+                                        currentDiagramInfo={currentDiagramInfo}
+                                        setCurrentDiagramInfo={
+                                            setCurrentDiagramInfo
+                                        }
+                                        autoSaveState={[
+                                            autoSaveMode,
+                                            setAutoSaveMode
+                                        ]}
+                                        diagramComponents={diagramComponents}
+                                        composedSVG={composedSVG}
+                                        canvasSize={canvasSize}
+                                        handleLoadDiagramFromJSON={
+                                            handleLoadDiagramFromJSON
+                                        }
+                                        user={user}
+                                    />
+                                )}
+                                {activePanel === "chat" && (
+                                    <ChatPanel
+                                        diagramComponents={diagramComponents}
+                                        addHistory={addHistory}
+                                        handleLoadDiagramFromJSON={
+                                            handleLoadDiagramFromJSON
+                                        }
+                                        handleRedo={handleRedo}
+                                        handleUndo={handleUndo}
+                                    />
+                                )}
+                            </div>
+                            {leftSidebarOpen && (
+                                <div className="flex-shrink-0 border-t border-gray-700">
+                                    <button
+                                        onClick={() =>
+                                            setLeftSidebarOpen(false)
+                                        }
+                                        className="flex p-2 bg-customGray items-center justify-center w-full hover:bg-gray-700 transition-colors"
+                                    >
+                                        <DoubleArrow />
+                                    </button>
+                                </div>
                             )}
                         </div>
-                        {leftSidebarOpen && (
-                            <div className="flex-shrink-0 border-t border-gray-700">
-                                <button
-                                    onClick={() => setLeftSidebarOpen(false)}
-                                    className="flex p-2 bg-customGray items-center justify-center w-full hover:bg-gray-700 transition-colors"
-                                >
-                                    <DoubleArrow />
-                                </button>
-                            </div>
-                        )}
-                    </div>
-
+                    )}
                     {/* Main content */}
                     {!fullScreenPanel && (
                         <div className="flex-grow  p-4 bg-white flex flex-col items-center justify-center transition-all duration-300 ease-in-out">
