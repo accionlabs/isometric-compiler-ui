@@ -10,7 +10,7 @@ import keycloak from "./keycloak";
 const newUUID = uuidv4();
 
 interface Chat {
-    id: string;
+    _id: string;
     message: string;
     messageType: "text" | "json" | "file";
     createdAt: string;
@@ -24,7 +24,7 @@ interface Chat {
 }
 interface ChatResponse {
     data: Chat[];
-    total: number
+    total: number;
 }
 
 export async function sendChatRequestV2({
@@ -52,8 +52,8 @@ export async function sendChatRequestV2({
         method: "POST",
         body: formData,
         headers: {
-            Authorization: `Bearer ${keycloak.token}`,
-        },
+            Authorization: `Bearer ${keycloak.token}`
+        }
     });
 
     if (!response.ok) {
@@ -83,9 +83,29 @@ export async function sendChatRequestV2({
 export async function getChatByuuid(uuid: string): Promise<ChatResponse> {
     const url = `${config.isometricApiUrl}/chat/byUUID/${uuid}`;
 
-    const response = await fetch(url, {  headers: {
-        Authorization: `Bearer ${keycloak.token}`,
-    },});
+    const response = await fetch(url, {
+        headers: {
+            Authorization: `Bearer ${keycloak.token}`
+        }
+    });
+
+    // Check if the response is ok (status code in the range 200-299)
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    return result;
+}
+
+export async function getMessageById(id?: string): Promise<Chat> {
+    const url = `${config.isometricApiUrl}/chat/${id}`;
+
+    const response = await fetch(url, {
+        headers: {
+            Authorization: `Bearer ${keycloak.token}`
+        }
+    });
 
     // Check if the response is ok (status code in the range 200-299)
     if (!response.ok) {
@@ -102,9 +122,11 @@ export async function getSignedUrl(folderName: string, path: string) {
     }/documents/get-signed-url/${encodeURIComponent(
         `isometric/${folderName}/${path}`
     )}`;
-    const response = await fetch(url, { headers: {
-        Authorization: `Bearer ${keycloak.token}`,
-    },});
+    const response = await fetch(url, {
+        headers: {
+            Authorization: `Bearer ${keycloak.token}`
+        }
+    });
 
     // Check if the response is ok (status code in the range 200-299)
     if (!response.ok) {
@@ -117,9 +139,11 @@ export async function getSignedUrl(folderName: string, path: string) {
 
 export async function getDocumentsSignedUrlById(id: string) {
     const url = `${config.isometricApiUrl}/documents/get-signed-url/${id}`;
-    const response = await fetch(url, { headers: {
-        Authorization: `Bearer ${keycloak.token}`,
-    },});
+    const response = await fetch(url, {
+        headers: {
+            Authorization: `Bearer ${keycloak.token}`
+        }
+    });
 
     // Check if the response is ok (status code in the range 200-299)
     if (!response.ok) {
@@ -132,9 +156,11 @@ export async function getDocumentsSignedUrlById(id: string) {
 
 export async function getReport(uuid: string) {
     const url = `${config.isometricApiUrl}/semantic-model/byUUID/${uuid}`;
-    const response = await fetch(url, { headers: {
-        Authorization: `Bearer ${keycloak.token}`,
-    },});
+    const response = await fetch(url, {
+        headers: {
+            Authorization: `Bearer ${keycloak.token}`
+        }
+    });
 
     // Check if the response is ok (status code in the range 200-299)
     if (!response.ok) {

@@ -53,7 +53,7 @@ import { v4 as uuidv4 } from "uuid";
 
 import SaveNewDiagram from "./panels/SaveNewDiagram";
 import RightSidebarPanel from "./panels/RightSidebarPanel";
-import { getReport } from "./services/chat";
+import { getMessageById, getReport } from "./services/chat";
 import { toast } from "sonner";
 import { ImprovedLayoutProps } from "./Interfaces";
 import { SEMANTIC_MODEL_STATUS } from "./Constants";
@@ -134,6 +134,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
 
     const currentUrl = new URL(window.location.href);
     const existinguuid = currentUrl.searchParams.get("uuid");
+    const message_id = currentUrl.searchParams.get("message_id");
     if (!existinguuid) currentUrl.searchParams.append("uuid", newUUID);
     window.history.pushState({}, "", currentUrl);
     const { keycloak } = useKeycloak();
@@ -181,6 +182,12 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
         queryFn: () => getReport(existinguuid || ""),
         refetchInterval: 5000
     });
+    const { data: message } = useQuery({
+        queryKey: ["message", message_id],
+        queryFn: () => getMessageById(message_id || ""),
+        enabled: !!message_id
+    });
+
     const { mutate, isPending: isCreateDiagramPending } = useMutation({
         mutationFn: saveDiagram,
         onSettled: (res, error) => {
@@ -411,6 +418,15 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
         currentUrl.searchParams.append("uuid", uuidv4());
         window.history.pushState({}, "", currentUrl);
     };
+    useEffect(() => {
+        if (!message_id) return;
+        handleLoadDiagramFromJSON(
+            !(message?.metadata?.content?.length > 0)
+                ? []
+                : message?.metadata?.content
+        );
+    }, [message, message_id]);
+
     useEffect(() => {
         const handleMessage = (event: MessageEvent) => {
             try {

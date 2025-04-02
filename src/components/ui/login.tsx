@@ -1,10 +1,7 @@
 import { config } from "@/config";
 import { useKeycloak } from "@react-keycloak/web";
-// import keycloak from "../../services/keycloak";
 
 export default function Login() {
-    // const auth = useAuth();
-
     const { keycloak } = useKeycloak();
 
     return (
