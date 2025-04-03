@@ -141,7 +141,8 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     const queryClient = useQueryClient();
     const user = queryClient.getQueryData<User>(["user"]);
     const params = new URLSearchParams(window.location.search);
-    const isReadModeEnabled = params.get("mode") === "read";
+    const isDiagramModeEnabled = params.get("mode") === "diagram";
+    const isShowModelModeEnabled = params.get("mode") === "model";
 
     const [activePanel, setActivePanel] = useState<PanelType>("shapes");
     const [currentDiagramInfo, setCurrentDiagramInfo] =
@@ -177,7 +178,11 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     const timeoutIdRef = useRef<NodeJS.Timeout | null>(null);
 
     const updateDiagramWithRateLimit = useCancelLatestCalls(updateDiagram);
-    const { data: semanticModel } = useQuery({
+    const {
+        data: semanticModel,
+        refetch,
+        isFetching: isFetchPending
+    } = useQuery({
         queryKey: ["report", existinguuid],
         queryFn: () => getReport(existinguuid || ""),
         refetchInterval: 5000
@@ -418,6 +423,35 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
         currentUrl.searchParams.append("uuid", uuidv4());
         window.history.pushState({}, "", currentUrl);
     };
+
+    const handleRightPanelOpen = () => {
+        setSelectedDiagramCompoent(undefined);
+        if (rightSidebarOpen) {
+            setQumData([]);
+            setRightSidebarOpen(false);
+            setFullScreenPanel(false);
+        } else {
+            if (semanticModel?.qum?.length > 0) {
+                setQumData([...semanticModel.qum]);
+                setRightSidebarOpen(true);
+            } else {
+                toast.error(
+                    "Unified model unavailable right now, Please try again!",
+                    {
+                        duration: 3000
+                    }
+                );
+            }
+        }
+    };
+    useEffect(() => {
+        if (!isShowModelModeEnabled) return;
+        if (semanticModel?.qum) setQumData([...semanticModel.qum]);
+
+        setLeftSidebarOpen(false);
+        setRightSidebarOpen(true);
+        setFullScreenPanel(true);
+    }, [isShowModelModeEnabled, isFetchPending]);
     useEffect(() => {
         if (!message_id) return;
         handleLoadDiagramFromJSON(
@@ -447,25 +481,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
             window.removeEventListener("message", handleMessage);
         };
     }, []);
-    // useEffect(() => {
-    //     if (isFirstRender.current) {
-    //         isFirstRender.current = false;
-    //         return;
-    //     }
-    //     if (isRefetching) return;
-    //     if (reportData?.qum) {
-    //         setRightSidebarOpen(true);
-    //     } else {
-    //         toast.error(
-    //             "Unified model unavailable right now, Please try again!",
-    //             {
-    //                 duration: 3000
-    //             }
-    //         );
-    //     }
-    // }, [reportData, isRefetching]);
 
-    // Trigger autoSave whenever the diagram composed svg changes
     useEffect(() => {
         if (user?._id !== currentDiagramInfo?.author) return;
         if (!autoSaveMode) return;
@@ -663,26 +679,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                     <CustomTooltip
                         action={
                             <button
-                                onClick={async () => {
-                                    setSelectedDiagramCompoent(undefined);
-                                    if (rightSidebarOpen) {
-                                        setQumData([]);
-                                        setRightSidebarOpen(false);
-                                        setFullScreenPanel(false);
-                                    } else {
-                                        if (semanticModel?.qum?.length > 0) {
-                                            setQumData([...semanticModel.qum]);
-                                            setRightSidebarOpen(true);
-                                        } else {
-                                            toast.error(
-                                                "Unified model unavailable right now, Please try again!",
-                                                {
-                                                    duration: 3000
-                                                }
-                                            );
-                                        }
-                                    }
-                                }}
+                                onClick={handleRightPanelOpen}
                                 className="hover:bg-customLightGray p-2 rounded disabled:cursor-not-allowed disabled:opacity-50"
                             >
                                 {rightSidebarOpen ? (
@@ -716,7 +713,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
         <ChatProvider>
             <div className="flex flex-col h-screen w-full text-white">
                 {/* Header */}
-                {!isReadModeEnabled && (
+                {!isDiagramModeEnabled && !isShowModelModeEnabled && (
                     <div className="w-full  bg-customGray  flex ">
                         <div className="flex flex-col  bg-customGray  border-[#1E1E1E] border-r-[1px] w-1/4 shrink-0">
                             <Header />
@@ -766,7 +763,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                 {/* Main content area with sidebars */}
                 <div className="flex flex-1 w-full overflow-hidden">
                     {/* Left sidebar */}
-                    {!isReadModeEnabled && (
+                    {!isDiagramModeEnabled && !isShowModelModeEnabled && (
                         <div
                             className={`overflow-hidden bg-customGray transition-all duration-300 ease-in-out flex flex-col ${
                                 leftSidebarOpen
@@ -860,7 +857,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                         </div>
                     )}
                     {/* Main content */}
-                    {!fullScreenPanel && (
+                    {!fullScreenPanel && !isShowModelModeEnabled && (
                         <div className="flex-grow  p-4 bg-white flex flex-col items-center justify-center transition-all duration-300 ease-in-out">
                             <FlowSVGDisplay
                                 svgContent={composedSVG}

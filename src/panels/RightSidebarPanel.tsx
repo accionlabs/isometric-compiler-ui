@@ -52,6 +52,8 @@ export default function RightSidebarPanel({
     fullscreenControls
 }: RightSidebarPanelProps) {
     const queryClient = useQueryClient();
+    const params = new URLSearchParams(window.location.search);
+    const isShowModelModeEnabled = params.get("mode") === "model";
     const { fullScreenPanel, setFullScreenPanel } = fullscreenControls;
     const [tabs, setTabs] = useState(defaultTabs);
     const [activeTab, setActiveTab] = useState("Functional");
@@ -194,12 +196,18 @@ export default function RightSidebarPanel({
                         ) : null
                     )}
                 </div>
-                <button
-                    className="shrink-0"
-                    onClick={() => setFullScreenPanel(!fullScreenPanel)}
-                >
-                    {fullScreenPanel ? <X size={20} /> : <Expand size={20} />}
-                </button>
+                {!isShowModelModeEnabled && (
+                    <button
+                        className="shrink-0"
+                        onClick={() => setFullScreenPanel(!fullScreenPanel)}
+                    >
+                        {fullScreenPanel ? (
+                            <X size={20} />
+                        ) : (
+                            <Expand size={20} />
+                        )}
+                    </button>
+                )}
             </div>
 
             {/* Tab Content */}

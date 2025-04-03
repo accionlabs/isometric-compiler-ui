@@ -20,7 +20,6 @@ export const Section: React.FC<SectionProps> = ({
     children,
     headerSize = "text-base"
 }) => {
-    console.log("headerSize", title, headerSize);
     const [expanded, setExpanded] = useState(true);
     return (
         <div className="mb-3">
