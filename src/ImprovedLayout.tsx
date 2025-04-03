@@ -134,7 +134,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
 
     const currentUrl = new URL(window.location.href);
     const existinguuid = currentUrl.searchParams.get("uuid");
-    const message_id = currentUrl.searchParams.get("message_id");
+    const message_id = currentUrl.searchParams.get("message");
     if (!existinguuid) currentUrl.searchParams.append("uuid", newUUID);
     window.history.pushState({}, "", currentUrl);
     const { keycloak } = useKeycloak();
@@ -267,7 +267,6 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     const handleSelectedPosition = useCallback(
         (position: string | null) => {
             if (position) {
-                //console.log(`Improved Layout: position ${position}`);
                 onSelectedPosition(position);
             }
         },
@@ -453,8 +452,10 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
         setRightSidebarOpen(true);
         setFullScreenPanel(true);
     }, [isShowUnifiedModelModeEnabled, isFetchPending]);
+
     useEffect(() => {
         if (!message_id) return;
+
         handleLoadDiagramFromJSON(
             !(message?.metadata?.content?.length > 0)
                 ? []
@@ -895,9 +896,10 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                     )}
 
                     {/* Right sidebar */}
+
                     <div
                         className={`overflow-hidden flex flex-col ${
-                            isShowUnifiedModelModeEnabled
+                            !isShowUnifiedModelModeEnabled
                                 ? "border-[#1E1E1E] border-t-[1px]"
                                 : ""
                         } ml-auto  bg-customGray transition-all duration-300 ease-in-out  ${
