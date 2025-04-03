@@ -896,7 +896,11 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
 
                     {/* Right sidebar */}
                     <div
-                        className={`overflow-hidden flex flex-col  border-t-[1px] ml-auto border-[#1E1E1E] bg-customGray transition-all duration-300 ease-in-out  ${
+                        className={`overflow-hidden flex flex-col ${
+                            isShowUnifiedModelModeEnabled
+                                ? "border-[#1E1E1E] border-t-[1px]"
+                                : ""
+                        } ml-auto  bg-customGray transition-all duration-300 ease-in-out  ${
                             !leftSidebarOpen &&
                             rightSidebarOpen &&
                             fullScreenPanel

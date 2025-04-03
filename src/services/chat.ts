@@ -132,13 +132,12 @@ export async function getSignedUrl(folderName: string, path: string) {
     if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
     }
-
     const result = await response.text();
     return result;
 }
 
 export async function getDocumentsSignedUrlById(id: string) {
-    const url = `${config.isometricApiUrl}/documents/get-signed-url/${id}`;
+    const url = `${config.isometricApiUrl}/documents/get-signed-url-by-id/${id}`;
     const response = await fetch(url, {
         headers: {
             Authorization: `Bearer ${keycloak.token}`
@@ -150,8 +149,7 @@ export async function getDocumentsSignedUrlById(id: string) {
         throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const result = await response.text();
-    return result;
+    return await response.text();
 }
 
 export async function getReport(uuid: string) {

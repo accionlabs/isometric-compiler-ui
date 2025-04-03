@@ -53,7 +53,8 @@ export default function RightSidebarPanel({
 }: RightSidebarPanelProps) {
     const queryClient = useQueryClient();
     const params = new URLSearchParams(window.location.search);
-    const isShowUnifiedModelModeEnabled = params.get("mode") === "model";
+    const isShowUnifiedModelModeEnabled =
+        params.get("mode") === "unified_model";
     const { fullScreenPanel, setFullScreenPanel } = fullscreenControls;
     const [tabs, setTabs] = useState(defaultTabs);
     const [activeTab, setActiveTab] = useState("Functional");
@@ -163,19 +164,35 @@ export default function RightSidebarPanel({
         setSelectedStep(step);
     };
 
-    const handleDocumentDownload = async (id: string) => {
+    const handleDocumentDownload = async ({
+        documentId,
+        documentName
+    }: {
+        documentId: string;
+        documentName: string;
+    }) => {
         const signedUrl = await queryClient.fetchQuery({
-            queryKey: ["getSignedDocUrl", id],
-            queryFn: () => getDocumentsSignedUrlById(id),
+            queryKey: ["getSignedDocUrl", documentId],
+            queryFn: () => getDocumentsSignedUrlById(documentId),
             staleTime: 300000
         });
-        window.open(signedUrl, "_blank", "noopener,noreferrer");
+
+        const link = document.createElement("a");
+        link.href = signedUrl;
+        link.setAttribute("download", documentName);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     };
 
     return (
         <>
             {/* Tab Selection Buttons */}
-            <div className="flex items-center justify-between px-4 py-3">
+            <div
+                className={`flex items-center justify-between px-4 ${
+                    isShowUnifiedModelModeEnabled ? "" : "py-3"
+                }`}
+            >
                 <div className="flex gap-2  flex-wrap">
                     {tabs.map((tab) =>
                         tab.show ? (
@@ -343,7 +360,7 @@ export default function RightSidebarPanel({
                                                         }
                                                         onClick={() =>
                                                             handleDocumentDownload(
-                                                                citation.documentId
+                                                                citation
                                                             )
                                                         }
                                                         contentSize={
@@ -466,7 +483,7 @@ export default function RightSidebarPanel({
                                                             }
                                                             onClick={() =>
                                                                 handleDocumentDownload(
-                                                                    citation.documentId
+                                                                    citation
                                                                 )
                                                             }
                                                             contentSize={
