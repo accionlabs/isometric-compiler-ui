@@ -142,7 +142,8 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     const user = queryClient.getQueryData<User>(["user"]);
     const params = new URLSearchParams(window.location.search);
     const isDiagramModeEnabled = params.get("mode") === "diagram";
-    const isShowModelModeEnabled = params.get("mode") === "model";
+    const isShowUnifiedModelModeEnabled =
+        params.get("mode") === "unified_model";
 
     const [activePanel, setActivePanel] = useState<PanelType>("shapes");
     const [currentDiagramInfo, setCurrentDiagramInfo] =
@@ -445,13 +446,13 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
         }
     };
     useEffect(() => {
-        if (!isShowModelModeEnabled) return;
+        if (!isShowUnifiedModelModeEnabled) return;
         if (semanticModel?.qum) setQumData([...semanticModel.qum]);
 
         setLeftSidebarOpen(false);
         setRightSidebarOpen(true);
         setFullScreenPanel(true);
-    }, [isShowModelModeEnabled, isFetchPending]);
+    }, [isShowUnifiedModelModeEnabled, isFetchPending]);
     useEffect(() => {
         if (!message_id) return;
         handleLoadDiagramFromJSON(
@@ -713,7 +714,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
         <ChatProvider>
             <div className="flex flex-col h-screen w-full text-white">
                 {/* Header */}
-                {!isDiagramModeEnabled && !isShowModelModeEnabled && (
+                {!isDiagramModeEnabled && !isShowUnifiedModelModeEnabled && (
                     <div className="w-full  bg-customGray  flex ">
                         <div className="flex flex-col  bg-customGray  border-[#1E1E1E] border-r-[1px] w-1/4 shrink-0">
                             <Header />
@@ -763,101 +764,116 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                 {/* Main content area with sidebars */}
                 <div className="flex flex-1 w-full overflow-hidden">
                     {/* Left sidebar */}
-                    {!isDiagramModeEnabled && !isShowModelModeEnabled && (
-                        <div
-                            className={`overflow-hidden bg-customGray transition-all duration-300 ease-in-out flex flex-col ${
-                                leftSidebarOpen
-                                    ? SIDEBAR_WIDTH + " opacity-100"
-                                    : "w-0 opacity-0"
-                            }`}
-                        >
-                            <div className="flex-grow overflow-auto">
-                                {activePanel === "shapes" && (
-                                    <ShapesPanel
-                                        svgLibrary={svgLibrary}
-                                        shapesByCategory={shapesByCategory}
-                                        categories={categories}
-                                        searchQuery={searchQuery}
-                                        searchedData={searchedData}
-                                        setSearchQuery={setSearchQuery}
-                                        activeCategory={activeCategory}
-                                        onCategoryChange={onCategoryChange}
-                                        canvasSize={canvasSize}
-                                        activeLibrary={activeLibrary}
-                                        onAdd3DShape={handleAdd3DShape}
-                                        onAddComponent={onAddComponent}
-                                        onDeleteComponent={onDeleteComponent}
-                                        onAdd2DShape={onAdd2DShape}
-                                        selected3DShape={selected3DShape}
-                                        diagramComponents={diagramComponents}
-                                        components={components}
-                                        isDataLoading={isDataLoading}
-                                    />
-                                )}
-                                {activePanel === "composition" && (
-                                    <CompositionPanel
-                                        diagramComponents={diagramComponents}
-                                        canvasSize={canvasSize}
-                                        isCopied={isCopied}
-                                        svgLibrary={svgLibrary}
-                                        onRemove3DShape={onRemove3DShape}
-                                        onRemove2DShape={onRemove2DShape}
-                                        onSelect3DShape={onSelect3DShape}
-                                        selected3DShape={selected3DShape}
-                                        onCut3DShape={onCut3DShape}
-                                        onCopy3DShape={handleCopy3DShape}
-                                        onCancelCut3DShape={onCancelCut3DShape}
-                                        onPaste3DShape={handlePaste3DShape}
-                                        onUpdateMetadata={onUpdateMetadata}
-                                    />
-                                )}
-                                {activePanel === "diagrams" && (
-                                    <DiagramPanel
-                                        currentDiagramInfo={currentDiagramInfo}
-                                        setCurrentDiagramInfo={
-                                            setCurrentDiagramInfo
-                                        }
-                                        autoSaveState={[
-                                            autoSaveMode,
-                                            setAutoSaveMode
-                                        ]}
-                                        diagramComponents={diagramComponents}
-                                        composedSVG={composedSVG}
-                                        canvasSize={canvasSize}
-                                        handleLoadDiagramFromJSON={
-                                            handleLoadDiagramFromJSON
-                                        }
-                                        user={user}
-                                    />
-                                )}
-                                {activePanel === "chat" && (
-                                    <ChatPanel
-                                        diagramComponents={diagramComponents}
-                                        addHistory={addHistory}
-                                        handleLoadDiagramFromJSON={
-                                            handleLoadDiagramFromJSON
-                                        }
-                                        handleRedo={handleRedo}
-                                        handleUndo={handleUndo}
-                                    />
+                    {!isDiagramModeEnabled &&
+                        !isShowUnifiedModelModeEnabled && (
+                            <div
+                                className={`overflow-hidden bg-customGray transition-all duration-300 ease-in-out flex flex-col ${
+                                    leftSidebarOpen
+                                        ? SIDEBAR_WIDTH + " opacity-100"
+                                        : "w-0 opacity-0"
+                                }`}
+                            >
+                                <div className="flex-grow overflow-auto">
+                                    {activePanel === "shapes" && (
+                                        <ShapesPanel
+                                            svgLibrary={svgLibrary}
+                                            shapesByCategory={shapesByCategory}
+                                            categories={categories}
+                                            searchQuery={searchQuery}
+                                            searchedData={searchedData}
+                                            setSearchQuery={setSearchQuery}
+                                            activeCategory={activeCategory}
+                                            onCategoryChange={onCategoryChange}
+                                            canvasSize={canvasSize}
+                                            activeLibrary={activeLibrary}
+                                            onAdd3DShape={handleAdd3DShape}
+                                            onAddComponent={onAddComponent}
+                                            onDeleteComponent={
+                                                onDeleteComponent
+                                            }
+                                            onAdd2DShape={onAdd2DShape}
+                                            selected3DShape={selected3DShape}
+                                            diagramComponents={
+                                                diagramComponents
+                                            }
+                                            components={components}
+                                            isDataLoading={isDataLoading}
+                                        />
+                                    )}
+                                    {activePanel === "composition" && (
+                                        <CompositionPanel
+                                            diagramComponents={
+                                                diagramComponents
+                                            }
+                                            canvasSize={canvasSize}
+                                            isCopied={isCopied}
+                                            svgLibrary={svgLibrary}
+                                            onRemove3DShape={onRemove3DShape}
+                                            onRemove2DShape={onRemove2DShape}
+                                            onSelect3DShape={onSelect3DShape}
+                                            selected3DShape={selected3DShape}
+                                            onCut3DShape={onCut3DShape}
+                                            onCopy3DShape={handleCopy3DShape}
+                                            onCancelCut3DShape={
+                                                onCancelCut3DShape
+                                            }
+                                            onPaste3DShape={handlePaste3DShape}
+                                            onUpdateMetadata={onUpdateMetadata}
+                                        />
+                                    )}
+                                    {activePanel === "diagrams" && (
+                                        <DiagramPanel
+                                            currentDiagramInfo={
+                                                currentDiagramInfo
+                                            }
+                                            setCurrentDiagramInfo={
+                                                setCurrentDiagramInfo
+                                            }
+                                            autoSaveState={[
+                                                autoSaveMode,
+                                                setAutoSaveMode
+                                            ]}
+                                            diagramComponents={
+                                                diagramComponents
+                                            }
+                                            composedSVG={composedSVG}
+                                            canvasSize={canvasSize}
+                                            handleLoadDiagramFromJSON={
+                                                handleLoadDiagramFromJSON
+                                            }
+                                            user={user}
+                                        />
+                                    )}
+                                    {activePanel === "chat" && (
+                                        <ChatPanel
+                                            diagramComponents={
+                                                diagramComponents
+                                            }
+                                            addHistory={addHistory}
+                                            handleLoadDiagramFromJSON={
+                                                handleLoadDiagramFromJSON
+                                            }
+                                            handleRedo={handleRedo}
+                                            handleUndo={handleUndo}
+                                        />
+                                    )}
+                                </div>
+                                {leftSidebarOpen && (
+                                    <div className="flex-shrink-0 border-t border-gray-700">
+                                        <button
+                                            onClick={() =>
+                                                setLeftSidebarOpen(false)
+                                            }
+                                            className="flex p-2 bg-customGray items-center justify-center w-full hover:bg-gray-700 transition-colors"
+                                        >
+                                            <DoubleArrow />
+                                        </button>
+                                    </div>
                                 )}
                             </div>
-                            {leftSidebarOpen && (
-                                <div className="flex-shrink-0 border-t border-gray-700">
-                                    <button
-                                        onClick={() =>
-                                            setLeftSidebarOpen(false)
-                                        }
-                                        className="flex p-2 bg-customGray items-center justify-center w-full hover:bg-gray-700 transition-colors"
-                                    >
-                                        <DoubleArrow />
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                    )}
+                        )}
                     {/* Main content */}
-                    {!fullScreenPanel && !isShowModelModeEnabled && (
+                    {!fullScreenPanel && !isShowUnifiedModelModeEnabled && (
                         <div className="flex-grow  p-4 bg-white flex flex-col items-center justify-center transition-all duration-300 ease-in-out">
                             <FlowSVGDisplay
                                 svgContent={composedSVG}

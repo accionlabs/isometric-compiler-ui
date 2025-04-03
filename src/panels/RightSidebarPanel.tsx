@@ -53,7 +53,7 @@ export default function RightSidebarPanel({
 }: RightSidebarPanelProps) {
     const queryClient = useQueryClient();
     const params = new URLSearchParams(window.location.search);
-    const isShowModelModeEnabled = params.get("mode") === "model";
+    const isShowUnifiedModelModeEnabled = params.get("mode") === "model";
     const { fullScreenPanel, setFullScreenPanel } = fullscreenControls;
     const [tabs, setTabs] = useState(defaultTabs);
     const [activeTab, setActiveTab] = useState("Functional");
@@ -196,7 +196,7 @@ export default function RightSidebarPanel({
                         ) : null
                     )}
                 </div>
-                {!isShowModelModeEnabled && (
+                {!isShowUnifiedModelModeEnabled && (
                     <button
                         className="shrink-0"
                         onClick={() => setFullScreenPanel(!fullScreenPanel)}
