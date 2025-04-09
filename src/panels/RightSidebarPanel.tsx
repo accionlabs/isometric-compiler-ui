@@ -116,18 +116,12 @@ export default function RightSidebarPanel({
 
     useEffect(() => {
         const hasBlueprint = !!componentData;
-        const hasTechnical = !!architectureData.length;
         setTabs((prev) =>
             prev.map((tab) => {
                 if (tab.name === "Blueprint") {
                     return { ...tab, show: hasBlueprint };
                 }
-                if (tab.name === "Architecture") {
-                    return {
-                        ...tab,
-                        enabled: hasTechnical
-                    };
-                }
+
                 return tab;
             })
         );
@@ -138,6 +132,21 @@ export default function RightSidebarPanel({
         });
     }, [componentData]);
 
+    useEffect(() => {
+        const hasTechnical = !!architectureData.length;
+
+        setTabs((prev) =>
+            prev.map((tab) => {
+                if (tab.name === "Architecture") {
+                    return {
+                        ...tab,
+                        enabled: hasTechnical
+                    };
+                }
+                return tab;
+            })
+        );
+    }, [architectureData]);
     useEffect(() => {
         if (!reportData?.length) {
             setSelectedPersona(null);
