@@ -42,7 +42,9 @@ export const RadixSelect: React.FC<SelectProps> = ({
                     textSize
                 )}
             >
-                <Select.Value>{value || placeholder}</Select.Value>
+                <span className="flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap text-left">
+                    <Select.Value>{value || placeholder}</Select.Value>
+                </span>
                 <Select.Icon className="text-gray-400 flex-shrink-0">
                     <ChevronDownIcon />
                 </Select.Icon>
