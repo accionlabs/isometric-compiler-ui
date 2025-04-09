@@ -630,7 +630,7 @@ export default function RightSidebarPanel({
                                         >
                                             {key}
                                         </h4>
-                                        <div className="grid grid-cols-2 gap-2 text-left">
+                                        <div className="grid grid-cols-1 gap-2 text-left">
                                             {values.map((value) => (
                                                 <ContentDiv
                                                     key={value}
