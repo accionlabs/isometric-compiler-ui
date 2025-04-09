@@ -899,6 +899,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
 
                     <div
                         className={`overflow-hidden flex flex-col ${
+                            !isDiagramModeEnabled &&
                             !isShowUnifiedModelModeEnabled
                                 ? "border-[#1E1E1E] border-t-[1px]"
                                 : ""
