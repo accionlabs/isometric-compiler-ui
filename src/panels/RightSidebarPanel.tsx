@@ -69,6 +69,7 @@ export default function RightSidebarPanel({
     );
     const [selectedStep, setSelectedStep] = useState<Step | null>(null);
     // Ensure `Blueprint` tab is shown/active when `componentData` is available
+
     useEffect(() => {
         const hasBlueprint = !!componentData;
         const hasTechnical = !!componentData?.metadata?.blueprint;

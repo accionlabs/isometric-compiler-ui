@@ -74,7 +74,7 @@ export default function DiagramPanel({
         queryKey: ["saved_diagrams"],
         queryFn: getDiagrams
     });
-
+    console.log("test888", diagrams);
     const { mutate: deleteMutation, isPending: isDeletionPending } =
         useMutation({
             mutationFn: deleteDiagram,
