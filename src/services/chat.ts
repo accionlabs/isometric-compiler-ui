@@ -81,7 +81,7 @@ export async function sendChatRequestV2({
 }
 
 export async function getChatByuuid(uuid: string): Promise<ChatResponse> {
-    const url = `${config.isometricApiUrl}/chat/byUUID/${uuid}?agent=architecture_agent`;
+    const url = `${config.isometricApiUrl}/chat/byUUID/${uuid}`;
 
     const response = await fetch(url, {
         headers: {

@@ -74,7 +74,6 @@ export default function DiagramPanel({
         queryKey: ["saved_diagrams"],
         queryFn: getDiagrams
     });
-    console.log("test888", diagrams);
     const { mutate: deleteMutation, isPending: isDeletionPending } =
         useMutation({
             mutationFn: deleteDiagram,
@@ -188,7 +187,7 @@ export default function DiagramPanel({
         }
 
         if (currentDiagramInfo?._id !== element._id) setIsDiagramLoading(true);
-        await handleLoadDiagramFromJSON(element.diagramComponents);
+        await handleLoadDiagramFromJSON(element.diagramComponents || []);
         setIsDiagramLoading(false);
         if (element._id === currentDiagramInfo?._id) return;
         setCurrentDiagramInfo(element);

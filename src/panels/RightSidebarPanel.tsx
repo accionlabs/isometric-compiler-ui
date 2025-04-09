@@ -1,5 +1,6 @@
 import { CUSTOM_SCROLLBAR } from "@/Constants";
 import {
+    ArchitectureData,
     Component,
     DiagramComponent,
     Outcome,
@@ -24,7 +25,7 @@ import { useQueryClient } from "@tanstack/react-query";
 
 import clsx from "clsx";
 import { Expand, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 interface RightSidebarPanelProps {
     setRightSidebarOpen: (value: boolean) => void;
@@ -34,6 +35,7 @@ interface RightSidebarPanelProps {
     };
     svgContent: string;
     reportData: PersonaData[];
+    architectureData: ArchitectureData[];
     canvasSize: { width: number; height: number };
     componentData?: DiagramComponent;
 }
@@ -43,12 +45,13 @@ const defaultTabs = [
     { name: "Functional", enabled: true, show: true },
     // { name: "Design", enabled: false, show: true },
     { name: "Metrics", enabled: false, show: true },
-    { name: "Technical", enabled: false, show: true }
+    { name: "Architecture", enabled: false, show: true }
 ];
 
 export default function RightSidebarPanel({
     reportData,
     componentData,
+    architectureData,
     fullscreenControls
 }: RightSidebarPanelProps) {
     const queryClient = useQueryClient();
@@ -70,19 +73,59 @@ export default function RightSidebarPanel({
     const [selectedStep, setSelectedStep] = useState<Step | null>(null);
     // Ensure `Blueprint` tab is shown/active when `componentData` is available
 
+    type GroupKey =
+        | "Entity Services"
+        | "Workflow Services"
+        | "External Integrations";
+
+    const groupedServices: Record<GroupKey, string[]> = useMemo(() => {
+        const grouped: Record<GroupKey, string[]> = {
+            "Entity Services": [],
+            "Workflow Services": [],
+            "External Integrations": []
+        };
+
+        const layers = architectureData.filter((d) => d.type === "layer");
+
+        const getLayerIdByName = (name: string) =>
+            layers.find((layer) =>
+                layer.metadata?.name.toLowerCase().includes(name.toLowerCase())
+            )?.id;
+
+        const entityLayerId = getLayerIdByName("entity");
+        const workflowLayerId = getLayerIdByName("workflow");
+        const externalLayerId = getLayerIdByName("external");
+
+        for (const data of architectureData) {
+            if (data.type !== "service") continue;
+
+            const serviceName = data.metadata?.name || "Unnamed";
+            const relativeToId = data.relativeToId;
+
+            if (relativeToId === entityLayerId) {
+                grouped["Entity Services"].push(serviceName);
+            } else if (relativeToId === workflowLayerId) {
+                grouped["Workflow Services"].push(serviceName);
+            } else if (relativeToId === externalLayerId) {
+                grouped["External Integrations"].push(serviceName);
+            }
+        }
+
+        return grouped;
+    }, [architectureData]);
+
     useEffect(() => {
         const hasBlueprint = !!componentData;
-        const hasTechnical = !!componentData?.metadata?.blueprint;
+        const hasTechnical = !!architectureData.length;
         setTabs((prev) =>
             prev.map((tab) => {
                 if (tab.name === "Blueprint") {
                     return { ...tab, show: hasBlueprint };
                 }
-                if (tab.name === "Technical") {
+                if (tab.name === "Architecture") {
                     return {
                         ...tab,
-                        enabled: hasTechnical,
-                        show: hasTechnical
+                        enabled: hasTechnical
                     };
                 }
                 return tab;
@@ -195,7 +238,6 @@ export default function RightSidebarPanel({
         link.click();
         document.body.removeChild(link);
     };
-
     return (
         <>
             {/* Tab Selection Buttons */}
@@ -567,42 +609,45 @@ export default function RightSidebarPanel({
 
             {/* Technical Tab */}
 
-            {activeTab === "Technical" && !!blueprint.name && (
+            {activeTab === "Architecture" && (
                 <div
                     className={`flex-col flex overflow-auto flex-grow px-4 py-3 ${CUSTOM_SCROLLBAR}`}
                 >
-                    {Object.entries(blueprint ?? {}).map(([key, value]) => (
-                        <Section
-                            title={key
-                                .replace(/_/g, " ")
-                                .replace(/\b\w/g, (l) => l.toUpperCase())}
-                            key={key}
-                            headerSize={fullScreenPanel ? "text-xl" : undefined}
-                        >
-                            <div className="grid grid-cols-1 gap-2 text-left">
-                                <ContentDiv
-                                    contentSize={
-                                        fullScreenPanel
-                                            ? "text-base"
-                                            : undefined
-                                    }
-                                    content={
-                                        typeof value === "object" ? (
-                                            <pre>
-                                                {JSON.stringify(
-                                                    value,
-                                                    undefined,
-                                                    2
-                                                )}
-                                            </pre>
-                                        ) : (
-                                            String(value)
-                                        )
-                                    }
-                                />
-                            </div>
-                        </Section>
-                    ))}
+                    <Section
+                        title="Architecture"
+                        headerSize={fullScreenPanel ? "text-xl" : undefined}
+                    >
+                        <div className="grid grid-cols-1 gap-4 text-left">
+                            {Object.entries(groupedServices).map(
+                                ([key, values]) => (
+                                    <div key={key}>
+                                        <h4
+                                            className={`mb-2 ${
+                                                fullScreenPanel
+                                                    ? "text-lg"
+                                                    : "text-sm"
+                                            }`}
+                                        >
+                                            {key}
+                                        </h4>
+                                        <div className="grid grid-cols-2 gap-2 text-left">
+                                            {values.map((value) => (
+                                                <ContentDiv
+                                                    key={value}
+                                                    contentSize={
+                                                        fullScreenPanel
+                                                            ? "text-base"
+                                                            : undefined
+                                                    }
+                                                    content={value}
+                                                />
+                                            ))}
+                                        </div>
+                                    </div>
+                                )
+                            )}
+                        </div>
+                    </Section>
                 </div>
             )}
         </>

@@ -452,3 +452,10 @@ export interface ContentCardProps {
     onClick?: () => void;
     contentSize?: string;
 }
+
+export interface ArchitectureData {
+    id: string;
+    type: "layer" | "service";
+    relativeToId: string | null;
+    metadata: { name: string };
+}

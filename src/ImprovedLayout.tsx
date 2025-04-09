@@ -923,6 +923,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                             svgContent={composedSVG}
                             canvasSize={canvasSize}
                             reportData={qumData}
+                            architectureData={semanticModel?.visualModel ?? []}
                             componentData={selectedDiagramCompoent}
                         />
                     </div>
