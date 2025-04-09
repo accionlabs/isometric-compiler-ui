@@ -70,12 +70,22 @@ export default function RightSidebarPanel({
     const [selectedStep, setSelectedStep] = useState<Step | null>(null);
     // Ensure `Blueprint` tab is shown/active when `componentData` is available
     useEffect(() => {
+        const hasBlueprint = !!componentData;
+        const hasTechnical = !!componentData?.metadata?.blueprint;
         setTabs((prev) =>
-            prev.map((tab) =>
-                tab.name === "Blueprint"
-                    ? { ...tab, show: !!componentData }
-                    : tab
-            )
+            prev.map((tab) => {
+                if (tab.name === "Blueprint") {
+                    return { ...tab, show: hasBlueprint };
+                }
+                if (tab.name === "Technical") {
+                    return {
+                        ...tab,
+                        enabled: hasTechnical,
+                        show: hasTechnical
+                    };
+                }
+                return tab;
+            })
         );
 
         setActiveTab((prev) => {
@@ -519,6 +529,47 @@ export default function RightSidebarPanel({
                         />
                     </div>
 
+                    {Object.entries(blueprint ?? {}).map(([key, value]) => (
+                        <Section
+                            title={key
+                                .replace(/_/g, " ")
+                                .replace(/\b\w/g, (l) => l.toUpperCase())}
+                            key={key}
+                            headerSize={fullScreenPanel ? "text-xl" : undefined}
+                        >
+                            <div className="grid grid-cols-1 gap-2 text-left">
+                                <ContentDiv
+                                    contentSize={
+                                        fullScreenPanel
+                                            ? "text-base"
+                                            : undefined
+                                    }
+                                    content={
+                                        typeof value === "object" ? (
+                                            <pre>
+                                                {JSON.stringify(
+                                                    value,
+                                                    undefined,
+                                                    2
+                                                )}
+                                            </pre>
+                                        ) : (
+                                            String(value)
+                                        )
+                                    }
+                                />
+                            </div>
+                        </Section>
+                    ))}
+                </div>
+            )}
+
+            {/* Technical Tab */}
+
+            {activeTab === "Technical" && !!blueprint.name && (
+                <div
+                    className={`flex-col flex overflow-auto flex-grow px-4 py-3 ${CUSTOM_SCROLLBAR}`}
+                >
                     {Object.entries(blueprint ?? {}).map(([key, value]) => (
                         <Section
                             title={key
