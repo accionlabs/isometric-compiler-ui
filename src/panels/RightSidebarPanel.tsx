@@ -26,7 +26,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
 import { Expand, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-
+// open in visual editor
 interface RightSidebarPanelProps {
     setRightSidebarOpen: (value: boolean) => void;
     fullscreenControls: {
@@ -71,7 +71,7 @@ export default function RightSidebarPanel({
         null
     );
     const [selectedStep, setSelectedStep] = useState<Step | null>(null);
-    // Ensure `Blueprint` tab is shown/active when `componentData` is available
+    const [selectedEntity, setSelectedEntity] = useState<string | null>(null);
 
     type GroupKey =
         | "Entity Services"
@@ -171,6 +171,7 @@ export default function RightSidebarPanel({
 
     const { name, blueprint = {} } = componentData?.metadata || {};
     blueprint.name = name;
+
     let component: Component | Shape | null = null;
 
     if (componentData?.source === "shape") {
@@ -180,6 +181,9 @@ export default function RightSidebarPanel({
             componentData.shape ?? ""
         );
     }
+    const blueprintForSelectedEntity =
+        architectureData.find((comp) => comp.metadata.name === selectedEntity)
+            ?.metadata?.blueprint ?? {};
 
     const handlePersonaClick = (persona: PersonaData): void => {
         setSelectedPersona(persona);
@@ -247,6 +251,30 @@ export default function RightSidebarPanel({
         link.click();
         document.body.removeChild(link);
     };
+    const renderBluePrint = (blueprint: any) =>
+        Object.entries(blueprint ?? {}).map(([key, value]) => (
+            <Section
+                title={key
+                    .replace(/_/g, " ")
+                    .replace(/\b\w/g, (l) => l.toUpperCase())}
+                key={key}
+                headerSize={fullScreenPanel ? "text-xl" : undefined}
+            >
+                <div className="grid grid-cols-1 gap-2 text-left">
+                    <ContentDiv
+                        contentSize={fullScreenPanel ? "text-base" : undefined}
+                        content={
+                            typeof value === "object" ? (
+                                <pre>{JSON.stringify(value, undefined, 2)}</pre>
+                            ) : (
+                                String(value)
+                            )
+                        }
+                    />
+                </div>
+            </Section>
+        ));
+
     return (
         <>
             {/* Tab Selection Buttons */}
@@ -572,7 +600,7 @@ export default function RightSidebarPanel({
 
             {activeTab === "Blueprint" && !!blueprint.name && (
                 <div
-                    className={`flex-col flex overflow-auto flex-grow px-4 py-3 ${CUSTOM_SCROLLBAR}`}
+                    className={`flex-col flex  flex-grow px-4 py-3 ${CUSTOM_SCROLLBAR}`}
                 >
                     <div className="h-28 w-28 pb-3 flex-shrink-0">
                         <SVGPreview
@@ -580,43 +608,9 @@ export default function RightSidebarPanel({
                             className="w-full h-full object-cover bg-white"
                         />
                     </div>
-
-                    {Object.entries(blueprint ?? {}).map(([key, value]) => (
-                        <Section
-                            title={key
-                                .replace(/_/g, " ")
-                                .replace(/\b\w/g, (l) => l.toUpperCase())}
-                            key={key}
-                            headerSize={fullScreenPanel ? "text-xl" : undefined}
-                        >
-                            <div className="grid grid-cols-1 gap-2 text-left">
-                                <ContentDiv
-                                    contentSize={
-                                        fullScreenPanel
-                                            ? "text-base"
-                                            : undefined
-                                    }
-                                    content={
-                                        typeof value === "object" ? (
-                                            <pre>
-                                                {JSON.stringify(
-                                                    value,
-                                                    undefined,
-                                                    2
-                                                )}
-                                            </pre>
-                                        ) : (
-                                            String(value)
-                                        )
-                                    }
-                                />
-                            </div>
-                        </Section>
-                    ))}
+                    {renderBluePrint(blueprint)}
                 </div>
             )}
-
-            {/* Technical Tab */}
 
             {activeTab === "Architecture" && (
                 <div
@@ -641,14 +635,20 @@ export default function RightSidebarPanel({
                                         </h4>
                                         <div className="grid grid-cols-1 gap-2 text-left">
                                             {values.map((value) => (
-                                                <ContentDiv
+                                                <ContentButton
                                                     key={value}
                                                     contentSize={
                                                         fullScreenPanel
                                                             ? "text-base"
                                                             : undefined
                                                     }
+                                                    isActive={
+                                                        selectedEntity === value
+                                                    }
                                                     content={value}
+                                                    onClick={() =>
+                                                        setSelectedEntity(value)
+                                                    }
                                                 />
                                             ))}
                                         </div>
@@ -657,6 +657,17 @@ export default function RightSidebarPanel({
                             )}
                         </div>
                     </Section>
+                    {selectedEntity &&
+                        Object.keys(blueprintForSelectedEntity).length > 0 && (
+                            <Section
+                                title={selectedEntity}
+                                headerSize={
+                                    fullScreenPanel ? "text-xl" : undefined
+                                }
+                            >
+                                {renderBluePrint(blueprintForSelectedEntity)}
+                            </Section>
+                        )}
                 </div>
             )}
         </>

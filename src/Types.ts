@@ -457,5 +457,5 @@ export interface ArchitectureData {
     id: string;
     type: "layer" | "service";
     relativeToId: string | null;
-    metadata: { name: string };
+    metadata: { name: string; blueprint: any };
 }
