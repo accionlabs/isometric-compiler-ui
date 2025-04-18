@@ -21,6 +21,7 @@ import {
 } from "./services/shapes";
 import { shapesLibraryManager } from "./lib/shapesLib";
 import { DEFAULT_SETTINGS } from "./Constants";
+import { toast } from "sonner";
 const MAX_HISTORY_LENGTH = 10;
 
 const App: React.FC = () => {
@@ -565,6 +566,12 @@ const App: React.FC = () => {
     const handleLoadDiagramFromJSON = async (
         loadedComponents: DiagramComponent[]
     ) => {
+        if (!diagramComponentsLib.validateLoadedFile(loadedComponents)) {
+            toast.error("Invalid component library structure", {
+                duration: 3000
+            });
+            loadedComponents = [];
+        }
         await handleMissingDependencies(loadedComponents);
         const { svgContent, processedComponents } =
             diagramComponentsLib.compileDiagram(

@@ -344,13 +344,13 @@ export interface DiagramInfo {
     _id?: string;
     name?: string;
     version?: string;
-    author?: string;
+    userId?: string;
+    uuid: string;
     metadata?: {
         description: string;
         svgContent: string;
         project: string;
         priority: string;
-        uuid: string;
     } | null;
     diagramComponents: DiagramComponent[];
 }

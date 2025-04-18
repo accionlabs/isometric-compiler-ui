@@ -62,6 +62,8 @@ export default function DiagramPanel({
     ];
     user: User | undefined;
 }) {
+    const params = new URLSearchParams(window.location.search);
+    const projectuuid = params.get("uuid") as string;
     const [isMyDiagramLoading, setIsDiagramLoading] = useState(false);
     const [error, setError] = useState({ isError: false, message: "" });
     const [loadDiagram, setLoadDiagram] = useState(false);
@@ -71,8 +73,9 @@ export default function DiagramPanel({
         refetch,
         isLoading
     } = useQuery({
-        queryKey: ["saved_diagrams"],
-        queryFn: getDiagrams
+        queryKey: ["saved_diagrams", projectuuid],
+        queryFn: () => getDiagrams(projectuuid),
+        enabled: Boolean(projectuuid)
     });
     const { mutate: deleteMutation, isPending: isDeletionPending } =
         useMutation({
@@ -179,10 +182,13 @@ export default function DiagramPanel({
 
     const handleLoadDiagram = async (element: DiagramInfo) => {
         if (isMyDiagramLoading) return;
-        if (element.metadata?.uuid) {
+        if (element?.uuid) {
             const currentUrl = new URL(window.location.href);
             currentUrl.searchParams.delete("uuid");
-            currentUrl.searchParams.append("uuid", element.metadata.uuid);
+            currentUrl.searchParams.delete("diagram_id");
+            currentUrl.searchParams.append("uuid", element.uuid);
+            if (element._id)
+                currentUrl.searchParams.append("diagram_id", element._id);
             window.history.pushState({}, "", currentUrl);
         }
 
@@ -191,7 +197,7 @@ export default function DiagramPanel({
         setIsDiagramLoading(false);
         if (element._id === currentDiagramInfo?._id) return;
         setCurrentDiagramInfo(element);
-        setAutoSaveMode(user?._id === element.author);
+        setAutoSaveMode(user?._id === element.userId);
     };
 
     const handleLoadDiagramConfirmation = (element?: DiagramInfo) => {
@@ -199,7 +205,7 @@ export default function DiagramPanel({
         setLoadDiagram(Boolean(element));
     };
     const DiagramDetails = ({ result }: { result: DiagramInfo }) => {
-        const isMyDiagram = user?._id === result.author;
+        const isMyDiagram = user?._id === result.userId;
 
         return (
             <li

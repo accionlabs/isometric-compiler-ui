@@ -3,10 +3,10 @@ import { config } from "@/config";
 import keycloak from "./keycloak";
 import { DiagramComponent, DiagramInfo } from "@/Types";
 
-export async function getDiagrams(): Promise<
-    { data: DiagramInfo[]; total: number } | undefined
-> {
-    const url = `${config.isometricApiUrl}/diagram`;
+export async function getDiagrams(
+    uuid: string
+): Promise<{ data: DiagramInfo[]; total: number } | undefined> {
+    const url = `${config.isometricApiUrl}/diagram?filters[uuid][eq]=${uuid}`;
 
     try {
         const response = await fetch(url, {
@@ -65,9 +65,9 @@ export async function saveDiagram(payload: {
         version: "1.0.0",
         metadata: {
             description: payload.description,
-            svgContent: payload.svgContent,
-            uuid: existinguuid
+            svgContent: payload.svgContent
         },
+        uuid: existinguuid,
         diagramComponents: payload.diagramComponents
     };
     try {
@@ -95,6 +95,8 @@ export async function updateDiagram(payload: {
     svgContent: string;
 }): Promise<DiagramInfo | undefined> {
     const url = `${config.isometricApiUrl}/diagram/${payload.id}`;
+    const currentUrl = new URL(window.location.href);
+    const existinguuid = currentUrl.searchParams.get("uuid");
     const body = {
         name: payload.name,
         version: "1.0.0",
@@ -102,6 +104,7 @@ export async function updateDiagram(payload: {
             description: payload.description,
             svgContent: payload.svgContent
         },
+        uuid: existinguuid,
         diagramComponents: payload.diagramComponents
     };
     try {

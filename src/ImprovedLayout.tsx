@@ -133,19 +133,20 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     const SIDEBAR_WIDTH = "w-1/4";
 
     const currentUrl = new URL(window.location.href);
+    const params = new URLSearchParams(window.location.search);
+
     const existinguuid = currentUrl.searchParams.get("uuid");
     const message_id = currentUrl.searchParams.get("message");
+    const isDiagramModeEnabled = params.get("mode") === "diagram";
+    const isShowUnifiedModelModeEnabled =
+        params.get("mode") === "unified_model";
     if (!existinguuid) currentUrl.searchParams.append("uuid", newUUID);
     window.history.pushState({}, "", currentUrl);
     const { keycloak } = useKeycloak();
     const queryClient = useQueryClient();
     const user = queryClient.getQueryData<User>(["user"]);
-    const params = new URLSearchParams(window.location.search);
-    const isDiagramModeEnabled = params.get("mode") === "diagram";
-    const isShowUnifiedModelModeEnabled =
-        params.get("mode") === "unified_model";
 
-    const [activePanel, setActivePanel] = useState<PanelType>("shapes");
+    const [activePanel, setActivePanel] = useState<PanelType>("chat");
     const [currentDiagramInfo, setCurrentDiagramInfo] =
         useState<DiagramInfo | null>(null);
 
@@ -165,7 +166,6 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     } | null>(null);
     const [autoSaveMode, setAutoSaveMode] = useState(false);
     const [showUpdateSuccess, setShowUpdateSuccess] = useState(false);
-
     const [saveLoadMessage, setSaveLoadMessage] = useState<string | null>(null);
     const [isPending, setIsPending] = useState(false);
     const [leftSidebarOpen, setLeftSidebarOpen] = useState(true);
@@ -179,11 +179,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     const timeoutIdRef = useRef<NodeJS.Timeout | null>(null);
 
     const updateDiagramWithRateLimit = useCancelLatestCalls(updateDiagram);
-    const {
-        data: semanticModel,
-        refetch,
-        isFetching: isFetchPending
-    } = useQuery({
+    const { data: semanticModel, isFetching: isFetchPending } = useQuery({
         queryKey: ["report", existinguuid],
         queryFn: () => getReport(existinguuid || ""),
         refetchInterval: 5000
@@ -255,6 +251,9 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                 ...currentDiagramInfo,
                 diagramComponents: updatedDiagramComponents
             });
+        console.log("here1111");
+
+        queryClient.invalidateQueries({ queryKey: ["saved_diagrams"] });
     }, [currentDiagramInfo, composedSVG]);
 
     const handleSelect3DShape = useCallback(
@@ -485,7 +484,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     }, []);
 
     useEffect(() => {
-        if (user?._id !== currentDiagramInfo?.author) return;
+        if (user?._id !== currentDiagramInfo?.userId) return;
         if (!autoSaveMode) return;
         if (!diagramComponents.length || !currentDiagramInfo?._id) return;
         if (
