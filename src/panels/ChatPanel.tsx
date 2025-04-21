@@ -19,19 +19,13 @@ import { getDiagramImageUrl } from "@/lib/exportUtils";
 import { config } from "@/config";
 import Toast from "@/components/ui/Toast";
 import {
-    Attachment,
     BreezeIcon,
     SendIcon,
     UnifiedModelIcon
 } from "@/components/ui/IconGroup";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuGroup,
-    DropdownMenuItem,
-    DropdownMenuTrigger
-} from "@/components/ui/DropDownMenu";
+
 import GitRepoDialog from "./GitRepoDialog";
+import AttachmentMenu from "./AttachmentMenu";
 
 interface ChatPanelProps {
     handleLoadDiagramFromJSON: (
@@ -105,7 +99,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     const [isViewerOpen, setViewerOpen] = useState(false);
     const [showLoader, setShowLoader] = useState(false);
 
-    const [selectedFile, setSelectedFile] = React.useState<{
+    const [selectedFile, setSelectedFile] = useState<{
         file: File | null;
         src: string;
         fileType: "image" | "pdf" | null;
@@ -114,6 +108,8 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         src: "",
         fileType: null
     });
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
     const currentUrl = new URL(window.location.href);
     const existinguuid = currentUrl.searchParams.get("uuid");
     // get api using useQuery
@@ -572,37 +568,15 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
 
                     <div className="flex gap-1 justify-center items-center absolute right-0 top-[13px] sm:right-4">
                         <div className="h-6">
-                            <DropdownMenu
-                                open={isAttachmentMenuOpen}
-                                onOpenChange={setIsAttachmentMenuOpen}
-                            >
-                                <DropdownMenuTrigger asChild>
-                                    <button className="h-6">
-                                        <Attachment className="mt-1 cursor-pointer" />
-                                    </button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent
-                                    align="end"
-                                    className="w-[200px] bg-customGray"
-                                >
-                                    <DropdownMenuGroup>
-                                        <DropdownMenuItem
-                                            onSelect={handleMenuSelect(() =>
-                                                fileInputRef.current?.click()
-                                            )}
-                                        >
-                                            Attach file
-                                        </DropdownMenuItem>
-                                        {/* <DropdownMenuItem
-                                            onSelect={handleMenuSelect(() =>
-                                                setIsGitRepoDialoagOpen(true)
-                                            )}
-                                        >
-                                            Attach git repo
-                                        </DropdownMenuItem> */}
-                                    </DropdownMenuGroup>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
+                            <AttachmentMenu
+                                dropdownControls={{
+                                    isDropdownOpen,
+                                    setIsDropdownOpen
+                                }}
+                                handleUploadBoxOpen={() =>
+                                    fileInputRef.current?.click()
+                                }
+                            />
 
                             <input
                                 type="file"

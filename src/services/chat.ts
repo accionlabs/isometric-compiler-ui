@@ -1,13 +1,11 @@
 // @/services/chat.ts
 
 import { config } from "@/config";
-import { v4 as uuidv4 } from "uuid";
 import { getShapesByName } from "./shapes";
 import { shapesLibraryManager } from "../lib/shapesLib";
 import { componentLibraryManager } from "../lib/componentLib";
 import { DiagramComponent, MessageResponse } from "@/Types";
 import keycloak from "./keycloak";
-const newUUID = uuidv4();
 
 interface Chat {
     _id: string;
@@ -81,7 +79,7 @@ export async function sendChatRequestV2({
 }
 
 export async function getChatByuuid(uuid: string): Promise<ChatResponse> {
-    const url = `${config.isometricApiUrl}/chat/byUUID/${uuid}`;
+    const url = `${config.isometricApiUrl}/chat/byUUID/${uuid}?agent=breeze_agent`;
 
     const response = await fetch(url, {
         headers: {
@@ -167,4 +165,26 @@ export async function getReport(uuid: string) {
 
     const result = await response.json();
     return result;
+}
+
+export async function generateFlow(payload: {
+    key: string;
+    uuid: string;
+    documentId?: string;
+}): Promise<any> {
+    const url = `${config.gatewayApiUrl}/chat/generate`;
+
+    const response = await fetch(url, {
+        method: "POST",
+        body: JSON.stringify(payload)
+    });
+
+    // Check if the response is ok (status code in the range 200-299)
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    console.log("result", result);
+    return result.data;
 }
