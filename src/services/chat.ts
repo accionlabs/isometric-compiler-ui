@@ -6,7 +6,7 @@ import { shapesLibraryManager } from "../lib/shapesLib";
 import { componentLibraryManager } from "../lib/componentLib";
 import { DiagramComponent, MessageResponse } from "@/Types";
 import keycloak from "./keycloak";
-
+const agent = "architecture_agent";
 interface Chat {
     _id: string;
     message: string;
@@ -18,6 +18,7 @@ interface Chat {
         fileType?: "image" | "pdf";
         fileName?: string;
         content?: any;
+        result?: DiagramComponent[];
     };
 }
 interface ChatResponse {
@@ -45,6 +46,7 @@ export async function sendChatRequestV2({
     }
     formData.append("query", query);
     formData.append("uuid", uuid);
+    formData.append("agent", agent);
 
     const response = await fetch(`${config.isometricApiUrl}/chat`, {
         method: "POST",
@@ -79,7 +81,7 @@ export async function sendChatRequestV2({
 }
 
 export async function getChatByuuid(uuid: string): Promise<ChatResponse> {
-    const url = `${config.isometricApiUrl}/chat/byUUID/${uuid}?agent=breeze_agent`;
+    const url = `${config.isometricApiUrl}/chat/byUUID/${uuid}?agent=${agent}`;
 
     const response = await fetch(url, {
         headers: {
@@ -170,12 +172,16 @@ export async function getReport(uuid: string) {
 export async function generateFlow(payload: {
     key: string;
     uuid: string;
-    documentId?: string;
-}): Promise<any> {
-    const url = `${config.gatewayApiUrl}/chat/generate`;
+    documentId?: number;
+}): Promise<Chat> {
+    const url = `${config.isometricApiUrl}/chat/generate`;
 
     const response = await fetch(url, {
         method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${keycloak.token}`
+        },
         body: JSON.stringify(payload)
     });
 
@@ -185,6 +191,5 @@ export async function generateFlow(payload: {
     }
 
     const result = await response.json();
-    console.log("result", result);
-    return result.data;
+    return result;
 }

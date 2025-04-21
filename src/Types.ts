@@ -459,3 +459,20 @@ export interface ArchitectureData {
     relativeToId: string | null;
     metadata: { name: string; blueprint: any };
 }
+
+export interface DocumentMetadata {
+    fileUrl: string;
+    fileType: "image" | "pdf";
+    fileName: string;
+    mimetype: string;
+}
+
+export interface DocumentResponse {
+    _id: number;
+    createdAt: string;
+    updatedAt: string;
+    status: "active" | "inactive";
+    uuid: string;
+    content: string;
+    metadata: DocumentMetadata;
+}

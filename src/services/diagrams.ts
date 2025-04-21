@@ -1,7 +1,7 @@
 // @/services/categories.ts
 import { config } from "@/config";
 import keycloak from "./keycloak";
-import { DiagramComponent, DiagramInfo } from "@/Types";
+import { DiagramComponent, DiagramInfo, DocumentResponse } from "@/Types";
 
 export async function getDiagrams(
     uuid: string
@@ -123,4 +123,24 @@ export async function updateDiagram(payload: {
         console.error("Error:", error); // Handle errors
         throw error;
     }
+}
+
+export async function getDocumentByuuid(
+    uuid: string
+): Promise<DocumentResponse[]> {
+    const url = `${config.isometricApiUrl}/documents/get-document/${uuid}`;
+
+    const response = await fetch(url, {
+        headers: {
+            Authorization: `Bearer ${keycloak.token}`
+        }
+    });
+
+    // Check if the response is ok (status code in the range 200-299)
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    return result;
 }

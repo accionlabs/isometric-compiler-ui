@@ -17,7 +17,6 @@ import Markdown from "react-markdown";
 import { CUSTOM_SCROLLBAR } from "@/Constants";
 import { getDiagramImageUrl } from "@/lib/exportUtils";
 import { config } from "@/config";
-import Toast from "@/components/ui/Toast";
 import {
     BreezeIcon,
     SendIcon,
@@ -217,10 +216,10 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
 
     const LoadMessagesWithImage = [
         { time: 0, message: "Extracting components." },
-        { time: 0.5, message: "Mapping to Unified Model..." },
-        { time: 1, message: "Optimizing layout..." },
-        { time: 2, message: "Applying isometric view..." },
-        { time: 3, message: "Finalizing diagram.." }
+        { time: 4, message: "Mapping to Unified Model..." },
+        { time: 8, message: "Optimizing layout..." },
+        { time: 10, message: "Applying isometric view..." },
+        { time: 14, message: "Finalizing diagram.." }
     ];
 
     const LoadMessagesWithPDF = [
@@ -244,12 +243,6 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     ];
 
     const [loadMessages, setLoadMessages] = useState(LoadMessagesWithImage);
-    let messageDuration;
-    if (loadMessages === LoadMessagesWithPDF) {
-        messageDuration = 6;
-    } else {
-        messageDuration = 4;
-    }
 
     const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event.target.files && event.target.files[0]) {
@@ -382,6 +375,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
 
     const [isLoader, setIsLoader] = useState(false);
     const [isLoaderTimePassed, setIsLoaderTimePassed] = useState(false);
+
     useEffect(() => {
         if (isLoaderTimePassed) {
             setIsLoader(isLoading);
@@ -394,23 +388,11 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         handleLoadDiagramFromJSON(content);
         addHistory(content);
     };
-
-    const handleMenuSelect = React.useCallback(
-        (action: () => void | Promise<void>) => async (e: Event) => {
-            e.preventDefault();
-            // Close the dropdown immediately
-            setIsAttachmentMenuOpen(false);
-
-            if (document.activeElement instanceof HTMLElement) {
-                document.activeElement.blur();
-            }
-            // Wait a tick for the dropdown to close
-            await new Promise((resolve) => setTimeout(resolve, 0));
-            // Then execute the action
-            await action();
-        },
-        []
-    );
+    const handleLoading = (loading: boolean) => {
+        setShowLoader(loading);
+        setIsLoader(loading);
+        setLoadMessages(LoadMessagesWithImage);
+    };
     return (
         <div className="px-4 pt-3 h-full flex flex-col gap-4">
             <div className="flex justify-between">
@@ -418,13 +400,6 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                     <BreezeIcon />
                     <p className="text-xl font-medium">Breeze.AI</p>
                 </div>
-
-                {/* <button
-                    className="bg-customGray2 p-1 rounded"
-                    onClick={() => {}}
-                >
-                    <MenuIcon2 />
-                </button> */}
             </div>
             {/* chat container */}
             <div
@@ -576,6 +551,10 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                                 handleUploadBoxOpen={() =>
                                     fileInputRef.current?.click()
                                 }
+                                handleLoadDiagramFromJSON={
+                                    handleLoadDiagramFromJSON
+                                }
+                                handleLoading={handleLoading}
                             />
 
                             <input
@@ -619,7 +598,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                         setIsLoaderTimePassed(true);
                     }}
                     messages={loadMessages}
-                    duration={messageDuration}
+                    duration={14}
                 />
             )}
         </div>
