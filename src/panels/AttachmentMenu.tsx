@@ -90,8 +90,7 @@ export default function AttachmentMenu(props: AttachmentMenuProps) {
                         </DropdownMenuSubTrigger>
                         <DropdownMenuPortal>
                             <DropdownMenuSubContent>
-                                {data &&
-                                    data?.length > 0 &&
+                                {data && data?.length > 0 ? (
                                     data
                                         .filter(
                                             (doc) =>
@@ -113,7 +112,12 @@ export default function AttachmentMenu(props: AttachmentMenuProps) {
                                             >
                                                 {doc.metadata.fileName}
                                             </DropdownMenuItem>
-                                        ))}
+                                        ))
+                                ) : (
+                                    <DropdownMenuItem>
+                                        Image not found.
+                                    </DropdownMenuItem>
+                                )}
                             </DropdownMenuSubContent>
                         </DropdownMenuPortal>
                     </DropdownMenuSub>

@@ -69,6 +69,7 @@ type SVGNodeData = Node<{
     onSelect3DShape: (id: string | null) => void;
     setSelectedPosition: (position: string) => void;
     setSelectedAttachmentPoint: (point: string) => void;
+    onComponentHover: (id: string | null) => void;
     isCopied: boolean;
     isConnecting: boolean;
     isInteractive: boolean;
@@ -231,11 +232,7 @@ const SVGNode = ({ id, data }: NodeProps<SVGNodeData>) => {
         const bounds = calculateComponentBounds();
         //console.log("component bounds:", bounds, data.onComponentBoundsUpdate);
         data.onComponentBoundsUpdate?.(bounds);
-    }, [
-        isReady,
-        data.diagramComponents,
-        data.onComponentBoundsUpdate
-    ]);
+    }, [isReady, data.diagramComponents, data.onComponentBoundsUpdate]);
 
     useEffect(() => {
         if (!svgRef.current) return;
@@ -309,7 +306,7 @@ const SVGNode = ({ id, data }: NodeProps<SVGNodeData>) => {
         if (!containerRef.current || !dimensions.width || !dimensions.height)
             return;
 
-        const initializeComponents = (svg:SVGSVGElement) => {
+        const initializeComponents = (svg: SVGSVGElement) => {
             // Apply reduced opacity to cut objects
             data.diagramComponents.forEach((component) => {
                 const element = svgRef.current?.getElementById(component.id);
@@ -379,7 +376,8 @@ const SVGNode = ({ id, data }: NodeProps<SVGNodeData>) => {
         initializeSVG();
 
         return () => {
-            const svgWrapper = containerRef.current?.querySelector(".svg-wrapper");
+            const svgWrapper =
+                containerRef.current?.querySelector(".svg-wrapper");
             if (svgWrapper) {
                 svgWrapper.innerHTML = "";
             }
@@ -483,7 +481,6 @@ const SVGNode = ({ id, data }: NodeProps<SVGNodeData>) => {
                     (c) => c.id === shapeId
                 );
                 data.onSelect3DShape(shapeId);
-
                 if (component) {
                     const containerRect =
                         containerRef.current.getBoundingClientRect();
@@ -508,6 +505,7 @@ const SVGNode = ({ id, data }: NodeProps<SVGNodeData>) => {
 
                     data.setSelectedPosition(position);
                     data.setSelectedAttachmentPoint(attachmentPoint);
+                    data.onComponentHover(component.id);
                 }
 
                 svgRef.current
@@ -518,6 +516,7 @@ const SVGNode = ({ id, data }: NodeProps<SVGNodeData>) => {
                 shape3D.classList.add("highlighted-shape");
             } else {
                 data.onSelect3DShape(null);
+                data.onComponentHover(null);
                 data.setSelectedPosition("top");
                 data.setSelectedAttachmentPoint("none");
 

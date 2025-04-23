@@ -164,25 +164,28 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
         useState<BaseLayoutManager | null>(null);
     const [initialLayoutComplete, setInitialLayoutComplete] = useState(false);
     const prevDiagramComponentsRef = useRef<DiagramComponent[]>([]);
+    const [hoveredComponentId, setHoveredComponentId] = useState<string | null>(
+        null
+    );
 
     // Debug: Log state changes
-    useEffect(() => {
-        // console.log("State Change Debug:", {
-        //     nodesCount: nodes.length,
-        //     edgesCount: edges.length,
-        //     diagramComponentsCount: diagramComponents.length,
-        //     areComponentBoundsReady,
-        //     hasLayoutManager: !!layoutManager,
-        //     componentBoundsCount: Object.keys(componentBounds).length
-        // });
-    }, [
-        nodes.length,
-        edges.length,
-        diagramComponents.length,
-        areComponentBoundsReady,
-        layoutManager,
-        componentBounds
-    ]);
+    // useEffect(() => {
+    // console.log("State Change Debug:", {
+    //     nodesCount: nodes.length,
+    //     edgesCount: edges.length,
+    //     diagramComponentsCount: diagramComponents.length,
+    //     areComponentBoundsReady,
+    //     hasLayoutManager: !!layoutManager,
+    //     componentBoundsCount: Object.keys(componentBounds).length
+    // });
+    // }, [
+    //     nodes.length,
+    //     edges.length,
+    //     diagramComponents.length,
+    //     areComponentBoundsReady,
+    //     layoutManager,
+    //     componentBounds
+    // ]);
 
     // Debug: Track diagram component changes
     useEffect(() => {
@@ -576,7 +579,8 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
                 setSelectedAttachmentPoint,
                 isInteractive,
                 onComponentBoundsUpdate: handleComponentBoundsUpdate,
-                onSVGLayoutUpdate: handleSVGLayoutUpdate
+                onSVGLayoutUpdate: handleSVGLayoutUpdate,
+                onComponentHover: setHoveredComponentId
             },
             draggable: false,
             selectable: false,
@@ -600,6 +604,7 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
         const metadataNodes: Node[] = componentsWithMetadata.map(
             (component) => {
                 const nodePosition = nodePositions.get(component.id);
+                const isVisible = hoveredComponentId === component.id;
 
                 if (!nodePosition) {
                     // Fallback to center if position not calculated
@@ -617,7 +622,11 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
                             isInteractive
                         },
                         draggable: isInteractive,
-                        style: { zIndex: 4 }
+                        style: {
+                            zIndex: 4,
+                            opacity: isVisible ? 1 : 0,
+                            pointerEvents: isVisible ? "auto" : "none"
+                        }
                     };
                 }
 
@@ -634,7 +643,11 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
                         handleComponentMetadata
                     } as MetadataNodeData,
                     draggable: true,
-                    style: { zIndex: 4 }
+                    style: {
+                        zIndex: 4,
+                        opacity: isVisible ? 1 : 0,
+                        pointerEvents: isVisible ? "auto" : "none"
+                    }
                 };
             }
         );
@@ -727,6 +740,7 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
                     );
 
                 if (!sourceHandle || !targetHandle) return null;
+                const isVisible = hoveredComponentId === componentId;
 
                 return {
                     id: `metadata-edge-${metadataNode.id}`,
@@ -738,7 +752,11 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
                     deletable: false,
                     selectable: false,
                     animated: false,
-                    data: { permanent: true }
+                    data: { permanent: true },
+                    style: {
+                        opacity: isVisible ? 1 : 0,
+                        strokeWidth: isVisible ? 2 : 0
+                    }
                 } as FlowEdge;
             })
             .filter((edge): edge is FlowEdge => edge !== null);
