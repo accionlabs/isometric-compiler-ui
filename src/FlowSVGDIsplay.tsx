@@ -167,7 +167,6 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
     const [hoveredComponentId, setHoveredComponentId] = useState<string | null>(
         null
     );
-
     // Debug: Log state changes
     // useEffect(() => {
     // console.log("State Change Debug:", {
@@ -604,7 +603,6 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
         const metadataNodes: Node[] = componentsWithMetadata.map(
             (component) => {
                 const nodePosition = nodePositions.get(component.id);
-                const isVisible = hoveredComponentId === component.id;
 
                 if (!nodePosition) {
                     // Fallback to center if position not calculated
@@ -623,9 +621,7 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
                         },
                         draggable: isInteractive,
                         style: {
-                            zIndex: 4,
-                            opacity: isVisible ? 1 : 0,
-                            pointerEvents: isVisible ? "auto" : "none"
+                            zIndex: 4
                         }
                     };
                 }
@@ -640,13 +636,15 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
                         metadata: component.metadata,
                         alignment: nodePosition.alignment,
                         isInteractive,
-                        handleComponentMetadata
+                        handleComponentMetadata,
+                        selected3DShape,
+                        showSelectedLabels:
+                            settings?.layerLabel?.showSelectedLayerLabels ??
+                            true
                     } as MetadataNodeData,
                     draggable: true,
                     style: {
-                        zIndex: 4,
-                        opacity: isVisible ? 1 : 0,
-                        pointerEvents: isVisible ? "auto" : "none"
+                        zIndex: 4
                     }
                 };
             }
@@ -740,7 +738,6 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
                     );
 
                 if (!sourceHandle || !targetHandle) return null;
-                const isVisible = hoveredComponentId === componentId;
 
                 return {
                     id: `metadata-edge-${metadataNode.id}`,
@@ -752,11 +749,7 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
                     deletable: false,
                     selectable: false,
                     animated: false,
-                    data: { permanent: true },
-                    style: {
-                        opacity: isVisible ? 1 : 0,
-                        strokeWidth: isVisible ? 2 : 0
-                    }
+                    data: { permanent: true }
                 } as FlowEdge;
             })
             .filter((edge): edge is FlowEdge => edge !== null);

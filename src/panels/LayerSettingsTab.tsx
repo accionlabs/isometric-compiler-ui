@@ -1,31 +1,34 @@
 // LayerSettingsTab.tsx
-import React from 'react';
-import { Input } from '@/components/ui/Input';
-import { RadixSelect } from '@/components/ui/Select';
-import { LayerLabelSettings } from '@/Types';
-
+import React from "react";
+import { Input } from "@/components/ui/Input";
+import { RadixSelect } from "@/components/ui/Select";
+import { LayerLabelSettings } from "@/Types";
+import { Checkbox } from "@/components/ui/Checkbox";
 
 export const WEB_SAFE_FONTS = [
-    { value: 'Arial', label: 'Arial' },
-    { value: 'Helvetica', label: 'Helvetica' },
-    { value: 'Times New Roman', label: 'Times New Roman' },
-    { value: 'Times', label: 'Times' },
-    { value: 'Courier New', label: 'Courier New' },
-    { value: 'Courier', label: 'Courier' },
-    { value: 'Verdana', label: 'Verdana' },
-    { value: 'Georgia', label: 'Georgia' },
-    { value: 'Palatino', label: 'Palatino' },
-    { value: 'Garamond', label: 'Garamond' },
-    { value: 'Bookman', label: 'Bookman' },
-    { value: 'Comic Sans MS', label: 'Comic Sans MS' },
-    { value: 'Trebuchet MS', label: 'Trebuchet MS' },
-    { value: 'Arial Black', label: 'Arial Black' },
-    { value: 'sans-serif', label: 'Sans-serif' }
+    { value: "Arial", label: "Arial" },
+    { value: "Helvetica", label: "Helvetica" },
+    { value: "Times New Roman", label: "Times New Roman" },
+    { value: "Times", label: "Times" },
+    { value: "Courier New", label: "Courier New" },
+    { value: "Courier", label: "Courier" },
+    { value: "Verdana", label: "Verdana" },
+    { value: "Georgia", label: "Georgia" },
+    { value: "Palatino", label: "Palatino" },
+    { value: "Garamond", label: "Garamond" },
+    { value: "Bookman", label: "Bookman" },
+    { value: "Comic Sans MS", label: "Comic Sans MS" },
+    { value: "Trebuchet MS", label: "Trebuchet MS" },
+    { value: "Arial Black", label: "Arial Black" },
+    { value: "sans-serif", label: "Sans-serif" }
 ];
 
 interface LayerSettingsTabProps {
     settings: LayerLabelSettings;
-    onChange: (key: keyof LayerLabelSettings, value: number | string) => void;
+    onChange: (
+        key: keyof LayerLabelSettings,
+        value: number | string | boolean
+    ) => void;
 }
 
 export const LayerSettingsTab: React.FC<LayerSettingsTabProps> = ({
@@ -41,7 +44,9 @@ export const LayerSettingsTab: React.FC<LayerSettingsTabProps> = ({
                 <Input
                     type="number"
                     value={settings.width}
-                    onChange={(e) => onChange('width', parseInt(e.target.value))}
+                    onChange={(e) =>
+                        onChange("width", parseInt(e.target.value))
+                    }
                     min={1}
                     className="bg-gray-700 text-white"
                 />
@@ -53,7 +58,9 @@ export const LayerSettingsTab: React.FC<LayerSettingsTabProps> = ({
                 <Input
                     type="number"
                     value={settings.lineSpacing}
-                    onChange={(e) => onChange('lineSpacing', parseFloat(e.target.value))}
+                    onChange={(e) =>
+                        onChange("lineSpacing", parseFloat(e.target.value))
+                    }
                     step="0.1"
                     min="1"
                     className="bg-gray-700 text-white"
@@ -66,7 +73,7 @@ export const LayerSettingsTab: React.FC<LayerSettingsTabProps> = ({
                 <RadixSelect
                     options={WEB_SAFE_FONTS}
                     value={settings.fontFamily}
-                    onChange={(value) => onChange('fontFamily', value)}
+                    onChange={(value) => onChange("fontFamily", value)}
                 />
             </div>
             <div>
@@ -76,7 +83,9 @@ export const LayerSettingsTab: React.FC<LayerSettingsTabProps> = ({
                 <Input
                     type="number"
                     value={settings.fontSize}
-                    onChange={(e) => onChange('fontSize', parseInt(e.target.value))}
+                    onChange={(e) =>
+                        onChange("fontSize", parseInt(e.target.value))
+                    }
                     min={1}
                     className="bg-gray-700 text-white"
                 />
@@ -87,12 +96,28 @@ export const LayerSettingsTab: React.FC<LayerSettingsTabProps> = ({
                 </label>
                 <RadixSelect
                     options={[
-                        { value: 'normal', label: 'Normal' },
-                        { value: 'bold', label: 'Bold' }
+                        { value: "normal", label: "Normal" },
+                        { value: "bold", label: "Bold" }
                     ]}
                     value={settings.fontWeight}
-                    onChange={(value) => onChange('fontWeight', value)}
+                    onChange={(value) => onChange("fontWeight", value)}
                 />
+            </div>
+            <div className="flex items-center">
+                <Checkbox
+                    id="show-attachment-points"
+                    checked={settings.showSelectedLayerLabels}
+                    onCheckedChange={(check) =>
+                        onChange("showSelectedLayerLabels", check)
+                    }
+                    className="mr-2 text-white"
+                />
+                <label
+                    htmlFor="show-attachment-points"
+                    className="text-sm text-white"
+                >
+                    Show Labels For Selected Components
+                </label>
             </div>
         </div>
     );

@@ -13,9 +13,11 @@ import {
 export interface MetadataNodeData extends Record<string, unknown> {
     componentId: string;
     type: string;
+    showSelectedLabels: boolean;
     metadata: Record<string, any>;
     isInteractive?: boolean;
     alignment?: "left" | "right"; // New alignment property
+    selected3DShape: string | null;
     onProcess?: (metadata: Record<string, any>) => void;
 }
 
@@ -32,7 +34,6 @@ const MetadataNode: React.FC<NodeProps<MetadataNodeType>> = ({
     if (!componentType || !data.metadata) {
         return null;
     }
-
     const name = data.metadata.name || "Unnamed Component";
     const description = data.metadata.description || "No description available";
 
@@ -69,72 +70,88 @@ const MetadataNode: React.FC<NodeProps<MetadataNodeType>> = ({
         transformOrigin: alignment === "left" ? "right center" : "left center"
     };
 
+    const shouldShowLabel = (): boolean => {
+        if (data.showSelectedLabels) {
+            return true;
+        }
+
+        if (
+            !data.showSelectedLabels &&
+            data.selected3DShape === data.componentId
+        ) {
+            return true;
+        }
+
+        return false;
+    };
+
     return (
         <>
-            <div
-                className="px-3 py-2 rounded-lg border bg-white shadow-lg cursor-pointer transition-all duration-200 hover:shadow-xl"
-                style={nodeStyle}
-                onClick={() => {
-                    if (
-                        data.onProcess &&
-                        typeof data.onProcess === "function"
-                    ) {
-                        data.onProcess(data.metadata);
-                    }
-                }}
-                //         onMouseEnter={(e) => {
-                //             const tooltip = document.createElement("div");
-                //             tooltip.className =
-                //                 "fixed bg-customGray text-white p-3 rounded text-sm z-50 max-w-xs";
-                //             tooltip.style.left = `${e.clientX + 10}px`;
-                //             tooltip.style.top = `${e.clientY + 10}px`;
-                //             tooltip.id = "metadata-tooltip";
-                //             tooltip.innerHTML = `
-                //     <div class="font-medium text-gray-200 mb-1">${componentType.displayName}</div>
-                //     <div class="text-gray-400">${description}</div>
-                //   `;
-                //             document.body.appendChild(tooltip);
-                //         }}
-                //         onMouseLeave={() => {
-                //             const tooltip = document.getElementById("metadata-tooltip");
-                //             if (tooltip) tooltip.remove();
-                //         }}
-            >
-                {/* Always visible connection points */}
-                <Handle
-                    type="source"
-                    position={Position.Right}
-                    id={`metadata-${data.componentId}-right`} // Changed handle ID format
-                    style={handleStyle}
-                    isConnectable={isConnectable && !!data.isInteractive}
-                />
-                <Handle
-                    type="source"
-                    position={Position.Left}
-                    id={`metadata-${data.componentId}-left`} // Changed handle ID format
-                    style={handleStyle}
-                    isConnectable={isConnectable && !!data.isInteractive}
-                />
-                <Handle
-                    type="source"
-                    position={Position.Top}
-                    id={`metadata-${data.componentId}-top`} // Changed handle ID format
-                    style={handleStyle}
-                    isConnectable={isConnectable && !!data.isInteractive}
-                />
-                <Handle
-                    type="source"
-                    position={Position.Bottom}
-                    id={`metadata-${data.componentId}-bottom`} // Changed handle ID format
-                    style={handleStyle}
-                    isConnectable={isConnectable && !!data.isInteractive}
-                />
-                {/* Content */}
-                <div className="font-normal text-sm text-gray-900 whitespace-nowrap">
-                    {name}
+            {shouldShowLabel() && (
+                <div
+                    className="px-3 py-2 rounded-lg border bg-white shadow-lg cursor-pointer transition-all duration-200 hover:shadow-xl"
+                    style={nodeStyle}
+                    onClick={() => {
+                        if (
+                            data.onProcess &&
+                            typeof data.onProcess === "function"
+                        ) {
+                            data.onProcess(data.metadata);
+                        }
+                    }}
+                    //         onMouseEnter={(e) => {
+                    //             const tooltip = document.createElement("div");
+                    //             tooltip.className =
+                    //                 "fixed bg-customGray text-white p-3 rounded text-sm z-50 max-w-xs";
+                    //             tooltip.style.left = `${e.clientX + 10}px`;
+                    //             tooltip.style.top = `${e.clientY + 10}px`;
+                    //             tooltip.id = "metadata-tooltip";
+                    //             tooltip.innerHTML = `
+                    //     <div class="font-medium text-gray-200 mb-1">${componentType.displayName}</div>
+                    //     <div class="text-gray-400">${description}</div>
+                    //   `;
+                    //             document.body.appendChild(tooltip);
+                    //         }}
+                    //         onMouseLeave={() => {
+                    //             const tooltip = document.getElementById("metadata-tooltip");
+                    //             if (tooltip) tooltip.remove();
+                    //         }}
+                >
+                    {/* Always visible connection points */}
+                    <Handle
+                        type="source"
+                        position={Position.Right}
+                        id={`metadata-${data.componentId}-right`} // Changed handle ID format
+                        style={handleStyle}
+                        isConnectable={isConnectable && !!data.isInteractive}
+                    />
+                    <Handle
+                        type="source"
+                        position={Position.Left}
+                        id={`metadata-${data.componentId}-left`} // Changed handle ID format
+                        style={handleStyle}
+                        isConnectable={isConnectable && !!data.isInteractive}
+                    />
+                    <Handle
+                        type="source"
+                        position={Position.Top}
+                        id={`metadata-${data.componentId}-top`} // Changed handle ID format
+                        style={handleStyle}
+                        isConnectable={isConnectable && !!data.isInteractive}
+                    />
+                    <Handle
+                        type="source"
+                        position={Position.Bottom}
+                        id={`metadata-${data.componentId}-bottom`} // Changed handle ID format
+                        style={handleStyle}
+                        isConnectable={isConnectable && !!data.isInteractive}
+                    />
+                    {/* Content */}
+                    <div className="font-normal text-sm text-gray-900 whitespace-nowrap">
+                        {name}
+                    </div>
                 </div>
-            </div>
-
+            )}
             {/* Dialog content remains the same */}
             <Dialog open={isExpanded} onOpenChange={setIsExpanded}>
                 <DialogContent className="bg-gray-800 text-white">

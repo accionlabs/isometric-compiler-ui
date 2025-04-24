@@ -69,7 +69,6 @@ type SVGNodeData = Node<{
     onSelect3DShape: (id: string | null) => void;
     setSelectedPosition: (position: string) => void;
     setSelectedAttachmentPoint: (point: string) => void;
-    onComponentHover: (id: string | null) => void;
     isCopied: boolean;
     isConnecting: boolean;
     isInteractive: boolean;
@@ -505,7 +504,6 @@ const SVGNode = ({ id, data }: NodeProps<SVGNodeData>) => {
 
                     data.setSelectedPosition(position);
                     data.setSelectedAttachmentPoint(attachmentPoint);
-                    data.onComponentHover(component.id);
                 }
 
                 svgRef.current
@@ -516,7 +514,6 @@ const SVGNode = ({ id, data }: NodeProps<SVGNodeData>) => {
                 shape3D.classList.add("highlighted-shape");
             } else {
                 data.onSelect3DShape(null);
-                data.onComponentHover(null);
                 data.setSelectedPosition("top");
                 data.setSelectedAttachmentPoint("none");
 

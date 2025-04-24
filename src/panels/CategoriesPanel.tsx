@@ -218,7 +218,6 @@ export default function CategoriesPanel({
                             key={child._id}
                             ref={(el) => (buttonRefs.current[child._id] = el)}
                             onClick={(e) => {
-                                console.log();
                                 if (!(child.children.length > 0)) {
                                     e.currentTarget.focus(); // Ensure focus
                                     buttonRefs.current[

@@ -35,7 +35,6 @@ export const AdvancedCanvasSettings: React.FC<AdvancedCanvasSettingsProps> = ({
         key: string,
         value: number | string | boolean | CanvasSize
     ) => {
-        console.log("category", category, "key", key, "value", value);
         const newSettings = function () {
             if (category === "canvas") {
                 return {
@@ -64,7 +63,7 @@ export const AdvancedCanvasSettings: React.FC<AdvancedCanvasSettingsProps> = ({
             }
             return settings;
         };
-        console.log(newSettings());
+        // console.log("new settings", newSettings());
         setSettings(newSettings());
         setHasChanges(true);
     };
@@ -78,7 +77,6 @@ export const AdvancedCanvasSettings: React.FC<AdvancedCanvasSettingsProps> = ({
     useEffect(() => {
         console.log("Settings updated:", settings);
     }, [settings]);
-    console.log("settings", settings);
     return (
         <div className={styles.settingsContainer}>
             <Tabs defaultValue="canvas" className={styles.tabs}>

@@ -22,7 +22,8 @@ export const DEFAULT_SETTINGS: CanvasSettings = {
         lineSpacing: 1.2,
         fontFamily: "sans-serif",
         fontSize: 60,
-        fontWeight: "bold"
+        fontWeight: "bold",
+        showSelectedLayerLabels: true
     }
 };
 

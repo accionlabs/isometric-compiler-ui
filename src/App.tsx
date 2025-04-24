@@ -124,7 +124,7 @@ const App: React.FC = () => {
                 setShowAttachmentPoints(settings.canvas.showAttachmentPoints);
             }
             setCanvasSettings(settings);
-            console.log("Updated Settings:", settings);
+            // console.log("Updated Settings:", settings);
         },
         []
     );
