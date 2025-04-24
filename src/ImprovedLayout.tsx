@@ -251,7 +251,6 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                 ...currentDiagramInfo,
                 diagramComponents: updatedDiagramComponents
             });
-        console.log("here1111");
 
         queryClient.invalidateQueries({ queryKey: ["saved_diagrams"] });
     }, [currentDiagramInfo, composedSVG]);
@@ -431,8 +430,8 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
             setRightSidebarOpen(false);
             setFullScreenPanel(false);
         } else {
-            if (semanticModel?.qum?.length > 0) {
-                setQumData([...semanticModel.qum]);
+            if (semanticModel?.qum_specs?.unified_model?.length > 0) {
+                setQumData([...semanticModel.qum_specs.unified_model]);
                 setRightSidebarOpen(true);
             } else {
                 toast.error(
@@ -462,7 +461,6 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                 : message?.metadata?.content
         );
     }, [message, message_id]);
-
     useEffect(() => {
         const handleMessage = (event: MessageEvent) => {
             try {

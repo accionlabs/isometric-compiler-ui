@@ -185,7 +185,6 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                         }
                     ]);
                 }
-                setIsLoader(false);
             }
             if (error) {
                 setMessages((prev) => [
@@ -199,6 +198,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                 ]);
                 // setError({ isError: true, message: error.message });
             }
+            setIsLoader(false);
         }
     });
 
