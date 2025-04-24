@@ -96,11 +96,18 @@ interface MetadataNodeProps extends NodeProps<Node<MetadataNodeData>> {
 }
 
 // Define your custom function
+
 const nodeTypes = {
     svgNode: SVGNode,
     metadata: (props: MetadataNodeProps) => {
+        const { handleComponentMetadata } = props.data; // Extract the function from props
+
         const enhancedData = {
-            ...props.data
+            ...props.data,
+            onMetadataProcess: handleComponentMetadata as (
+                panel: boolean,
+                metadata: Record<string, any>
+            ) => void
         };
 
         return <MetadataNode {...props} data={enhancedData} />;
@@ -634,6 +641,7 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
                         isInteractive,
                         handleComponentMetadata,
                         selected3DShape,
+                        onMetadataProcess: handleComponentMetadata,
                         hideLabels: settings?.layerLabel?.hideLabels ?? true
                     } as MetadataNodeData,
                     draggable: true,

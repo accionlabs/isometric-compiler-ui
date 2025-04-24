@@ -18,6 +18,7 @@ export interface MetadataNodeData extends Record<string, unknown> {
     isInteractive?: boolean;
     alignment?: "left" | "right"; // New alignment property
     selected3DShape: string | null;
+    onMetadataProcess: (panel: boolean, metadata: Record<string, any>) => void;
 }
 
 type MetadataNodeType = Node<MetadataNodeData>;
@@ -75,7 +76,7 @@ const MetadataNode: React.FC<NodeProps<MetadataNodeType>> = ({
                 <div
                     className="px-3 py-2 rounded-lg border bg-white shadow-lg cursor-pointer transition-all duration-200 hover:shadow-xl"
                     style={nodeStyle}
-
+                    onClick={() => data.onMetadataProcess(true, data.metadata)}
                     //         onMouseEnter={(e) => {
                     //             const tooltip = document.createElement("div");
                     //             tooltip.className =
