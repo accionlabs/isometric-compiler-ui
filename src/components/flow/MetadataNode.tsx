@@ -68,11 +68,10 @@ const MetadataNode: React.FC<NodeProps<MetadataNodeType>> = ({
         transform: alignment === "left" ? "translateX(-100%)" : "none",
         transformOrigin: alignment === "left" ? "right center" : "left center"
     };
-    // const showLabels=!data.hideLabels
-    const showLabels = false;
+
     return (
         <>
-            {showLabels && (
+            {!data.hideLabels && (
                 <div
                     className="px-3 py-2 rounded-lg border bg-white shadow-lg cursor-pointer transition-all duration-200 hover:shadow-xl"
                     style={nodeStyle}

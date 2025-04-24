@@ -103,7 +103,7 @@ export const LayerSettingsTab: React.FC<LayerSettingsTabProps> = ({
                     onChange={(value) => onChange("fontWeight", value)}
                 />
             </div>
-            {/* <div className="flex items-center">
+            <div className="flex items-center">
                 <Checkbox
                     id="show-attachment-points"
                     checked={settings.hideLabels}
@@ -116,7 +116,7 @@ export const LayerSettingsTab: React.FC<LayerSettingsTabProps> = ({
                 >
                     Hide Labels
                 </label>
-            </div> */}
+            </div>
         </div>
     );
 };
