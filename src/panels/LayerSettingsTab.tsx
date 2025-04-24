@@ -103,22 +103,20 @@ export const LayerSettingsTab: React.FC<LayerSettingsTabProps> = ({
                     onChange={(value) => onChange("fontWeight", value)}
                 />
             </div>
-            <div className="flex items-center">
+            {/* <div className="flex items-center">
                 <Checkbox
                     id="show-attachment-points"
-                    checked={settings.showSelectedLayerLabels}
-                    onCheckedChange={(check) =>
-                        onChange("showSelectedLayerLabels", check)
-                    }
+                    checked={settings.hideLabels}
+                    onCheckedChange={(check) => onChange("hideLabels", check)}
                     className="mr-2 text-white"
                 />
                 <label
                     htmlFor="show-attachment-points"
                     className="text-sm text-white"
                 >
-                    Show Labels For Selected Components
+                    Hide Labels
                 </label>
-            </div>
+            </div> */}
         </div>
     );
 };

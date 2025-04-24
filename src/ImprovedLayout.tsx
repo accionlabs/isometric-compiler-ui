@@ -382,8 +382,9 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     const handleOpenSaveDialog = () => {
         setIsSaveDiagramDialogOpen(true);
     };
-    const handleComponentMetadata = (data: any) => {
-        setRightSidebarOpen(true);
+    const handleComponentMetadata = (panel: boolean, data: any) => {
+        setRightSidebarOpen(panel);
+        if (!panel) return;
         const selectedComponentData = diagramComponents.find((component) => {
             return component?.metadata?.name === data.name;
         });

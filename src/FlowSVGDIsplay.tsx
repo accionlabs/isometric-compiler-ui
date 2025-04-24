@@ -61,7 +61,10 @@ interface FlowSVGDisplayProps {
     settings: CanvasSettings | null;
     setSelectedPosition: (position: string) => void;
     setSelectedAttachmentPoint: (point: string) => void;
-    handleComponentMetadata: (metadata: Record<string, any>) => void;
+    handleComponentMetadata: (
+        panel: boolean,
+        metadata: Record<string, any>
+    ) => void;
 }
 
 type FlowEdge = Edge<CustomEdgeProps["data"]>;
@@ -96,13 +99,8 @@ interface MetadataNodeProps extends NodeProps<Node<MetadataNodeData>> {
 const nodeTypes = {
     svgNode: SVGNode,
     metadata: (props: MetadataNodeProps) => {
-        const { handleComponentMetadata } = props.data; // Extract the function from props
-
         const enhancedData = {
-            ...props.data,
-            onProcess: handleComponentMetadata as (
-                metadata: Record<string, any>
-            ) => void
+            ...props.data
         };
 
         return <MetadataNode {...props} data={enhancedData} />;
@@ -164,9 +162,7 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
         useState<BaseLayoutManager | null>(null);
     const [initialLayoutComplete, setInitialLayoutComplete] = useState(false);
     const prevDiagramComponentsRef = useRef<DiagramComponent[]>([]);
-    const [hoveredComponentId, setHoveredComponentId] = useState<string | null>(
-        null
-    );
+
     // Debug: Log state changes
     // useEffect(() => {
     // console.log("State Change Debug:", {
@@ -579,7 +575,7 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
                 isInteractive,
                 onComponentBoundsUpdate: handleComponentBoundsUpdate,
                 onSVGLayoutUpdate: handleSVGLayoutUpdate,
-                onComponentHover: setHoveredComponentId
+                onMetadataProcess: handleComponentMetadata
             },
             draggable: false,
             selectable: false,
@@ -638,9 +634,7 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
                         isInteractive,
                         handleComponentMetadata,
                         selected3DShape,
-                        showSelectedLabels:
-                            settings?.layerLabel?.showSelectedLayerLabels ??
-                            true
+                        hideLabels: settings?.layerLabel?.hideLabels ?? true
                     } as MetadataNodeData,
                     draggable: true,
                     style: {

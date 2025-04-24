@@ -278,7 +278,7 @@ export interface LayerLabelSettings {
     fontFamily: string;
     fontSize: number;
     fontWeight: string;
-    showSelectedLayerLabels: boolean;
+    hideLabels: boolean;
 }
 
 export interface CanvasSettings {

@@ -23,7 +23,7 @@ export const DEFAULT_SETTINGS: CanvasSettings = {
         fontFamily: "sans-serif",
         fontSize: 60,
         fontWeight: "bold",
-        showSelectedLayerLabels: true
+        hideLabels: true
     }
 };
 

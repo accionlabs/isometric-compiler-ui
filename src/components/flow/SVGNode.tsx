@@ -69,6 +69,7 @@ type SVGNodeData = Node<{
     onSelect3DShape: (id: string | null) => void;
     setSelectedPosition: (position: string) => void;
     setSelectedAttachmentPoint: (point: string) => void;
+    onMetadataProcess: (panel: boolean, metadata?: Record<string, any>) => void;
     isCopied: boolean;
     isConnecting: boolean;
     isInteractive: boolean;
@@ -504,6 +505,7 @@ const SVGNode = ({ id, data }: NodeProps<SVGNodeData>) => {
 
                     data.setSelectedPosition(position);
                     data.setSelectedAttachmentPoint(attachmentPoint);
+                    data.onMetadataProcess(true, component?.metadata ?? {});
                 }
 
                 svgRef.current
@@ -516,6 +518,7 @@ const SVGNode = ({ id, data }: NodeProps<SVGNodeData>) => {
                 data.onSelect3DShape(null);
                 data.setSelectedPosition("top");
                 data.setSelectedAttachmentPoint("none");
+                data.onMetadataProcess(false);
 
                 svgRef.current
                     .querySelectorAll(".highlighted-shape")

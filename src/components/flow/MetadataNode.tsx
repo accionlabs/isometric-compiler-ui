@@ -13,12 +13,11 @@ import {
 export interface MetadataNodeData extends Record<string, unknown> {
     componentId: string;
     type: string;
-    showSelectedLabels: boolean;
+    hideLabels: boolean;
     metadata: Record<string, any>;
     isInteractive?: boolean;
     alignment?: "left" | "right"; // New alignment property
     selected3DShape: string | null;
-    onProcess?: (metadata: Record<string, any>) => void;
 }
 
 type MetadataNodeType = Node<MetadataNodeData>;
@@ -69,36 +68,15 @@ const MetadataNode: React.FC<NodeProps<MetadataNodeType>> = ({
         transform: alignment === "left" ? "translateX(-100%)" : "none",
         transformOrigin: alignment === "left" ? "right center" : "left center"
     };
-
-    const shouldShowLabel = (): boolean => {
-        if (data.showSelectedLabels) {
-            return true;
-        }
-
-        if (
-            !data.showSelectedLabels &&
-            data.selected3DShape === data.componentId
-        ) {
-            return true;
-        }
-
-        return false;
-    };
-
+    // const showLabels=!data.hideLabels
+    const showLabels = false;
     return (
         <>
-            {shouldShowLabel() && (
+            {showLabels && (
                 <div
                     className="px-3 py-2 rounded-lg border bg-white shadow-lg cursor-pointer transition-all duration-200 hover:shadow-xl"
                     style={nodeStyle}
-                    onClick={() => {
-                        if (
-                            data.onProcess &&
-                            typeof data.onProcess === "function"
-                        ) {
-                            data.onProcess(data.metadata);
-                        }
-                    }}
+
                     //         onMouseEnter={(e) => {
                     //             const tooltip = document.createElement("div");
                     //             tooltip.className =
