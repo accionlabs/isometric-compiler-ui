@@ -56,7 +56,8 @@ export default function AttachmentMenu(props: AttachmentMenuProps) {
             handleLoading(false);
         }
     });
-
+    const imageFiles =
+        data?.filter((doc) => doc.metadata.fileType === "image") ?? [];
     return (
         <DropdownMenu
             open={isDropdownOpen}
@@ -90,29 +91,23 @@ export default function AttachmentMenu(props: AttachmentMenuProps) {
                         </DropdownMenuSubTrigger>
                         <DropdownMenuPortal>
                             <DropdownMenuSubContent>
-                                {data && data?.length > 0 ? (
-                                    data
-                                        .filter(
-                                            (doc) =>
-                                                doc.metadata.fileType ===
-                                                "image"
-                                        )
-                                        .map((doc) => (
-                                            <DropdownMenuItem
-                                                key={doc._id}
-                                                onClick={() => {
-                                                    handleLoading(true);
+                                {imageFiles?.length > 0 ? (
+                                    imageFiles.map((doc) => (
+                                        <DropdownMenuItem
+                                            key={doc._id}
+                                            onClick={() => {
+                                                handleLoading(true);
 
-                                                    mutate({
-                                                        uuid,
-                                                        key: "diagram",
-                                                        documentId: doc._id
-                                                    });
-                                                }}
-                                            >
-                                                {doc.metadata.fileName}
-                                            </DropdownMenuItem>
-                                        ))
+                                                mutate({
+                                                    uuid,
+                                                    key: "diagram",
+                                                    documentId: doc._id
+                                                });
+                                            }}
+                                        >
+                                            {doc.metadata.fileName}
+                                        </DropdownMenuItem>
+                                    ))
                                 ) : (
                                     <DropdownMenuItem>
                                         Image not found.

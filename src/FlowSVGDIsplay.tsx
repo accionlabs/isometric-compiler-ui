@@ -96,7 +96,6 @@ interface MetadataNodeProps extends NodeProps<Node<MetadataNodeData>> {
 }
 
 // Define your custom function
-
 const nodeTypes = {
     svgNode: SVGNode,
     metadata: (props: MetadataNodeProps) => {
@@ -104,7 +103,7 @@ const nodeTypes = {
 
         const enhancedData = {
             ...props.data,
-            onMetadataProcess: handleComponentMetadata as (
+            onProcess: handleComponentMetadata as (
                 panel: boolean,
                 metadata: Record<string, any>
             ) => void
@@ -137,7 +136,11 @@ const LAYOUT_CONFIG = {
         stepSize: 20 // distance between metadata label positions
     } as HullBasedLayoutConfig
 };
-
+const fitViewOptions = {
+    padding: 0.2,
+    includeHiddenNodes: true,
+    duration: 800
+};
 // FlowContent Component
 const FlowContent: React.FC<FlowSVGDisplayProps> = ({
     svgContent,
@@ -155,6 +158,7 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
     const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
     const store = useStoreApi();
     const { fitView } = useReactFlow();
+
     const [pendingEdgeUpdates, setPendingEdgeUpdates] = useState<FlowEdge[]>(
         []
     );
@@ -515,7 +519,6 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
 
             if (!initialLayoutComplete) {
                 setInitialLayoutComplete(true);
-                setTimeout(() => fitView({ padding: 0.2 }), 100);
             }
 
             return updatedNodes;
@@ -582,7 +585,7 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
                 isInteractive,
                 onComponentBoundsUpdate: handleComponentBoundsUpdate,
                 onSVGLayoutUpdate: handleSVGLayoutUpdate,
-                onMetadataProcess: handleComponentMetadata
+                onprocess: handleComponentMetadata
             },
             draggable: false,
             selectable: false,
@@ -623,9 +626,7 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
                             isInteractive
                         },
                         draggable: isInteractive,
-                        style: {
-                            zIndex: 4
-                        }
+                        style: { zIndex: 4 }
                     };
                 }
 
@@ -639,15 +640,10 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
                         metadata: component.metadata,
                         alignment: nodePosition.alignment,
                         isInteractive,
-                        handleComponentMetadata,
-                        selected3DShape,
-                        onMetadataProcess: handleComponentMetadata,
-                        hideLabels: settings?.layerLabel?.hideLabels ?? true
+                        hideLabels: settings?.layerLabel.hideLabels
                     } as MetadataNodeData,
                     draggable: true,
-                    style: {
-                        zIndex: 4
-                    }
+                    style: { zIndex: 4 }
                 };
             }
         );
@@ -822,10 +818,22 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
 
     // Fit view after nodes are updated
     useEffect(() => {
-        if (nodes.length > 0) {
-            fitView({ padding: 0.2 });
+        // Only run when all necessary data is available
+        if (
+            nodes.length > 0 &&
+            edges.length > 0 &&
+            areComponentBoundsReady &&
+            pendingEdgeUpdates.length === 0 &&
+            initialLayoutComplete
+        ) {
+            // Use a longer timeout to ensure all renders are complete
+            const stabilizationTimer = setTimeout(() => {
+                fitView(fitViewOptions);
+            }, 200);
+
+            return () => clearTimeout(stabilizationTimer);
         }
-    }, [nodes.length, fitView]);
+    }, [nodes.length, initialLayoutComplete, fitView]);
 
     // Connection handler
     const onConnect = useCallback(
@@ -872,6 +880,7 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
             onPaneClick={onPaneClick}
             connectionMode={ConnectionMode.Loose}
             fitView
+            fitViewOptions={fitViewOptions}
             minZoom={0.5}
             maxZoom={10}
             snapToGrid
@@ -882,7 +891,7 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
             elementsSelectable={isInteractive}
         >
             <Background />
-            <Controls />
+            <Controls fitViewOptions={fitViewOptions} />
         </ReactFlow>
     );
 };

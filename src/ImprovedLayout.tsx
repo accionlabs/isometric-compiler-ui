@@ -177,6 +177,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     const [qumData, setQumData] = useState<any>(undefined);
 
     const timeoutIdRef = useRef<NodeJS.Timeout | null>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
 
     const updateDiagramWithRateLimit = useCancelLatestCalls(updateDiagram);
     // const { data: semanticModel, isFetching: isFetchPending } = useQuery({
@@ -422,7 +423,6 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
         currentUrl.searchParams.append("uuid", uuidv4());
         window.history.pushState({}, "", currentUrl);
     };
-
     // const handleRightPanelOpen = () => {
     //     setSelectedDiagramCompoent(undefined);
     //     if (rightSidebarOpen) {
@@ -452,6 +452,12 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     //     setFullScreenPanel(true);
     // }, [isShowUnifiedModelModeEnabled, isFetchPending]);
 
+    useEffect(() => {
+        // get proper canvas size to render svg properly
+        if (!containerRef.current) return;
+        const { width, height } = containerRef.current.getBoundingClientRect();
+        onSetCanvasSize({ width, height });
+    }, []);
     useEffect(() => {
         if (!message_id) return;
 
@@ -887,7 +893,10 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                         )}
                     {/* Main content */}
                     {!fullScreenPanel && !isShowUnifiedModelModeEnabled && (
-                        <div className="flex-grow  p-4 bg-white flex flex-col items-center justify-center transition-all duration-300 ease-in-out">
+                        <div
+                            ref={containerRef}
+                            className="flex-grow  p-4 bg-white flex flex-col items-center justify-center transition-all duration-300 ease-in-out"
+                        >
                             <FlowSVGDisplay
                                 svgContent={composedSVG}
                                 selected3DShape={selected3DShape}

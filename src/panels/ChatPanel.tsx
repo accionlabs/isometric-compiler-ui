@@ -25,7 +25,8 @@ import {
 
 import GitRepoDialog from "./GitRepoDialog";
 import AttachmentMenu from "./AttachmentMenu";
-
+import pdf from "@/assets/pdf.png";
+import image from "@/assets/image.png";
 interface ChatPanelProps {
     handleLoadDiagramFromJSON: (
         loadedComponents: DiagramComponent[]
@@ -413,37 +414,31 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                             message.isUser ? "items-end" : "items-start"
                         }`}
                     >
-                        {/* Image Message */}
-                        {message.metaData.fileType === "image" && (
-                            <img
-                                src={message.metaData.fileUrl}
-                                alt="Sent"
-                                className="w-20 h-20 cursor-pointer"
-                                onClick={() => openViewerPopup(message)}
-                                onError={(e) =>
-                                    (e.currentTarget.src =
-                                        "/images/placeholder.jpg")
-                                }
-                            />
-                        )}
-
-                        {/* PDF Message */}
-                        {message.metaData.fileType === "pdf" && (
-                            <div className="w-20 h-20 flex flex-col items-center justify-center bg-gray-100 rounded-sm border">
-                                <FileText className="w-5 h-5 text-gray-700" />
-                                <span className="text-[10px] text-gray-800 truncate max-w-[40px] text-center">
-                                    {message.metaData.fileName}
+                        {/* PDF or image Message */}
+                        {message.metaData.fileType && (
+                            <>
+                                <img
+                                    src={
+                                        message.metaData.fileType === "image"
+                                            ? image
+                                            : pdf
+                                    }
+                                    alt={message.metaData.fileName}
+                                    className=" object-contain rounded bg-white"
+                                />
+                                <span className="text-xs  truncate max-w-52 text-center">
+                                    {message.metaData.fileUrl?.split("/").pop()}
                                 </span>
-                            </div>
+                            </>
                         )}
 
                         {/* Text Message */}
                         {message.text && (
                             <div
-                                className={`max-w-xs px-4 py-2 rounded-lg break-words ${
+                                className={` px-4 py-2 rounded-lg break-words ${
                                     message.isUser
-                                        ? "bg-customBlue"
-                                        : "bg-customLightGray "
+                                        ? "bg-customLightGray max-w-xs"
+                                        : ""
                                 }`}
                             >
                                 <Markdown>{message.text}</Markdown>

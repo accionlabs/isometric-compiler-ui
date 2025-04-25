@@ -9,6 +9,7 @@ import {
     DialogHeader,
     DialogTitle
 } from "@/components/ui/Dialog";
+import { DEFAULT_SETTINGS } from "@/Constants";
 
 export interface MetadataNodeData extends Record<string, unknown> {
     componentId: string;
@@ -18,7 +19,7 @@ export interface MetadataNodeData extends Record<string, unknown> {
     isInteractive?: boolean;
     alignment?: "left" | "right"; // New alignment property
     selected3DShape: string | null;
-    onMetadataProcess: (panel: boolean, metadata: Record<string, any>) => void;
+    onProcess: (panel: boolean, metadata: Record<string, any>) => void;
 }
 
 type MetadataNodeType = Node<MetadataNodeData>;
@@ -69,14 +70,18 @@ const MetadataNode: React.FC<NodeProps<MetadataNodeType>> = ({
         transform: alignment === "left" ? "translateX(-100%)" : "none",
         transformOrigin: alignment === "left" ? "right center" : "left center"
     };
-
+    const hideLabels =
+        data.hideLabels === undefined
+            ? DEFAULT_SETTINGS.layerLabel.hideLabels
+            : data.hideLabels;
+    console.log(hideLabels, data.hideLabels);
     return (
         <>
-            {!data.hideLabels && (
+            {!hideLabels && (
                 <div
                     className="px-3 py-2 rounded-lg border bg-white shadow-lg cursor-pointer transition-all duration-200 hover:shadow-xl"
                     style={nodeStyle}
-                    onClick={() => data.onMetadataProcess(true, data.metadata)}
+                    onClick={() => data.onProcess(true, data.metadata)}
                     //         onMouseEnter={(e) => {
                     //             const tooltip = document.createElement("div");
                     //             tooltip.className =
