@@ -179,11 +179,11 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
     const timeoutIdRef = useRef<NodeJS.Timeout | null>(null);
 
     const updateDiagramWithRateLimit = useCancelLatestCalls(updateDiagram);
-    const { data: semanticModel, isFetching: isFetchPending } = useQuery({
-        queryKey: ["report", existinguuid],
-        queryFn: () => getReport(existinguuid || ""),
-        refetchInterval: 5000
-    });
+    // const { data: semanticModel, isFetching: isFetchPending } = useQuery({
+    //     queryKey: ["report", existinguuid],
+    //     queryFn: () => getReport(existinguuid || ""),
+    //     refetchInterval: 5000
+    // });
     const { data: message } = useQuery({
         queryKey: ["message", message_id],
         queryFn: () => getMessageById(message_id || ""),
@@ -423,34 +423,34 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
         window.history.pushState({}, "", currentUrl);
     };
 
-    const handleRightPanelOpen = () => {
-        setSelectedDiagramCompoent(undefined);
-        if (rightSidebarOpen) {
-            setQumData([]);
-            setRightSidebarOpen(false);
-            setFullScreenPanel(false);
-        } else {
-            if (semanticModel?.qum_specs?.unified_model?.length > 0) {
-                setQumData([...semanticModel.qum_specs.unified_model]);
-                setRightSidebarOpen(true);
-            } else {
-                toast.error(
-                    "Unified model unavailable right now, Please try again!",
-                    {
-                        duration: 3000
-                    }
-                );
-            }
-        }
-    };
-    useEffect(() => {
-        if (!isShowUnifiedModelModeEnabled) return;
-        if (semanticModel?.qum) setQumData([...semanticModel.qum]);
+    // const handleRightPanelOpen = () => {
+    //     setSelectedDiagramCompoent(undefined);
+    //     if (rightSidebarOpen) {
+    //         setQumData([]);
+    //         setRightSidebarOpen(false);
+    //         setFullScreenPanel(false);
+    //     } else {
+    //         if (semanticModel?.qum_specs?.unified_model?.length > 0) {
+    //             setQumData([...semanticModel.qum_specs.unified_model]);
+    //             setRightSidebarOpen(true);
+    //         } else {
+    //             toast.error(
+    //                 "Unified model unavailable right now, Please try again!",
+    //                 {
+    //                     duration: 3000
+    //                 }
+    //             );
+    //         }
+    //     }
+    // };
+    // useEffect(() => {
+    //     if (!isShowUnifiedModelModeEnabled) return;
+    //     if (semanticModel?.qum) setQumData([...semanticModel.qum]);
 
-        setLeftSidebarOpen(false);
-        setRightSidebarOpen(true);
-        setFullScreenPanel(true);
-    }, [isShowUnifiedModelModeEnabled, isFetchPending]);
+    //     setLeftSidebarOpen(false);
+    //     setRightSidebarOpen(true);
+    //     setFullScreenPanel(true);
+    // }, [isShowUnifiedModelModeEnabled, isFetchPending]);
 
     useEffect(() => {
         if (!message_id) return;
@@ -676,7 +676,7 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                         header="Redo"
                         side="top"
                     />
-                    <CustomTooltip
+                    {/* <CustomTooltip
                         action={
                             <button
                                 onClick={handleRightPanelOpen}
@@ -703,7 +703,21 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                             ] ?? "Unified model"
                         }
                         side="top"
-                    />
+                    /> */}
+                    {rightSidebarOpen && (
+                        <CustomTooltip
+                            action={
+                                <button
+                                    onClick={() => setRightSidebarOpen(false)}
+                                    className="hover:bg-customLightGray p-2 rounded disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                    <X />
+                                </button>
+                            }
+                            header={"Unified model"}
+                            side="top"
+                        />
+                    )}
                 </div>
             </div>
         );
@@ -922,7 +936,8 @@ const ImprovedLayout: React.FC<ImprovedLayoutProps> = ({
                             svgContent={composedSVG}
                             canvasSize={canvasSize}
                             reportData={qumData}
-                            architectureData={semanticModel?.visualModel ?? []}
+                            // architectureData={semanticModel?.visualModel ?? []}
+                            architectureData={[]}
                             componentData={selectedDiagramCompoent}
                         />
                     </div>
