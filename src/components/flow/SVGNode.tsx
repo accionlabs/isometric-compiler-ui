@@ -452,7 +452,6 @@ const SVGNode = ({ id, data }: NodeProps<SVGNodeData>) => {
         updateNodeInternals,
         id
     ]);
-    console.log("dataaaaa", data);
     const handleClick = useCallback(
         (event: React.MouseEvent<HTMLDivElement>) => {
             event.stopPropagation();

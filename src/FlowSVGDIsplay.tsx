@@ -99,17 +99,7 @@ interface MetadataNodeProps extends NodeProps<Node<MetadataNodeData>> {
 const nodeTypes = {
     svgNode: SVGNode,
     metadata: (props: MetadataNodeProps) => {
-        const { handleComponentMetadata } = props.data; // Extract the function from props
-
-        const enhancedData = {
-            ...props.data,
-            onProcess: handleComponentMetadata as (
-                panel: boolean,
-                metadata: Record<string, any>
-            ) => void
-        };
-
-        return <MetadataNode {...props} data={enhancedData} />;
+        return <MetadataNode {...props} data={props.data} />;
     },
     marker: MarkerNode,
     isometricText: IsometricTextNode
@@ -640,7 +630,8 @@ const FlowContent: React.FC<FlowSVGDisplayProps> = ({
                         metadata: component.metadata,
                         alignment: nodePosition.alignment,
                         isInteractive,
-                        hideLabels: settings?.layerLabel.hideLabels
+                        hideLabels: settings?.layerLabel.hideLabels,
+                        onProcess: handleComponentMetadata
                     } as MetadataNodeData,
                     draggable: true,
                     style: { zIndex: 4 }
