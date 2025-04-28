@@ -18,7 +18,7 @@ import { CUSTOM_SCROLLBAR } from "@/Constants";
 import { getDiagramImageUrl } from "@/lib/exportUtils";
 import { config } from "@/config";
 import {
-    BreezeIcon,
+    // BreezeIcon,
     SendIcon,
     UnifiedModelIcon
 } from "@/components/ui/IconGroup";
@@ -397,12 +397,12 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     };
     return (
         <div className="px-4 pt-3 h-full flex flex-col gap-4">
-            <div className="flex justify-between">
+            {/* <div className="flex justify-between">
                 <div className="flex gap-2 justify-center items-center">
                     <BreezeIcon />
                     <p className="text-xl font-medium">Breeze.AI</p>
                 </div>
-            </div>
+            </div> */}
             {/* chat container */}
             <div
                 className={`flex-grow overflow-x-hidden flex flex-col gap-2 ${CUSTOM_SCROLLBAR}`}
