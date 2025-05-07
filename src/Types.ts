@@ -463,7 +463,7 @@ export interface ArchitectureData {
 
 export interface DocumentMetadata {
     fileUrl: string;
-    fileType: "image" | "pdf";
+    fileType: "image" | "pdf" | "txt" | "text";
     fileName: string;
     mimetype: string;
 }

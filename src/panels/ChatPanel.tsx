@@ -14,7 +14,7 @@ import ViewerPopup from "@/components/ui/ViewerPopup";
 import ProgressPopup from "@/components/ui/ProgressPopup";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Markdown from "react-markdown";
-import { CUSTOM_SCROLLBAR } from "@/Constants";
+import { CUSTOM_SCROLLBAR, FILE_TYPE_MAP } from "@/Constants";
 import { getDiagramImageUrl } from "@/lib/exportUtils";
 import { config } from "@/config";
 import {
@@ -27,6 +27,7 @@ import GitRepoDialog from "./GitRepoDialog";
 import AttachmentMenu from "./AttachmentMenu";
 import pdf from "@/assets/pdf.png";
 import image from "@/assets/image.png";
+import text from "@/assets/text.png";
 interface ChatPanelProps {
     handleLoadDiagramFromJSON: (
         loadedComponents: DiagramComponent[]
@@ -102,7 +103,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     const [selectedFile, setSelectedFile] = useState<{
         file: File | null;
         src: string;
-        fileType: "image" | "pdf" | null;
+        fileType?: "image" | "pdf" | "txt" | "text" | null;
     }>({
         file: null,
         src: "",
@@ -251,6 +252,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             const file = event.target.files[0];
 
             const reader = new FileReader();
+
             if (file.type.startsWith("image/")) {
                 // Read image as Data URL for preview
                 reader.onload = () =>
@@ -260,13 +262,18 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                         src: reader.result as string
                     });
                 setLoadMessages(LoadMessagesWithImage);
+
                 reader.readAsDataURL(file);
-            } else if (file.type === "application/pdf") {
+            } else if (
+                file.type === "application/pdf" ||
+                file.type === "text/plain" ||
+                file.type === "text/markdown"
+            ) {
                 // Set PDF file without preview
                 setSelectedFile({
                     file,
                     src: "",
-                    fileType: "pdf"
+                    fileType: FILE_TYPE_MAP[file.type]
                 });
                 setLoadMessages(LoadMessagesWithPDF);
             }
@@ -414,6 +421,10 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                             message.isUser ? "items-end" : "items-start"
                         }`}
                     >
+                        {console.log(
+                            "message.metaData.fileType",
+                            message.metaData.fileType
+                        )}
                         {/* PDF or image Message */}
                         {message.metaData.fileType && (
                             <>
@@ -421,10 +432,15 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                                     src={
                                         message.metaData.fileType === "image"
                                             ? image
+                                            : message.metaData.fileType ===
+                                                  "txt" ||
+                                              message.metaData.fileType ===
+                                                  "text"
+                                            ? text
                                             : pdf
                                     }
                                     alt={message.metaData.fileName}
-                                    className=" object-contain rounded bg-white"
+                                    className=" object-contain rounded bg-white  h-8 w-8"
                                 />
                                 <span className="text-xs  truncate max-w-52 text-center">
                                     {message.metaData.fileUrl?.split("/").pop()}
@@ -555,7 +571,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
 
                             <input
                                 type="file"
-                                accept="image/*,.pdf"
+                                accept="image/*,.pdf,.md,.txt,.md"
                                 ref={fileInputRef}
                                 className="hidden"
                                 onChange={handleFileSelect}

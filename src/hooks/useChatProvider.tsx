@@ -15,7 +15,7 @@ export type Message = {
     isSystemQuery?: boolean;
     metaData: {
         fileUrl?: string;
-        fileType?: "image" | "pdf";
+        fileType?: "image" | "pdf" | "txt" | "text";
         fileName?: string;
         content?: any;
         isGherkinScriptQuery?: boolean;

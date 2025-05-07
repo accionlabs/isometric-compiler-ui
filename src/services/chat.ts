@@ -15,7 +15,7 @@ interface Chat {
     role: "system" | "user";
     metadata: {
         fileUrl?: string;
-        fileType?: "image" | "pdf";
+        fileType?: "image" | "pdf" | "txt" | "text";
         fileName?: string;
         content?: any;
         result?: DiagramComponent[];

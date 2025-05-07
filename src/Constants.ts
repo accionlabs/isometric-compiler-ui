@@ -3,6 +3,11 @@ import { CanvasSettings } from "./Types";
 export const CUSTOM_SCROLLBAR =
     "scroll-container overflow-auto scrollbar-thin scrollbar-thumb-customLightGray scrollbar-track-transparent";
 
+export const FILE_TYPE_MAP: Record<string, "image" | "pdf" | "txt" | "text"> = {
+    "application/pdf": "pdf",
+    "text/plain": "txt",
+    "text/markdown": "txt"
+};
 export const DEFAULT_SETTINGS: CanvasSettings = {
     canvas: {
         canvasSize: {
