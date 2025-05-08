@@ -18,6 +18,7 @@ export type Message = {
         fileType?: "image" | "pdf" | "txt" | "text";
         fileName?: string;
         content?: any;
+        gitUrl?: string;
         isGherkinScriptQuery?: boolean;
     };
 };

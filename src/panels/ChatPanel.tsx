@@ -27,6 +27,7 @@ import GitRepoDialog from "./GitRepoDialog";
 import AttachmentMenu from "./AttachmentMenu";
 import pdf from "@/assets/pdf.png";
 import image from "@/assets/image.png";
+import git from "@/assets/git.png";
 import text from "@/assets/text.png";
 interface ChatPanelProps {
     handleLoadDiagramFromJSON: (
@@ -401,6 +402,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             gitToken: token
         });
     };
+
     useEffect(() => {
         if (isLoaderTimePassed) {
             setIsLoader(isLoading);
@@ -448,11 +450,15 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                         }`}
                     >
                         {/* PDF or image Message */}
-                        {message.metaData.fileType && (
+                        {(message.metaData.fileType ||
+                            message.metaData.gitUrl) && (
                             <>
                                 <img
                                     src={
-                                        message.metaData.fileType === "image"
+                                        message.metaData.gitUrl
+                                            ? git
+                                            : message.metaData.fileType ===
+                                              "image"
                                             ? image
                                             : message.metaData.fileType ===
                                                   "txt" ||
@@ -465,7 +471,10 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                                     className=" object-contain rounded bg-white  h-8 w-8"
                                 />
                                 <span className="text-xs  truncate max-w-52 text-center">
-                                    {message.metaData.fileUrl?.split("/").pop()}
+                                    {message.metaData.gitUrl ||
+                                        message.metaData.fileUrl
+                                            ?.split("/")
+                                            .pop()}
                                 </span>
                             </>
                         )}
