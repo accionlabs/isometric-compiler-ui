@@ -447,10 +447,6 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                             message.isUser ? "items-end" : "items-start"
                         }`}
                     >
-                        {console.log(
-                            "message.metaData.fileType",
-                            message.metaData.fileType
-                        )}
                         {/* PDF or image Message */}
                         {message.metaData.fileType && (
                             <>
@@ -488,7 +484,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                         )}
 
                         {/* JSON Response */}
-                        {message.metaData.content && (
+                        {message.metaData.content?.length > 0 && (
                             <div className="flex items-center gap-2">
                                 <div
                                     className="max-w-xs px-2 py-1 bg-customGray2 cursor-pointer rounded-xl flex items-center"
