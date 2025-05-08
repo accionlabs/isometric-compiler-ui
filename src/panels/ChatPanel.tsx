@@ -596,7 +596,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
 
                             <input
                                 type="file"
-                                accept="image/*,.pdf,.md,.txt,.md"
+                                accept="image/jpeg,image/png,.pdf,.md,.txt,.md"
                                 ref={fileInputRef}
                                 className="hidden"
                                 onChange={handleFileSelect}
