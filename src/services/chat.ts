@@ -198,16 +198,3 @@ export async function generateFlow(payload: {
     const result = await response.json();
     return result;
 }
-
-// {
-//     "uuid": "3e3d8096-904b-4cf2-a12c-4809d3ffa215",
-//     "message": "Git repo indexed",
-//     "agent": "architecture_agent",
-//     "messageType": "text",
-//     "metadata": {
-//         "documentId": 428,
-//         "isPdfUploaded": false,
-//         "isGitQuery": true
-//     },
-//     "role": "system"
-// }
