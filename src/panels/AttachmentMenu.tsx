@@ -11,10 +11,10 @@ import {
     DropdownMenuSubTrigger,
     DropdownMenuTrigger
 } from "@/components/ui/DropDownMenu";
-import { Attachment } from "@/components/ui/IconGroup";
 import { generateFlow } from "@/services/chat";
 import { getDocumentByuuid } from "@/services/diagrams";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { CirclePlus } from "lucide-react";
 import React from "react";
 import { toast } from "sonner";
 interface AttachmentMenuProps {
@@ -27,6 +27,7 @@ interface AttachmentMenuProps {
     ) => Promise<void>;
     handleLoading: (loader: boolean) => void;
     handleUploadBoxOpen: () => void;
+    handleGitRepoDialoagOpen: () => void;
 }
 export default function AttachmentMenu(props: AttachmentMenuProps) {
     const currentUrl = new URL(window.location.href);
@@ -35,7 +36,8 @@ export default function AttachmentMenu(props: AttachmentMenuProps) {
         dropdownControls,
         handleUploadBoxOpen,
         handleLoading,
-        handleLoadDiagramFromJSON
+        handleLoadDiagramFromJSON,
+        handleGitRepoDialoagOpen
     } = props;
     const { isDropdownOpen, setIsDropdownOpen } = dropdownControls;
     const { data, refetch } = useQuery({
@@ -68,13 +70,16 @@ export default function AttachmentMenu(props: AttachmentMenuProps) {
         >
             <DropdownMenuTrigger asChild>
                 <button className="h-6 mt-1">
-                    <Attachment className=" cursor-pointer" />
+                    <CirclePlus className=" cursor-pointer" />
                 </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className=" bg-customGray">
                 <DropdownMenuGroup>
                     <DropdownMenuItem onSelect={handleUploadBoxOpen}>
                         Attach File
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={handleGitRepoDialoagOpen}>
+                        Attach Repo
                     </DropdownMenuItem>
                     <DropdownMenuItem
                         onClick={() => {

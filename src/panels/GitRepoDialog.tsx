@@ -13,21 +13,21 @@ import { Input } from "@/components/ui/Input";
 interface GitRepoDialogProps {
     isOpen: boolean;
     onClose: () => void;
-    // onSave: (name: string, description: string, category: string) => void;
+    onSubmit: (url: string, token: string) => void;
 }
 
 const GitRepoDialog: React.FC<GitRepoDialogProps> = ({
     isOpen,
-    onClose
-    // onSave
+    onClose,
+    onSubmit
 }) => {
-    const [link, setLink] = useState("");
+    const [url, seturl] = useState("");
     const [token, setToken] = useState("");
     const [error, setError] = useState<string | null>(null);
 
     const handleSubmit = () => {
-        if (!link.trim()) {
-            setError("Component name is required");
+        if (!url.trim()) {
+            setError("Repo url is required");
             return;
         }
 
@@ -35,12 +35,12 @@ const GitRepoDialog: React.FC<GitRepoDialogProps> = ({
     };
 
     const handleSaveComponent = () => {
-        alert("Feature not implemented yet");
+        onSubmit(url, token);
         handleClose();
     };
 
     const handleClose = () => {
-        setLink("");
+        seturl("");
         setError(null);
         onClose();
     };
@@ -58,12 +58,12 @@ const GitRepoDialog: React.FC<GitRepoDialogProps> = ({
                     <div className="space-y-4 mt-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-200 mb-1">
-                                Git Repository Link *
+                                Git Repository url *
                             </label>
                             <Input
-                                value={link}
-                                onChange={(e) => setLink(e.target.value)}
-                                placeholder="Enter repository link"
+                                value={url}
+                                onChange={(e) => seturl(e.target.value)}
+                                placeholder="Enter repository url"
                                 className="w-full bg-customLightGray text-white border-gray-600"
                             />
                             {error && (
@@ -94,7 +94,7 @@ const GitRepoDialog: React.FC<GitRepoDialogProps> = ({
                             <Button
                                 onClick={handleSubmit}
                                 className="bg-blue-600 hover:bg-blue-700"
-                                disabled={!link.trim()}
+                                disabled={!url.trim()}
                             >
                                 Attach
                             </Button>

@@ -30,24 +30,29 @@ export async function sendChatRequestV2({
     query,
     uuid,
     currentState,
-    file
+    file,
+    gitUrl,
+    gitToken
 }: {
     query: string;
     uuid: string;
     currentState?: DiagramComponent[];
     file?: File;
+
+    gitUrl?: string;
+    gitToken?: string;
 }): Promise<MessageResponse> {
     const formData = new FormData();
-    if (file) {
-        formData.append("file", file);
-    }
-    if (currentState) {
+
+    if (file) formData.append("file", file);
+    if (currentState)
         formData.append("currentState", JSON.stringify(currentState));
-    }
-    formData.append("query", query);
+    if (gitToken) formData.append("gitToken", gitToken.trim());
+    if (gitUrl) formData.append("gitUrl", gitUrl.trim());
+
+    formData.append("query", query.trim());
     formData.append("uuid", uuid);
     formData.append("agent", agent);
-
     const response = await fetch(`${config.isometricApiUrl}/chat`, {
         method: "POST",
         body: formData,
@@ -193,3 +198,16 @@ export async function generateFlow(payload: {
     const result = await response.json();
     return result;
 }
+
+// {
+//     "uuid": "3e3d8096-904b-4cf2-a12c-4809d3ffa215",
+//     "message": "Git repo indexed",
+//     "agent": "architecture_agent",
+//     "messageType": "text",
+//     "metadata": {
+//         "documentId": 428,
+//         "isPdfUploaded": false,
+//         "isGitQuery": true
+//     },
+//     "role": "system"
+// }

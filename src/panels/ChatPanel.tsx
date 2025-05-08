@@ -85,7 +85,6 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     const { formRef, onKeyDown } = useEnterSubmit();
 
     const [input, setInput] = useState("");
-    const [isAttachmentMenuOpen, setIsAttachmentMenuOpen] = useState(false);
     const [isGitRepoDialoagOpen, setIsGitRepoDialoagOpen] = useState(false);
     // const [isLoading, setLoading] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -93,13 +92,15 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
 
     // const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     const [viewerContent, setViewerContent] = useState<React.ReactNode | null>(
         null
     );
     const [isViewerOpen, setViewerOpen] = useState(false);
     const [showLoader, setShowLoader] = useState(false);
-
+    const [isLoader, setIsLoader] = useState(false);
+    const [isLoaderTimePassed, setIsLoaderTimePassed] = useState(false);
     const [selectedFile, setSelectedFile] = useState<{
         file: File | null;
         src: string;
@@ -112,7 +113,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
     const currentUrl = new URL(window.location.href);
-    const existinguuid = currentUrl.searchParams.get("uuid");
+    const existinguuid = currentUrl.searchParams.get("uuid") as string;
     // get api using useQuery
     const { data: existingChatData, isLoading: isExistingChatLoading } =
         useQuery({
@@ -382,9 +383,24 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         clearFile();
     };
 
-    const [isLoader, setIsLoader] = useState(false);
-    const [isLoaderTimePassed, setIsLoaderTimePassed] = useState(false);
-
+    const handleGitRepoSubmit = (url: string, token?: string) => {
+        const userInput = "Process this git repo";
+        setMessages((prev) => [
+            ...prev,
+            {
+                text: userInput,
+                isUser: true,
+                isSystemQuery: false,
+                metaData: {}
+            }
+        ]);
+        sendChatMutaion({
+            query: userInput,
+            uuid: existinguuid,
+            gitUrl: url,
+            gitToken: token
+        });
+    };
     useEffect(() => {
         if (isLoaderTimePassed) {
             setIsLoader(isLoading);
@@ -401,6 +417,16 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         setShowLoader(loading);
         setIsLoader(loading);
         setLoadMessages(LoadMessagesWithImage);
+    };
+
+    const handleGitRepoDialoagOpen = () => {
+        if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+        }
+
+        timeoutRef.current = setTimeout(() => {
+            setIsGitRepoDialoagOpen(true);
+        }, 200);
     };
     return (
         <div className="px-4 pt-3 h-full flex flex-col gap-4">
@@ -567,6 +593,9 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                                     handleLoadDiagramFromJSON
                                 }
                                 handleLoading={handleLoading}
+                                handleGitRepoDialoagOpen={
+                                    handleGitRepoDialoagOpen
+                                }
                             />
 
                             <input
@@ -591,7 +620,6 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                     </div>
                 </div>
             </form>
-
             {/* viewer Popup */}
             <ViewerPopup
                 isOpen={isViewerOpen}
@@ -601,6 +629,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             <GitRepoDialog
                 isOpen={isGitRepoDialoagOpen}
                 onClose={() => setIsGitRepoDialoagOpen(false)}
+                onSubmit={handleGitRepoSubmit}
             />
             {showLoader && (
                 <ProgressPopup
