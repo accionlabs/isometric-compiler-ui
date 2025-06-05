@@ -475,5 +475,6 @@ export interface DocumentResponse {
     status: "active" | "inactive";
     uuid: string;
     content: string;
+    architectureMetricsGenerated: "none" | "inprogress" | "done";
     metadata: DocumentMetadata;
 }

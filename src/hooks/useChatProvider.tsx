@@ -20,6 +20,7 @@ export type Message = {
         content?: any;
         gitUrl?: string;
         isGherkinScriptQuery?: boolean;
+        documentId?: number | string;
     };
 };
 interface ChatProviderProps {

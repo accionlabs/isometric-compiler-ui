@@ -198,3 +198,27 @@ export async function generateFlow(payload: {
     const result = await response.json();
     return result;
 }
+
+export async function generateMetrics(params: {
+    uuid: string;
+    document_id: number | string;
+    metrics: "architecture" | "functional";
+}): Promise<any> {
+    const url = `${config.isometricApiUrl}/documents/metrics`;
+    const response = await fetch(url, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${keycloak.token}`
+        },
+        body: JSON.stringify(params)
+    });
+
+    if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to update document tags: ${errorText}`);
+    }
+
+    const result = await response.json();
+    return result;
+}

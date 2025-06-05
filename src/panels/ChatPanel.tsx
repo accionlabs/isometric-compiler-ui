@@ -3,13 +3,14 @@ import React, { useEffect, useRef, useState } from "react";
 import { DiagramComponent } from "@/Types";
 import { Message, useChat } from "@/hooks/useChatProvider";
 import {
+    generateMetrics,
     getChatByuuid,
     getSignedUrl,
     sendChatRequestV2
 } from "@/services/chat";
 import { useEnterSubmit } from "@/hooks/useEnterSubmit";
 import { Textarea } from "@/components/ui/Textarea";
-import { Eye, FileText, X } from "lucide-react";
+import { Eye, FileText, Network, X } from "lucide-react";
 import ViewerPopup from "@/components/ui/ViewerPopup";
 import ProgressPopup from "@/components/ui/ProgressPopup";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -29,6 +30,9 @@ import pdf from "@/assets/pdf.png";
 import image from "@/assets/image.png";
 import git from "@/assets/git.png";
 import text from "@/assets/text.png";
+import { getDocumentByuuid } from "@/services/documents";
+import { toast } from "sonner";
+import MetricsButton from "@/components/ui/MetricsButton";
 interface ChatPanelProps {
     handleLoadDiagramFromJSON: (
         loadedComponents: DiagramComponent[]
@@ -124,7 +128,14 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             },
             enabled: !!existinguuid
         });
-
+    const { data: statusData } = useQuery({
+        queryKey: ["docuemnt-by-id-with-filter", existinguuid],
+        queryFn: () => {
+            return getDocumentByuuid(existinguuid || "");
+        },
+        enabled: !!existinguuid,
+        refetchInterval: 5000
+    });
     const { mutate: sendChatMutaion, isPending: isLoading } = useMutation({
         mutationFn: sendChatRequestV2,
         onSettled: async (res, error) => {
@@ -204,6 +215,9 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             }
             setIsLoader(false);
         }
+    });
+    const { mutate: generateMetricCall } = useMutation({
+        mutationFn: generateMetrics
     });
 
     useEffect(() => {
@@ -352,8 +366,8 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         if (!existinguuid) return;
         if (!input && !selectedFile.file) return;
         if (selectedFile.file) {
-            setShowLoader(true);
-            setIsLoader(true);
+            // setShowLoader(true);
+            // setIsLoader(true);
         }
 
         if (input === "generate blueprint") {
@@ -364,7 +378,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         setMessages((prev) => [
             ...prev,
             {
-                text: input,
+                text: input || "Process this file",
                 isUser: true,
                 isSystemQuery: false,
                 metaData: {
@@ -420,7 +434,35 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         setIsLoader(loading);
         setLoadMessages(LoadMessagesWithImage);
     };
+    const handleGenerateMetrics = (index: number) => {
+        if (index === 0) return;
+        let documentId =
+            messages[index].metaData.documentId ||
+            messages[index - 1].metaData.documentId;
+        if (!documentId) return;
 
+        //    generateMetricCall({uuid:existinguuid,document_id})
+        const document = statusData?.data?.find(
+            (item) => item._id === Number(documentId)
+        );
+        if (document?.architectureMetricsGenerated === "inprogress") {
+            toast.success(
+                "Architecture metrics are already being generated for this document. Please wait until the process is complete."
+            );
+            return;
+        }
+        if (document?.architectureMetricsGenerated === "done") {
+            toast.success(
+                "Architecture metrics have already been generated for this document."
+            );
+            return;
+        }
+        generateMetricCall({
+            uuid: existinguuid,
+            document_id: Number(documentId),
+            metrics: "architecture"
+        });
+    };
     const handleGitRepoDialoagOpen = () => {
         if (timeoutRef.current) {
             clearTimeout(timeoutRef.current);
@@ -472,6 +514,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                                 />
                                 <span className="text-xs  truncate max-w-52 text-center">
                                     {message.metaData.gitUrl ||
+                                        message.metaData.fileName ||
                                         message.metaData.fileUrl
                                             ?.split("/")
                                             .pop()}
@@ -492,6 +535,13 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                             </div>
                         )}
 
+                        {(message.text === "Document Indexed Successfully!" ||
+                            message.text === "Git repo indexed") && (
+                            <MetricsButton
+                                index={index}
+                                handleGenerateMetrics={handleGenerateMetrics}
+                            />
+                        )}
                         {/* JSON Response */}
                         {message.metaData.content?.length > 0 && (
                             <div className="flex items-center gap-2">
