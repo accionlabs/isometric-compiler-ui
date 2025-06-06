@@ -22,7 +22,7 @@ export default function MetricsButton({
             }}
             className={cn(
                 "flex items-center gap-2",
-                disabled && "cursor-not-allowed opacity-50"
+                (isDisabled || disabled) && "cursor-not-allowed opacity-50"
             )}
         >
             <div className="max-w-xs px-2 py-1 bg-customGray2 cursor-pointer rounded-xl flex items-center">

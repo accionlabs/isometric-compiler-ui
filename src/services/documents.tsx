@@ -3,14 +3,9 @@ import keycloak from "./keycloak";
 import { DocumentResponse } from "@/Types";
 
 export async function getDocumentByuuid(
-    uuid: string,
-    withFilter: boolean = false
+    uuid: string
 ): Promise<{ data: DocumentResponse[] }> {
-    let url = `${config.isometricApiUrl}/documents/?sortName=updatedAt&sortOrder=desc&filters[uuid][eq]=${uuid}`;
-    if (withFilter)
-        url =
-            url +
-            "&selectFields=_id,architectureMetricsGenerated,agent,fileIndexedStatus,functionalMetricsGenerated";
+    let url = `${config.isometricApiUrl}/documents/?sortName=updatedAt&sortOrder=desc&filters[uuid][eq]=${uuid}&selectFields=_id,architectureMetricsGenerated,agent,fileIndexedStatus,functionalMetricsGenerated`;
 
     const response = await fetch(url, {
         headers: {

@@ -476,6 +476,15 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             setIsGitRepoDialoagOpen(true);
         }, 200);
     };
+
+    const checkIfMetrixButtonDisabled = (message: Message) => {
+        if (!message.metaData.uploadedType) return false;
+        const status = statusData?.data?.find(
+            (item) => item._id === Number(message.metaData.documentId)
+        )?.architectureMetricsGenerated;
+        if (!status) return false;
+        return status === "inprogress" || status === "done";
+    };
     return (
         <div className="px-4 pt-3 h-full flex flex-col gap-4">
             {/* <div className="flex justify-between">
@@ -543,6 +552,9 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                             <MetricsButton
                                 index={index}
                                 handleGenerateMetrics={handleGenerateMetrics}
+                                isDisabled={checkIfMetrixButtonDisabled(
+                                    message
+                                )}
                             />
                         )}
                         {/* JSON Response */}
