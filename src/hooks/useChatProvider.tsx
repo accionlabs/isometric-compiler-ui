@@ -21,6 +21,7 @@ export type Message = {
         gitUrl?: string;
         isGherkinScriptQuery?: boolean;
         documentId?: number | string;
+        uploadedType?: "image" | "pdf" | "txt" | "text";
     };
 };
 interface ChatProviderProps {

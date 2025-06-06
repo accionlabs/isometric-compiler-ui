@@ -176,7 +176,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                                 text: res.message,
                                 isUser: false,
                                 isSystemQuery: true,
-                                metaData: {}
+                                metaData: res.metadata
                             }
                         ]);
                     }
@@ -190,13 +190,17 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                         handleLoadDiagramFromJSON(res.metadata.content ?? []);
                         addHistory(res.metadata.content ?? []);
                     }
+
                     setMessages((prev) => [
                         ...prev,
                         {
                             text: res.message,
                             isUser: false,
                             isSystemQuery: false,
-                            metaData: { content: res.metadata.content }
+                            metaData: {
+                                ...res.metadata,
+                                content: res.metadata.content
+                            }
                         }
                     ]);
                 }
@@ -406,7 +410,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                 text: userInput,
                 isUser: true,
                 isSystemQuery: false,
-                metaData: {}
+                metaData: { gitUrl: url }
             }
         ]);
         sendChatMutaion({
@@ -535,8 +539,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                             </div>
                         )}
 
-                        {(message.text === "Document Indexed Successfully!" ||
-                            message.text === "Git repo indexed") && (
+                        {message.metaData.uploadedType && (
                             <MetricsButton
                                 index={index}
                                 handleGenerateMetrics={handleGenerateMetrics}
